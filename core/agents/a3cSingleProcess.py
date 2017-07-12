@@ -267,8 +267,8 @@ class A3CLearner(A3CSingleProcess):
             self.frame_step += 1
             self.master.frame_step.value += 1
 
-            if self.master.frame_step.value % 1000 == 0:
-                print "global step:", self.master.frame_step.value, "time:", time.time()
+            if self.master.train_step.value % 1000 == 0:
+                print "train step: {0}, frame step {1}, time: {2}".format(self.master.train_step.value, self.master.frame_step.value, time.time())
 
             # NOTE: we put this condition inside to make sure this current rollout won't be empty
             if self.master.train_step.value >= self.master.steps:

@@ -29,18 +29,18 @@ minisim_num_robots = 1
 
 class Params(object):   # NOTE: shared across all modules
     def __init__(self):
-        self.verbose     = 1            # 0(warning) | 1(info) | 2(debug)
+        self.verbose     = 0            # 0(warning) | 1(info) | 2(debug)
 
         # training signature
-        self.machine     = "pearl3"  # "machine_id"
-        self.timestamp   = "17062702"   # "yymmdd##"
+        self.machine     = "pearl6"  # "machine_id"
+        self.timestamp   = "17071201"   # "yymmdd##"
         # training configuration
         self.mode        = 1            # 1(train) | 2(test model_file)
         self.config      = 8
 
         self.seed        = 123
         self.render      = False        # whether render the window from the original envs or not
-        self.visualize   = True        # whether do online plotting and stuff or not
+        self.visualize   = True         # whether do online plotting and stuff or not
         self.save_best   = False        # save model w/ highest reward if True, otherwise always save the latest model
 
         self.agent_type, self.env_type, self.game, self.model_type, self.memory_type = CONFIGS[self.config]
@@ -75,7 +75,7 @@ class Params(object):   # NOTE: shared across all modules
 
             if self.env_type == "minisim":
                 self.hist_len = 1
-                self.hidden_dim = 24
+                self.hidden_dim = 36
                 self.num_processes = 6
 
             self.use_cuda           = False
@@ -265,11 +265,11 @@ class AgentParams(Params):  # hyperparameters for drl agents
             self.early_stop          = 30000     # max #steps per episode
             self.gamma               = 0.99
             self.clip_grad           = 40.
-            self.lr                  = 0.0001
+            self.lr                  = 0.00003
             self.eval_freq           = 60       # NOTE: here means every this many seconds
-            self.eval_steps          = 80000
+            self.eval_steps          = 50000
             self.prog_freq           = self.eval_freq
-            self.test_nepisodes      = 5
+            self.test_nepisodes      = 10
 
             self.rollout_steps       = 20       # max look-ahead steps in a single rollout
             self.tau                 = 1.

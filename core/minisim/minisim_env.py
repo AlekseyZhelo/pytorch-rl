@@ -34,7 +34,8 @@ class MinisimEnv(Env):
         self.client.setup()  # TODO: move to client's init?
 
         # action space setup  # [linear velocity, angular velocity]
-        self.actions = [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1]]  # ,[1, 1], [1, -1], [-1, 1], [-1, -1]]
+        # self.actions = [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1]]  # ,[1, 1], [1, -1], [-1, 1], [-1, -1]]
+        self.actions = [[0, 0], [5, 0], [-5, 0], [0, 2], [0, -2]]  # ,[1, 1], [1, -1], [-1, 1], [-1, -1]]
         self.logger.warning("Action Space: %s", self.actions)
 
         # state space setup
