@@ -13,29 +13,34 @@ from utils.sharedAdam import SharedAdam
 
 CONFIGS = [
 # agent_type, env_type,    game,                       model_type, memory_type
-[ "empty",    "gym",       "CartPole-v0",              "mlp",      "none"      ],  # 0
-[ "dqn",      "gym",       "CartPole-v0",              "mlp",      "sequential"],  # 1
-[ "dqn",      "atari-ram", "Pong-ram-v0",              "mlp",      "sequential"],  # 2
-[ "dqn",      "atari",     "PongDeterministic-v3",     "cnn",      "sequential"],  # 3
-[ "dqn",      "atari",     "BreakoutDeterministic-v3", "cnn",      "sequential"],  # 4
-[ "a3c",      "atari",     "PongDeterministic-v3",     "a3c-cnn",  "none"      ],  # 5
-[ "a3c",      "gym",       "InvertedPendulum-v1",      "a3c-mjc",  "none"      ]   # 6
+[ "empty",    "gym",       "CartPole-v0",              "mlp",      "none"        ],  # 0
+[ "dqn",      "gym",       "CartPole-v0",              "mlp",      "sequential"  ],  # 1
+[ "dqn",      "atari-ram", "Pong-ram-v0",              "mlp",      "sequential"  ],  # 2
+[ "dqn",      "atari",     "PongDeterministic-v3",     "cnn",      "sequential"  ],  # 3
+[ "dqn",      "atari",     "BreakoutDeterministic-v3", "cnn",      "sequential"  ],  # 4
+[ "a3c",      "atari",     "PongDeterministic-v3",     "a3c-cnn",  "none"        ],  # 5
+[ "a3c",      "gym",       "InvertedPendulum-v1",      "a3c-mjc",  "none"        ],  # 6
+[ "a3c",      "minisim",   "minisim",                  "a3c-mlp",  "none"        ],  # 7
+[ "a3c",      "minisim",   "minisim",                  "a3c-mlp-minisim",  "none"],  # 8
+[ "dqn",      "minisim",   "minisim",                  "mlp",      "sequential"  ]   # 9
 ]
+
+minisim_num_robots = 1
 
 class Params(object):   # NOTE: shared across all modules
     def __init__(self):
-        self.verbose     = 0            # 0(warning) | 1(info) | 2(debug)
+        self.verbose     = 1            # 0(warning) | 1(info) | 2(debug)
 
         # training signature
-        self.machine     = "alienware"  # "machine_id"
-        self.timestamp   = "17052100"   # "yymmdd##"
+        self.machine     = "pearl3"  # "machine_id"
+        self.timestamp   = "17062702"   # "yymmdd##"
         # training configuration
         self.mode        = 1            # 1(train) | 2(test model_file)
-        self.config      = 5
+        self.config      = 8
 
         self.seed        = 123
         self.render      = False        # whether render the window from the original envs or not
-        self.visualize   = True         # whether do online plotting and stuff or not
+        self.visualize   = True        # whether do online plotting and stuff or not
         self.save_best   = False        # save model w/ highest reward if True, otherwise always save the latest model
 
         self.agent_type, self.env_type, self.game, self.model_type, self.memory_type = CONFIGS[self.config]
@@ -48,6 +53,9 @@ class Params(object):   # NOTE: shared across all modules
             if self.env_type == "gym":
                 self.hist_len       = 1
                 self.hidden_dim     = 16
+            elif self.env_type == "minisim":
+                self.hist_len = 4
+                self.hidden_dim = 24
             else:
                 self.hist_len       = 4
                 self.hidden_dim     = 256
@@ -64,6 +72,11 @@ class Params(object):   # NOTE: shared across all modules
 
             self.hist_len           = 1
             self.hidden_dim         = 128
+
+            if self.env_type == "minisim":
+                self.hist_len = 1
+                self.hidden_dim = 24
+                self.num_processes = 6
 
             self.use_cuda           = False
             self.dtype              = torch.FloatTensor
@@ -117,8 +130,11 @@ class EnvParams(Params):    # settings for simulation environment
             self.wid_state = 80
             self.preprocess_mode = 3  # 0(nothing) | 1(rgb2gray) | 2(rgb2y) | 3(crop&resize depth)
             self.img_encoding_type = "passthrough"
+        elif self.env_type == "minisim":
+            self.num_robots = minisim_num_robots
+            pass
         else:
-            assert False, "env_type must be: gym | atari-ram | atari | lab"
+            assert False, "env_type must be: gym | atari-ram | atari | lab | minisim"
 
 class ModelParams(Params):  # settings for network architecture
     def __init__(self):
@@ -126,6 +142,9 @@ class ModelParams(Params):  # settings for network architecture
 
         self.state_shape = None # NOTE: set in fit_model of inherited Agents
         self.action_dim  = None # NOTE: set in fit_model of inherited Agents
+
+        if self.env_type == "minisim":
+            self.num_robots = minisim_num_robots
 
 class MemoryParams(Params):     # settings for replay memory
     def __init__(self):
@@ -139,6 +158,8 @@ class MemoryParams(Params):     # settings for replay memory
             self.memory_size = 1000000
         elif self.env_type == "lab":
             self.memory_size = 1000000
+        elif self.env_type == "minisim":
+            self.memory_size = 200000
         else:
             self.memory_size = 1000000
 
@@ -203,6 +224,28 @@ class AgentParams(Params):  # hyperparameters for drl agents
             self.action_repetition   = 4
             self.memory_interval     = 1
             self.train_interval      = 4
+        elif self.agent_type == "dqn" and self.env_type == "minisim":
+            self.steps               = 1000000   # max #iterations
+            self.early_stop          = 15000     # max #steps per episode  # should be the average it takes to get to the goal
+            self.gamma               = 0.99
+            self.clip_grad           = np.inf
+            self.lr                  = 0.0001
+            self.eval_freq           = 150000    # NOTE: here means every this many steps
+            self.eval_steps          = 15000
+            self.prog_freq           = self.eval_freq
+            self.test_nepisodes      = 10
+
+            self.learn_start         = 500      # start update params after this many steps
+            self.batch_size          = 64
+            self.valid_size          = 250
+            self.eps_start           = 1
+            self.eps_end             = 0.2
+            self.eps_eval            = 0.#0.05
+            self.eps_decay           = 700000
+            self.target_model_update = 2000#0.0001
+            self.action_repetition   = 1
+            self.memory_interval     = 1
+            self.train_interval      = 32
         elif self.agent_type == "a3c" and self.env_type == "atari-ram" or \
              self.agent_type == "a3c" and (self.env_type == "atari" or self.env_type == "gym"):
             self.steps               = 20000000 # max #iterations
@@ -214,6 +257,19 @@ class AgentParams(Params):  # hyperparameters for drl agents
             self.eval_steps          = 3000
             self.prog_freq           = self.eval_freq
             self.test_nepisodes      = 10
+
+            self.rollout_steps       = 20       # max look-ahead steps in a single rollout
+            self.tau                 = 1.
+        elif self.agent_type == "a3c" and self.env_type == "minisim":
+            self.steps               = 10000000  # max #iterations
+            self.early_stop          = 30000     # max #steps per episode
+            self.gamma               = 0.99
+            self.clip_grad           = 40.
+            self.lr                  = 0.0001
+            self.eval_freq           = 60       # NOTE: here means every this many seconds
+            self.eval_steps          = 80000
+            self.prog_freq           = self.eval_freq
+            self.test_nepisodes      = 5
 
             self.rollout_steps       = 20       # max look-ahead steps in a single rollout
             self.tau                 = 1.

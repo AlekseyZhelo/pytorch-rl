@@ -273,6 +273,9 @@ class DQNAgent(Agent):
             episode_reward += reward
             self.step += 1
 
+            if self.step % 1000 == 0:
+                print self.step
+
             if should_start_new:
                 # We are in a terminal state but the agent hasn't yet seen it. We therefore
                 # perform one more forward-backward call and simply ignore the action before
