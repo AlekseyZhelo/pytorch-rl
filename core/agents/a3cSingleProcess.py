@@ -21,7 +21,7 @@ class A3CSingleProcess(mp.Process):
 
         self.master = master
         self.process_id = process_id
-
+        print "self.master.entropy_weight!!!!", self.master.entropy_weight
         # env
         self.env = self.master.env_prototype(self.master.env_params, self.process_id)
         # model
@@ -215,9 +215,9 @@ class A3CLearner(A3CSingleProcess):
             if self.master.enable_continuous:
                 _log_prob = self._normal(action_batch_vb[i], policy_vb[i], sigma_vb[i])
                 _entropy = -0.5*((sigma_vb[i]+2*self.pi_vb.expand_as(sigma_vb[i])).log()+1)
-                policy_loss_vb = policy_loss_vb - (_log_prob * Variable(gae_ts).expand_as(_log_prob)).sum() - 0.01 * _entropy.sum()
+                policy_loss_vb = policy_loss_vb - (_log_prob * Variable(gae_ts).expand_as(_log_prob)).sum() - self.master.entropy_weight * _entropy.sum()
             else:
-                policy_loss_vb = policy_loss_vb - policy_log_vb[i] * Variable(gae_ts) - 0.01 * entropy_vb[i]
+                policy_loss_vb = policy_loss_vb - policy_log_vb[i] * Variable(gae_ts) - self.master.entropy_weight * entropy_vb[i]
 
         loss_vb = policy_loss_vb + 0.5 * value_loss_vb
         loss_vb.backward()

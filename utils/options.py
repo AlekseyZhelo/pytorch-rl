@@ -75,7 +75,7 @@ class Params(object):   # NOTE: shared across all modules
 
             if self.env_type == "minisim":
                 self.hist_len = 1
-                self.hidden_dim = 36
+                self.hidden_dim = 128
                 self.num_processes = 6
 
             self.use_cuda           = False
@@ -261,18 +261,19 @@ class AgentParams(Params):  # hyperparameters for drl agents
             self.rollout_steps       = 20       # max look-ahead steps in a single rollout
             self.tau                 = 1.
         elif self.agent_type == "a3c" and self.env_type == "minisim":
-            self.steps               = 10000000  # max #iterations
+            self.steps               = 2000000   # max #iterations
             self.early_stop          = 26500     # max #steps per episode
             self.gamma               = 0.99
             self.clip_grad           = 40.
             self.lr                  = 0.0001
             self.eval_freq           = 60       # NOTE: here means every this many seconds
-            self.eval_steps          = 50000
+            self.eval_steps          = 60000
             self.prog_freq           = self.eval_freq
             self.test_nepisodes      = 10
 
             self.rollout_steps       = 20       # max look-ahead steps in a single rollout
             self.tau                 = 1.
+            self.entropy_weight      = 0.05
         else:
             self.steps               = 1000000  # max #iterations
             self.early_stop          = None     # max #steps per episode

@@ -76,6 +76,7 @@ class Agent(object):
 
             self.rollout_steps = args.rollout_steps
             self.tau = args.tau
+            self.entropy_weight = args.entropy_weight if hasattr(args, 'entropy_weight') else 0.01
 
     def _reset_experience(self):
         self.experience = Experience(state0 = None,
