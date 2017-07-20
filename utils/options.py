@@ -32,8 +32,8 @@ class Params(object):   # NOTE: shared across all modules
         self.verbose     = 0            # 0(warning) | 1(info) | 2(debug)
 
         # training signature
-        self.machine     = "pearl8"  # "machine_id"
-        self.timestamp   = "17072000"   # "yymmdd##"
+        self.machine     = "pearl6"  # "machine_id"
+        self.timestamp   = "17072001"   # "yymmdd##"
         # training configuration
         self.mode        = 1            # 1(train) | 2(test model_file)
         self.config      = 8
