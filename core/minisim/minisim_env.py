@@ -35,7 +35,7 @@ class MinisimEnv(Env):
 
         # action space setup  # [linear velocity, angular velocity]
         # self.actions = [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1]]  # ,[1, 1], [1, -1], [-1, 1], [-1, -1]]
-        self.actions = [[0, 0], [5, 0], [-5, 0], [0, 2], [0, -2]]  # ,[1, 1], [1, -1], [-1, 1], [-1, -1]]
+        self.actions = [[0, 0], [10, 0], [-10, 0], [0, 16], [0, -16]]  # ,[1, 1], [1, -1], [-1, 1], [-1, -1]]
         self.logger.warning("Action Space: %s", self.actions)
 
         # state space setup

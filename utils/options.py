@@ -32,8 +32,8 @@ class Params(object):   # NOTE: shared across all modules
         self.verbose     = 0            # 0(warning) | 1(info) | 2(debug)
 
         # training signature
-        self.machine     = "pearl6"  # "machine_id"
-        self.timestamp   = "17071201"   # "yymmdd##"
+        self.machine     = "pearl8"  # "machine_id"
+        self.timestamp   = "17072000"   # "yymmdd##"
         # training configuration
         self.mode        = 1            # 1(train) | 2(test model_file)
         self.config      = 8
@@ -262,10 +262,10 @@ class AgentParams(Params):  # hyperparameters for drl agents
             self.tau                 = 1.
         elif self.agent_type == "a3c" and self.env_type == "minisim":
             self.steps               = 10000000  # max #iterations
-            self.early_stop          = 30000     # max #steps per episode
+            self.early_stop          = 26500     # max #steps per episode
             self.gamma               = 0.99
             self.clip_grad           = 40.
-            self.lr                  = 0.00003
+            self.lr                  = 0.0001
             self.eval_freq           = 60       # NOTE: here means every this many seconds
             self.eval_steps          = 50000
             self.prog_freq           = self.eval_freq
