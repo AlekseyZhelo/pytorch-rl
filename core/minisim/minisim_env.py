@@ -50,6 +50,8 @@ class MinisimEnv(Env):
         else:
             self.enable_continuous = False
 
+        print("rrrrrrr", args.hist_len)
+
         if hasattr(args, "hist_len"):
             self.hist_len = args.hist_len
             self.state_buffer = np.zeros(self.hist_len, self.state_shape + self.num_robots)

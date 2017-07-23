@@ -74,7 +74,7 @@ class Params(object):   # NOTE: shared across all modules
             self.hidden_dim         = 128
 
             if self.env_type == "minisim":
-                self.hist_len = 1
+                self.hist_len = 4
                 self.hidden_dim = 128
                 self.num_processes = 6
 
