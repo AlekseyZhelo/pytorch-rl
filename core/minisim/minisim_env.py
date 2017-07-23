@@ -20,6 +20,14 @@ class MinisimEnv(Env):
     roslaunch_node_starter = None
 
     def __init__(self, args, env_ind=0):
+        print("rrrrrrr", args.hist_len)
+
+        if hasattr(args, "hist_len"):
+            self.hist_len = args.hist_len
+            self.state_buffer = np.zeros(self.hist_len, self.state_shape + self.num_robots)
+        else:
+            self.hist_len = 1
+            
         super(MinisimEnv, self).__init__(args, env_ind)
 
         assert self.env_type == "minisim"
@@ -49,14 +57,6 @@ class MinisimEnv(Env):
                 self.logger.warning("Continuous actions not implemented for minisim yet")
         else:
             self.enable_continuous = False
-
-        print("rrrrrrr", args.hist_len)
-
-        if hasattr(args, "hist_len"):
-            self.hist_len = args.hist_len
-            self.state_buffer = np.zeros(self.hist_len, self.state_shape + self.num_robots)
-        else:
-            self.hist_len = 1
 
     def _preprocessState(self, state):  # NOTE: here no preprocessing is needed
         return state
