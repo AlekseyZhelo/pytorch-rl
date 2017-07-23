@@ -49,8 +49,18 @@ class MinisimEnv(Env):
         else:
             self.enable_continuous = False
 
+        if hasattr(args, "hist_len"):
+            self.hist_len = args.hist_len
+            self.state_buffer =
+        else:
+            self.hist_len = 1
+
     def _preprocessState(self, state):  # NOTE: here no preprocessing is needed
         return state
+
+    def _reset_experience(self):
+        super(MinisimEnv, self)._reset_experience()
+
 
     @property
     def state_shape(self):
@@ -68,6 +78,12 @@ class MinisimEnv(Env):
 
     def sample_random_action(self):  # TODO: unused
         return [self.actions[np.random.randint(0, len(self.actions))] for _ in xrange(self.num_robots)]
+
+    def _get_experience(self):
+        if self.hist_len == 1:
+            return super(MinisimEnv, self)._get_experience()
+        else:
+
 
     def reset(self):
         self._reset_experience()
