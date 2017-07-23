@@ -11,6 +11,7 @@ import roslaunch
 
 from core.env import Env
 from core.minisim.minisim_client import MinisimClient
+from utils.helpers import Experience
 from utils.options import EnvParams
 
 
@@ -51,7 +52,7 @@ class MinisimEnv(Env):
 
         if hasattr(args, "hist_len"):
             self.hist_len = args.hist_len
-            self.state_buffer =
+            self.state_buffer = np.zeros(self.hist_len, self.state_shape + self.num_robots)
         else:
             self.hist_len = 1
 
@@ -60,7 +61,13 @@ class MinisimEnv(Env):
 
     def _reset_experience(self):
         super(MinisimEnv, self)._reset_experience()
+        if self.hist_len > 1:
+            self.state_buffer[:] = 0
 
+    def _append_to_history(self, state):
+        for i in range(self.state_buffer.shape[0] - 1):
+            self.state_buffer[i, :] = self.state_buffer[i + 1, :]
+            self.state_buffer[-1, :] = state
 
     @property
     def state_shape(self):
@@ -83,11 +90,17 @@ class MinisimEnv(Env):
         if self.hist_len == 1:
             return super(MinisimEnv, self)._get_experience()
         else:
-
+            return Experience(state0=self.exp_state0,  # NOTE: here state0 is always None
+                              action=self.exp_action,
+                              reward=self.exp_reward,
+                              state1=self.state_buffer,
+                              terminal1=self.exp_terminal1)
 
     def reset(self):
         self._reset_experience()
         self.exp_state1 = self.client.reset()
+        if self.hist_len > 1:
+            self._append_to_history(self._preprocessState(self.exp_state1))
         return self._get_experience()
 
     def step(self, action_index):
@@ -99,6 +112,8 @@ class MinisimEnv(Env):
             # print("actions taken:", [self.actions[i] for i in self._to_n_dim_idx(action_index, self.num_robots)])
             self.exp_state1, self.exp_reward, self.exp_terminal1, _ = self.client.step(
                 [self.actions[i] for i in self._to_n_dim_idx(action_index, self.num_robots)])
+            if self.hist_len > 1:
+                self._append_to_history(self._preprocessState(self.exp_state1))
         return self._get_experience()
 
     def _to_n_dim_idx(self, idx, n_dims):

@@ -261,7 +261,7 @@ class AgentParams(Params):  # hyperparameters for drl agents
             self.rollout_steps       = 20       # max look-ahead steps in a single rollout
             self.tau                 = 1.
         elif self.agent_type == "a3c" and self.env_type == "minisim":
-            self.steps               = 2000000   # max #iterations
+            self.steps               = 1000000   # max #iterations
             self.early_stop          = 26500     # max #steps per episode
             self.gamma               = 0.99
             self.clip_grad           = 40.
