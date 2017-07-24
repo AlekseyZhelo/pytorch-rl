@@ -53,13 +53,13 @@ class MinisimEnv(Env):
         else:
             self.enable_continuous = False
 
-        print("rrrrrrr", args.hist_len)
-
         if hasattr(args, "hist_len"):
             self.hist_len = args.hist_len
             self.state_buffer = np.zeros((self.hist_len, self.state_shape + self.num_robots))
         else:
             self.hist_len = 1
+
+        self._reset_experience()
 
     def _preprocessState(self, state):  # NOTE: here no preprocessing is needed
         return state
@@ -72,7 +72,7 @@ class MinisimEnv(Env):
     def _append_to_history(self, state):
         for i in range(self.state_buffer.shape[0] - 1):
             self.state_buffer[i, :] = self.state_buffer[i + 1, :]
-            self.state_buffer[-1, :] = state
+        self.state_buffer[-1, :] = state
 
     @property
     def state_shape(self):

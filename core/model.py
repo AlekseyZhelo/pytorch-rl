@@ -238,6 +238,7 @@ class A3CMlpMinisimModel(Model):
         super(A3CMlpMinisimModel, self).__init__(args)
 
         self.num_robots = args.num_robots
+        self.hist_len = args.hist_len
 
         # build model
         # 0. feature layers
@@ -253,10 +254,10 @@ class A3CMlpMinisimModel(Model):
         if self.enable_lstm:
             self.lstm = nn.LSTMCell(self.hidden_dim, self.hidden_dim, 1)
         # 1. policy output
-        self.policy_5 = nn.Linear(self.hidden_dim + self.num_robots, self.output_dims)
+        self.policy_5 = nn.Linear(self.hidden_dim + self.num_robots * self.hist_len, self.output_dims)
         self.policy_6 = nn.Softmax()
         # 2. value output
-        self.value_5 = nn.Linear(self.hidden_dim + self.num_robots, 1)
+        self.value_5 = nn.Linear(self.hidden_dim + self.num_robots * self.hist_len, 1)
 
         self._reset()
 
@@ -279,10 +280,13 @@ class A3CMlpMinisimModel(Model):
         self.lstm.bias_hh.data.fill_(0)
 
     def forward(self, x, lstm_hidden_vb=None):
-        x = x.view(x.size(0), self.input_dims[0] * self.input_dims[1] + self.num_robots)
-        bearings = x[:, self.input_dims[0] * self.input_dims[1]:]
+        bearings = x[:, :, self.input_dims[1]:self.input_dims[1] + self.num_robots * self.hist_len]
+        bearings = bearings.contiguous().view(bearings.size(0), self.num_robots * self.hist_len)
+        laser_scans = x[:, :, :self.input_dims[1]]
+        # TODO: contiguous here will slow everything down a lot?
+        x = laser_scans.contiguous().view(laser_scans.size(0), self.input_dims[0] * self.input_dims[1])
 
-        x = self.rl1(self.fc1(x[:, :self.input_dims[0] * self.input_dims[1]]))
+        x = self.rl1(self.fc1(x))
         x = self.rl2(self.fc2(x))
         x = self.rl3(self.fc3(x))
         x = self.rl4(self.fc4(x))

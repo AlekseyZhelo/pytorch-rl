@@ -21,7 +21,7 @@ class A3CSingleProcess(mp.Process):
 
         self.master = master
         self.process_id = process_id
-        print "self.master.entropy_weight!!!!", self.master.entropy_weight
+
         # env
         self.env = self.master.env_prototype(self.master.env_params, self.process_id)
         # model
