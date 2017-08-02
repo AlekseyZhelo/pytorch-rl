@@ -32,8 +32,8 @@ class Params(object):   # NOTE: shared across all modules
         self.verbose     = 0            # 0(warning) | 1(info) | 2(debug)
 
         # training signature
-        self.machine     = "pearl8"  # "machine_id"
-        self.timestamp   = "17072400"   # "yymmdd##"
+        self.machine     = "pearl8"     # "machine_id"
+        self.timestamp   = "17080200"   # "yymmdd##"
         # training configuration
         self.mode        = 1            # 1(train) | 2(test model_file)
         self.config      = 8
@@ -132,6 +132,7 @@ class EnvParams(Params):    # settings for simulation environment
             self.img_encoding_type = "passthrough"
         elif self.env_type == "minisim":
             self.num_robots = minisim_num_robots
+            self.curriculum = True
             pass
         else:
             assert False, "env_type must be: gym | atari-ram | atari | lab | minisim"

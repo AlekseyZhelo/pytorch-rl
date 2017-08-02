@@ -28,13 +28,15 @@ class MinisimEnv(Env):
         assert self.env_type == "minisim"
 
         self.num_robots = args.num_robots
+        self.curriculum = args.curriculum if hasattr(args, "curriculum") else False
+
         self.sim_name = 'sim' + str(self.ind)
 
         if MinisimEnv.roslaunch_map_server is None:
             self.init_roslaunch()
 
         self.node = self.launch_node()
-        self.client = MinisimClient(self.num_robots, self.seed, '/' + self.sim_name, self.logger)
+        self.client = MinisimClient(self.num_robots, self.seed, self.curriculum, '/' + self.sim_name, self.logger)
         self.client.setup()  # TODO: move to client's init?
 
         # action space setup  # [linear velocity, angular velocity]

@@ -13,9 +13,10 @@ class MinisimClient(object):
     laser_rays_per_robot = 36
     message_ok = "ok"
 
-    def __init__(self, num_robots, seed, sim_prefix, logger):
+    def __init__(self, num_robots, seed, curriculum, sim_prefix, logger):
         self.num_robots = num_robots
         self.seed = seed
+        self.curriculum = curriculum
         self.sim_prefix = sim_prefix
         self.logger = logger
         self.twists = [geometry_msgs.msg.Twist() for _ in xrange(self.num_robots)]
@@ -37,7 +38,7 @@ class MinisimClient(object):
 
     def setup(self):
         try:
-            resp = self.setup_robots(self.num_robots, self.seed)
+            resp = self.setup_robots(self.num_robots, self.seed, self.curriculum)
             if resp.message != MinisimClient.message_ok:
                 self.logger.warning("WARNING: SetupRobots service improperly called, message: {0}".format(resp.message))
         except rospy.ServiceException, e:
