@@ -271,7 +271,7 @@ class AgentParams(Params):  # hyperparameters for drl agents
             self.prog_freq           = self.eval_freq
             self.test_nepisodes      = 10
 
-            self.rollout_steps       = 20       # max look-ahead steps in a single rollout
+            self.rollout_steps       = 50       # max look-ahead steps in a single rollout
             self.tau                 = 1.
             self.entropy_weight      = 0.05
         else:

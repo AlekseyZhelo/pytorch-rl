@@ -55,7 +55,7 @@ class MinisimEnv(Env):
 
         if hasattr(args, "hist_len"):
             self.hist_len = args.hist_len
-            self.state_buffer = np.zeros((self.hist_len, self.state_shape + self.num_robots))
+            self.state_buffer = np.zeros((self.hist_len, self.state_shape + 2 * self.num_robots))
         else:
             self.hist_len = 1
 

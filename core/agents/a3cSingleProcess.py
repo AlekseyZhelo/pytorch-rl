@@ -318,6 +318,7 @@ class A3CLearner(A3CSingleProcess):
                 should_start_new = True
                 if self.experience.terminal1:
                     nepisodes_solved += 1
+                    self.master.terminations_count.value += 1
 
             # calculate loss
             self._backward()
@@ -357,6 +358,7 @@ class A3CEvaluator(A3CSingleProcess):
         self.nepisodes_log = []
         self.nepisodes_solved_log = []
         self.repisodes_solved_log = []
+        self.terminals_reached_log = []
         # placeholders for windows for online curve plotting
         if self.master.visualize:
             # training stats across all processes
@@ -373,6 +375,7 @@ class A3CEvaluator(A3CSingleProcess):
             self.win_nepisodes = "win_nepisodes"
             self.win_nepisodes_solved = "win_nepisodes_solved"
             self.win_repisodes_solved = "win_repisodes_solved"
+            self.win_terminals_reached = "win_terminals_reached"
 
     def _eval_model(self):
         self.last_eval = time.time()
@@ -468,6 +471,7 @@ class A3CEvaluator(A3CSingleProcess):
         self.nepisodes_log.append([eval_at_train_step, eval_nepisodes])
         self.nepisodes_solved_log.append([eval_at_train_step, eval_nepisodes_solved])
         self.repisodes_solved_log.append([eval_at_train_step, (eval_nepisodes_solved/eval_nepisodes) if eval_nepisodes > 0 else 0.])
+        self.terminals_reached_log.append([self.master.train_step.value, self.master.terminations_count.value])
         # plotting
         if self.master.visualize:
             self.win_p_loss_avg = self.master.vis.scatter(X=np.array(self.p_loss_avg_log), env=self.master.refs, win=self.win_p_loss_avg, opts=dict(title="p_loss_avg"))
@@ -482,6 +486,7 @@ class A3CEvaluator(A3CSingleProcess):
             self.win_nepisodes = self.master.vis.scatter(X=np.array(self.nepisodes_log), env=self.master.refs, win=self.win_nepisodes, opts=dict(title="nepisodes"))
             self.win_nepisodes_solved = self.master.vis.scatter(X=np.array(self.nepisodes_solved_log), env=self.master.refs, win=self.win_nepisodes_solved, opts=dict(title="nepisodes_solved"))
             self.win_repisodes_solved = self.master.vis.scatter(X=np.array(self.repisodes_solved_log), env=self.master.refs, win=self.win_repisodes_solved, opts=dict(title="repisodes_solved"))
+            self.win_terminals_reached = self.master.vis.scatter(X=np.array(self.terminals_reached_log), env=self.master.refs, win=self.win_terminals_reached, opts=dict(title="terminals_reached"))
         # logging
         self.master.logger.warning("Reporting       @ Step: " + str(eval_at_train_step) + " | Elapsed Time: " + str(time.time() - self.start_time))
         self.master.logger.warning("Iteration: {}; p_loss_avg: {}".format(eval_at_train_step, self.p_loss_avg_log[-1][1]))
