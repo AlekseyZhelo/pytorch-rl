@@ -30,6 +30,8 @@ class MinisimEnv(Env):
         self.num_robots = args.num_robots
         self.curriculum = args.curriculum if hasattr(args, "curriculum") else False
 
+        print('curriculum', self.curriculum)
+
         self.sim_name = 'sim' + str(self.ind)
 
         if MinisimEnv.roslaunch_map_server is None:
