@@ -29,11 +29,11 @@ minisim_num_robots = 1
 
 class Params(object):   # NOTE: shared across all modules
     def __init__(self):
-        self.verbose     = 0            # 0(warning) | 1(info) | 2(debug)
+        self.verbose     = 2            # 0(warning) | 1(info) | 2(debug)
 
         # training signature
         self.machine     = "pearl10"     # "machine_id"
-        self.timestamp   = "17080300"   # "yymmdd##"
+        self.timestamp   = "17080400"   # "yymmdd##"
         # training configuration
         self.mode        = 1            # 1(train) | 2(test model_file)
         self.config      = 8
