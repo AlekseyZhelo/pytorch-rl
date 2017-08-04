@@ -7,7 +7,7 @@ import cv2
 from collections import namedtuple
 
 def loggerConfig(log_file, verbose=2):
-   logger      = logging.getLogger()
+   logger      = logging.getLogger('pytorch-rl-logger')
    formatter   = logging.Formatter('[%(levelname)-8s] (%(processName)-11s) %(message)s')
    fileHandler = logging.FileHandler(log_file, 'w')
    fileHandler.setFormatter(formatter)

@@ -16,6 +16,7 @@ class A3CAgent(Agent):
         self.action_dim  = self.dummy_env.action_dim
         del self.dummy_env
 
+        self.logger.warning("<===================================> A3C-Master {After dummy env}")
         # global shared model
         self.model_params.state_shape = self.state_shape
         self.model_params.action_dim  = self.action_dim
