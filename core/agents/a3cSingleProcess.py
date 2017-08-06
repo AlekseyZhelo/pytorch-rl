@@ -50,14 +50,14 @@ class A3CSingleProcess(mp.Process):
                                      terminal1 = False) # TODO: should check this again
 
     # NOTE: to be called at the beginning of each new episode, clear up the hidden state
-    def _reset_lstm_hidden_vb_episode(self, training=True): # seq_len, batch_size, hidden_dim
+    def _reset_lstm_hidden_vb_episode(self, training=True): # seq_len, batch_size, hidden_vb_dim
         not_training = not training
         if self.master.enable_continuous:
-            self.lstm_hidden_vb = (Variable(torch.zeros(2, self.master.hidden_dim).type(self.master.dtype), volatile=not_training),
-                                   Variable(torch.zeros(2, self.master.hidden_dim).type(self.master.dtype), volatile=not_training))
+            self.lstm_hidden_vb = (Variable(torch.zeros(2, self.master.hidden_vb_dim).type(self.master.dtype), volatile=not_training),
+                                   Variable(torch.zeros(2, self.master.hidden_vb_dim).type(self.master.dtype), volatile=not_training))
         else:
-            self.lstm_hidden_vb = (Variable(torch.zeros(1, self.master.hidden_dim).type(self.master.dtype), volatile=not_training),
-                                   Variable(torch.zeros(1, self.master.hidden_dim).type(self.master.dtype), volatile=not_training))
+            self.lstm_hidden_vb = (Variable(torch.zeros(1, self.master.hidden_vb_dim).type(self.master.dtype), volatile=not_training),
+                                   Variable(torch.zeros(1, self.master.hidden_vb_dim).type(self.master.dtype), volatile=not_training))
 
     # NOTE: to be called at the beginning of each rollout, detach the previous variable from the graph
     def _reset_lstm_hidden_vb_rollout(self):
