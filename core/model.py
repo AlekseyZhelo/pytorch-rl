@@ -357,7 +357,6 @@ class A3CMlpNarrowingMinisimModel(Model):
         x = self.rl1(self.fc1(x))
         x = self.rl2(self.fc2(x))
         x = self.rl3(self.fc3(x))
-        x = self.rl4(self.fc4(x))
         x = x.view(-1, self.hidden_dim // 4)
 
         if self.enable_lstm:
