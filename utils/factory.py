@@ -10,13 +10,16 @@ EnvDict = {"gym":       GymEnv,                 # classic control games from ope
            "lab":       LabEnv,
            "minisim":   MinisimEnv}
 
-from core.model import MlpModel, CnnModel, A3CMlpModel, A3CCnnModel, A3CMjcModel, A3CMlpMinisimModel
+from core.model import MlpModel, CnnModel, A3CMlpModel, A3CCnnModel, A3CMjcModel, A3CMlpMinisimModel, \
+    A3CMlpNarrowingMinisimModel
+
 ModelDict = {"mlp":     MlpModel,               # for full-state  input envs
              "cnn":     CnnModel,               # for pixel-level input envs
              "a3c-mlp": A3CMlpModel,            # for full-state  input envs
              "a3c-cnn": A3CCnnModel,            # for pixel-level input envs
              "a3c-mjc": A3CMjcModel,            # for mujoco continuous
-             "a3c-mlp-minisim": A3CMlpMinisimModel}
+             "a3c-mlp-minisim": A3CMlpMinisimModel,
+             "a3c-mlp-minisim-narrowing": A3CMlpNarrowingMinisimModel}
 
 from core.memory import SequentialMemory
 MemoryDict = {"sequential": SequentialMemory,   # off-policy

@@ -22,7 +22,8 @@ CONFIGS = [
 [ "a3c",      "gym",       "InvertedPendulum-v1",      "a3c-mjc",  "none"        ],  # 6
 [ "a3c",      "minisim",   "minisim",                  "a3c-mlp",  "none"        ],  # 7
 [ "a3c",      "minisim",   "minisim",                  "a3c-mlp-minisim",  "none"],  # 8
-[ "dqn",      "minisim",   "minisim",                  "mlp",      "sequential"  ]   # 9
+[ "a3c",      "minisim",   "minisim",                  "a3c-mlp-minisim-narrowing",  "none"],  # 9
+[ "dqn",      "minisim",   "minisim",                  "mlp",      "sequential"  ]   # 10
 ]
 
 minisim_num_robots = 1
@@ -33,7 +34,7 @@ class Params(object):   # NOTE: shared across all modules
 
         # training signature
         self.machine     = "pearl10"     # "machine_id"
-        self.timestamp   = "17080400"   # "yymmdd##"
+        self.timestamp   = "17080600"   # "yymmdd##"
         # training configuration
         self.mode        = 1            # 1(train) | 2(test model_file)
         self.config      = 8
@@ -75,7 +76,7 @@ class Params(object):   # NOTE: shared across all modules
 
             if self.env_type == "minisim":
                 self.hist_len = 4
-                self.hidden_dim = 128
+                self.hidden_dim = 160
                 self.num_processes = 6
 
             self.use_cuda           = False
@@ -262,7 +263,7 @@ class AgentParams(Params):  # hyperparameters for drl agents
             self.rollout_steps       = 20       # max look-ahead steps in a single rollout
             self.tau                 = 1.
         elif self.agent_type == "a3c" and self.env_type == "minisim":
-            self.steps               = 1000000   # max #iterations
+            self.steps               = 2000000   # max #iterations
             self.early_stop          = 26500     # max #steps per episode
             self.gamma               = 0.99
             self.clip_grad           = 40.
@@ -274,7 +275,7 @@ class AgentParams(Params):  # hyperparameters for drl agents
 
             self.rollout_steps       = 50       # max look-ahead steps in a single rollout
             self.tau                 = 1.
-            self.entropy_weight      = 0.05
+            self.entropy_weight      = 0.02
         else:
             self.steps               = 1000000  # max #iterations
             self.early_stop          = None     # max #steps per episode
