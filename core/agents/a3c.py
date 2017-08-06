@@ -8,6 +8,7 @@ from core.agents.a3cSingleProcess import A3CLearner, A3CEvaluator, A3CTester
 class A3CAgent(Agent):
     def __init__(self, args, env_prototype, model_prototype, memory_prototype):
         super(A3CAgent, self).__init__(args, env_prototype, model_prototype, memory_prototype)
+        self.hidden_vb_dim = args.hidden_vb_dim
         self.logger.warning("<===================================> A3C-Master {Env(dummy) & Model}")
 
         # dummy_env just to get state_shape & action_dim

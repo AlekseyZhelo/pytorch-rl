@@ -65,7 +65,6 @@ class Params(object):   # NOTE: shared across all modules
             self.dtype              = torch.cuda.FloatTensor if torch.cuda.is_available() else torch.FloatTensor
         elif self.agent_type == "a3c":
             self.enable_lstm        = True
-            self.hidden_vb_dim = 128
 
             if self.model_type == "a3c-mjc":    # NOTE: should be set to True when training Mujoco envs
                 self.enable_continuous  = True
@@ -75,6 +74,7 @@ class Params(object):   # NOTE: shared across all modules
 
             self.hist_len           = 1
             self.hidden_dim         = 128
+            self.hidden_vb_dim      = 128
 
             if self.env_type == "minisim":
                 self.hist_len = 4
