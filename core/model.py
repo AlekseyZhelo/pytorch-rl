@@ -316,18 +316,18 @@ class A3CMlpNarrowingMinisimModel(Model):
         # 0. feature layers
         self.fc1 = nn.Linear(self.input_dims[0] * self.input_dims[1], self.hidden_dim)
         self.rl1 = nn.ReLU()
-        self.fc2 = nn.Linear(self.hidden_dim, self.hidden_dim / 2)
+        self.fc2 = nn.Linear(self.hidden_dim, self.hidden_dim // 2)
         self.rl2 = nn.ReLU()
-        self.fc3 = nn.Linear(self.hidden_dim / 2, self.hidden_dim / 4)
+        self.fc3 = nn.Linear(self.hidden_dim // 2, self.hidden_dim // 4)
         self.rl3 = nn.ReLU()
         # lstm
         if self.enable_lstm:
-            self.lstm = nn.LSTMCell(self.hidden_dim / 4, self.hidden_dim / 4, 1)
+            self.lstm = nn.LSTMCell(self.hidden_dim // 4, self.hidden_dim // 4, 1)
         # 1. policy output
-        self.policy_5 = nn.Linear(self.hidden_dim / 4 + 2 * self.num_robots * self.hist_len, self.output_dims)
+        self.policy_5 = nn.Linear(self.hidden_dim // 4 + 2 * self.num_robots * self.hist_len, self.output_dims)
         self.policy_6 = nn.Softmax()
         # 2. value output
-        self.value_5 = nn.Linear(self.hidden_dim / 4 + 2 * self.num_robots * self.hist_len, 1)
+        self.value_5 = nn.Linear(self.hidden_dim // 4 + 2 * self.num_robots * self.hist_len, 1)
 
         self._reset()
 
@@ -358,7 +358,7 @@ class A3CMlpNarrowingMinisimModel(Model):
         x = self.rl2(self.fc2(x))
         x = self.rl3(self.fc3(x))
         x = self.rl4(self.fc4(x))
-        x = x.view(-1, self.hidden_dim)
+        x = x.view(-1, self.hidden_dim // 4)
 
         if self.enable_lstm:
             x, c = self.lstm(x, lstm_hidden_vb)
