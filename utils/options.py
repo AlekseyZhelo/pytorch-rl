@@ -33,11 +33,11 @@ class Params(object):   # NOTE: shared across all modules
         self.verbose     = 2            # 0(warning) | 1(info) | 2(debug)
 
         # training signature
-        self.machine     = "pearl10"     # "machine_id"
+        self.machine     = "pearl3"     # "machine_id"
         self.timestamp   = "17080600"   # "yymmdd##"
         # training configuration
         self.mode        = 1            # 1(train) | 2(test model_file)
-        self.config      = 8
+        self.config      = 9
 
         self.seed        = 123
         self.render      = False        # whether render the window from the original envs or not
@@ -76,7 +76,7 @@ class Params(object):   # NOTE: shared across all modules
 
             if self.env_type == "minisim":
                 self.hist_len = 4
-                self.hidden_dim = 160
+                self.hidden_dim = 128
                 self.num_processes = 6
 
             self.use_cuda           = False
