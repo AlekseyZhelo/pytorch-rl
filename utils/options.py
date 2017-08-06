@@ -66,6 +66,7 @@ class Params(object):   # NOTE: shared across all modules
         elif self.agent_type == "a3c":
             self.enable_lstm        = True
             self.hidden_vb_dim = 128
+
             if self.model_type == "a3c-mjc":    # NOTE: should be set to True when training Mujoco envs
                 self.enable_continuous  = True
             else:
