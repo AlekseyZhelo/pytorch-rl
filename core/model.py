@@ -321,16 +321,16 @@ class A3CMlpDeeperMinisimModel(Model):
         # 0. feature layers
         self.fc1 = nn.Linear(self.input_dims[0] * self.input_dims[1], self.hidden_dim)
         self.rl1 = nn.ELU()
-        self.fc2 = nn.Linear(self.hidden_dim, self.hidden_dim)
+        self.fc2 = nn.Linear(self.hidden_dim, self.hidden_dim // 2)
         self.rl2 = nn.ELU()
-        self.fc3 = nn.Linear(self.hidden_dim, self.hidden_dim // 2)
+        self.fc3 = nn.Linear(self.hidden_dim // 2, self.hidden_dim // 3)
         self.rl3 = nn.ELU()
-        self.fc4 = nn.Linear(self.hidden_dim // 2, self.hidden_dim // 4)
+        self.fc4 = nn.Linear(self.hidden_dim // 3, self.hidden_dim // 4)
         self.rl4 = nn.ELU()
-        self.fc5 = nn.Linear(self.hidden_dim // 4, self.hidden_dim // 6)
+        self.fc5 = nn.Linear(self.hidden_dim // 4, self.hidden_dim // 8)
         self.rl5 = nn.ELU()
-        self.fc6 = nn.Linear(self.hidden_dim // 6, self.hidden_dim // 8)
-        self.rl6 = nn.ELU()
+        # self.fc6 = nn.Linear(self.hidden_dim // 6, self.hidden_dim // 8)
+        # self.rl6 = nn.ELU()
         # lstm
         if self.enable_lstm:
             self.lstm = nn.LSTMCell(self.hidden_dim // 8, self.hidden_dim // 8, 1)
@@ -354,8 +354,8 @@ class A3CMlpDeeperMinisimModel(Model):
         self.fc4.bias.data.fill_(0)
         self.fc5.weight.data = normalized_columns_initializer(self.fc5.weight.data, 0.01)
         self.fc5.bias.data.fill_(0)
-        self.fc6.weight.data = normalized_columns_initializer(self.fc6.weight.data, 0.01)
-        self.fc6.bias.data.fill_(0)
+        # self.fc6.weight.data = normalized_columns_initializer(self.fc6.weight.data, 0.01)
+        # self.fc6.bias.data.fill_(0)
         self.policy_7.weight.data = normalized_columns_initializer(self.policy_7.weight.data, 0.01)
         self.policy_7.bias.data.fill_(0)
         self.value_8.weight.data = normalized_columns_initializer(self.value_8.weight.data, 1.0)
@@ -381,7 +381,7 @@ class A3CMlpDeeperMinisimModel(Model):
         x = self.rl3(self.fc3(x))
         x = self.rl4(self.fc4(x))
         x = self.rl5(self.fc5(x))
-        x = self.rl6(self.fc6(x))
+        # x = self.rl6(self.fc6(x))
         # TODO: unify lstm layer size usage
         x = x.view(-1, self.hidden_dim // 8)
 

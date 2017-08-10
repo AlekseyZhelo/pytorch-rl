@@ -35,7 +35,7 @@ class Params(object):   # NOTE: shared across all modules
 
         # training signature
         self.machine     = "pearl3"     # "machine_id"
-        self.timestamp   = "17080900"   # "yymmdd##"
+        self.timestamp   = "17081000"   # "yymmdd##"
         # training configuration
         self.mode        = 1            # 1(train) | 2(test model_file)
         self.config      = 10
@@ -78,8 +78,8 @@ class Params(object):   # NOTE: shared across all modules
             self.hidden_vb_dim      = 128
 
             if self.env_type == "minisim":
-                self.hist_len = 6
-                self.hidden_dim = 128
+                self.hist_len = 2
+                self.hidden_dim = 56
                 self.hidden_vb_dim = self.hidden_dim // 8
                 self.num_processes = 6
 
