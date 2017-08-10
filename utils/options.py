@@ -23,7 +23,8 @@ CONFIGS = [
 [ "a3c",      "minisim",   "minisim",                  "a3c-mlp",  "none"        ],  # 7
 [ "a3c",      "minisim",   "minisim",                  "a3c-mlp-minisim",  "none"],  # 8
 [ "a3c",      "minisim",   "minisim",                  "a3c-mlp-minisim-narrowing",  "none"],  # 9
-[ "dqn",      "minisim",   "minisim",                  "mlp",      "sequential"  ]   # 10
+[ "a3c",      "minisim",   "minisim",                  "a3c-mlp-deeper",  "none"],  # 10
+[ "dqn",      "minisim",   "minisim",                  "mlp",      "sequential"  ]   # 11
 ]
 
 minisim_num_robots = 1
@@ -34,10 +35,10 @@ class Params(object):   # NOTE: shared across all modules
 
         # training signature
         self.machine     = "pearl3"     # "machine_id"
-        self.timestamp   = "17080600"   # "yymmdd##"
+        self.timestamp   = "17080900"   # "yymmdd##"
         # training configuration
         self.mode        = 1            # 1(train) | 2(test model_file)
-        self.config      = 9
+        self.config      = 10
 
         self.seed        = 123
         self.render      = False        # whether render the window from the original envs or not
@@ -77,9 +78,9 @@ class Params(object):   # NOTE: shared across all modules
             self.hidden_vb_dim      = 128
 
             if self.env_type == "minisim":
-                self.hist_len = 4
+                self.hist_len = 6
                 self.hidden_dim = 128
-                self.hidden_vb_dim = 32
+                self.hidden_vb_dim = self.hidden_dim // 8
                 self.num_processes = 6
 
             self.use_cuda           = False
