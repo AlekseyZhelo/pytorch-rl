@@ -371,7 +371,7 @@ class A3CMlpDeeperMinisimModel(Model):
         x = self.rl2(self.fc2(x))
         x = self.rl3(self.fc3(x))
         # TODO: unify lstm layer size usage
-        x = x.view(-1, self.hidden_dim // 8)
+        x = x.view(-1, self.hidden_dim // 4)
 
         if self.enable_lstm:
             x, c = self.lstm(x, lstm_hidden_vb)
