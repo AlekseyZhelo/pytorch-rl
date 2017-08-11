@@ -375,7 +375,7 @@ class A3CMlpDeeperMinisimModel(Model):
 
         if self.enable_lstm:
             x, c = self.lstm(x, lstm_hidden_vb)
-            x, c = self.lstm2(x, c)
+            x, c = self.lstm2(x, (x, c))
 
         x_aug = torch.cat((x, target_data), 1)
         p = self.policy_7(x_aug)
