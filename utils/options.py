@@ -25,7 +25,8 @@ CONFIGS = [
 [ "a3c",      "minisim",   "minisim",                  "a3c-mlp-minisim-narrowing",  "none"],  # 9
 [ "a3c",      "minisim",   "minisim",                  "a3c-mlp-deeper",  "none"],  # 10
 [ "a3c",      "minisim",   "minisim",                  "a3c-mlp-deeper2",  "none"],  # 11
-[ "dqn",      "minisim",   "minisim",                  "mlp",      "sequential"  ]   # 12
+[ "a3c",      "minisim",   "minisim",                  "a3c-mlp-deeper-sep-hid",  "none"],  # 12
+[ "dqn",      "minisim",   "minisim",                  "mlp",      "sequential"  ]   # 13
 ]
 
 minisim_num_robots = 1
@@ -35,11 +36,11 @@ class Params(object):   # NOTE: shared across all modules
         self.verbose     = 2            # 0(warning) | 1(info) | 2(debug)
 
         # training signature
-        self.machine     = "pearl1"     # "machine_id"
+        self.machine     = "pearl8"     # "machine_id"
         self.timestamp   = "17082400"   # "yymmdd##"
         # training configuration
         self.mode        = 1            # 1(train) | 2(test model_file)
-        self.config      = 11
+        self.config      = 12
 
         self.seed        = 123
         self.render      = False        # whether render the window from the original envs or not
@@ -154,6 +155,10 @@ class ModelParams(Params):  # settings for network architecture
                 self.hidden_dim = 56
                 self.hidden_vb_dim = self.hidden_dim // 4
             elif self.config == 11:
+                self.hist_len = 1
+                self.hidden_dim = 56
+                self.hidden_vb_dim = self.hidden_dim // 4
+            elif self.config == 12:
                 self.hist_len = 1
                 self.hidden_dim = 56
                 self.hidden_vb_dim = self.hidden_dim // 4
