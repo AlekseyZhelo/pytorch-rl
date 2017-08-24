@@ -33,6 +33,8 @@ class A3CSingleProcess(mp.Process):
 
         # lstm hidden states
         if self.master.enable_lstm:
+            # TODO: this solution with layer_count and all the ifs is stupid and not scalable, but will do for now
+            self.lstm_layer_count = self.model.lstm_layer_count if hasattr(self.model, "lstm_layer_count") else 1
             self._reset_lstm_hidden_vb_episode() # clear up hidden state
             self._reset_lstm_hidden_vb_rollout() # detach the previous variable from the computation graph
 
@@ -52,17 +54,28 @@ class A3CSingleProcess(mp.Process):
     # NOTE: to be called at the beginning of each new episode, clear up the hidden state
     def _reset_lstm_hidden_vb_episode(self, training=True): # seq_len, batch_size, hidden_vb_dim
         not_training = not training
+
         if self.master.enable_continuous:
-            self.lstm_hidden_vb = (Variable(torch.zeros(2, self.master.hidden_vb_dim).type(self.master.dtype), volatile=not_training),
-                                   Variable(torch.zeros(2, self.master.hidden_vb_dim).type(self.master.dtype), volatile=not_training))
+            self.lstm_hidden_vb = (Variable(torch.zeros(2, self.model.hidden_vb_dim).type(self.master.dtype), volatile=not_training),
+                                   Variable(torch.zeros(2, self.model.hidden_vb_dim).type(self.master.dtype), volatile=not_training))
+            if self.lstm_layer_count == 2:
+                self.lstm_hidden_vb2 = (Variable(torch.zeros(2, self.model.hidden_vb2_dim).type(self.master.dtype), volatile=not_training),
+                                        Variable(torch.zeros(2, self.model.hidden_vb2_dim).type(self.master.dtype), volatile=not_training))
         else:
-            self.lstm_hidden_vb = (Variable(torch.zeros(1, self.master.hidden_vb_dim).type(self.master.dtype), volatile=not_training),
-                                   Variable(torch.zeros(1, self.master.hidden_vb_dim).type(self.master.dtype), volatile=not_training))
+            self.lstm_hidden_vb = (Variable(torch.zeros(1, self.model.hidden_vb_dim).type(self.master.dtype), volatile=not_training),
+                                   Variable(torch.zeros(1, self.model.hidden_vb_dim).type(self.master.dtype), volatile=not_training))
+            if self.lstm_layer_count == 2:
+                self.lstm_hidden_vb2 = (Variable(torch.zeros(1, self.model.hidden_vb2_dim).type(self.master.dtype), volatile=not_training),
+                                        Variable(torch.zeros(1, self.model.hidden_vb2_dim).type(self.master.dtype), volatile=not_training))
 
     # NOTE: to be called at the beginning of each rollout, detach the previous variable from the graph
+    # TODO: so what does this do, actually?
     def _reset_lstm_hidden_vb_rollout(self):
         self.lstm_hidden_vb = (Variable(self.lstm_hidden_vb[0].data),
                                Variable(self.lstm_hidden_vb[1].data))
+        if self.lstm_layer_count == 2:
+            self.lstm_hidden_vb2 = (Variable(self.lstm_hidden_vb2[0].data),
+                                    Variable(self.lstm_hidden_vb2[1].data))
 
     def _sync_local_with_global(self):  # grab the current global model for local learning/evaluating
         self.model.load_state_dict(self.master.model.state_dict())
@@ -79,7 +92,10 @@ class A3CSingleProcess(mp.Process):
     def _forward(self, state_vb):
         if not self.master.enable_continuous:
             if self.master.enable_lstm:
-                p_vb, v_vb, self.lstm_hidden_vb = self.model(state_vb, self.lstm_hidden_vb)
+                if self.lstm_layer_count == 1:
+                    p_vb, v_vb, self.lstm_hidden_vb = self.model(state_vb, self.lstm_hidden_vb)
+                elif self.lstm_layer_count == 2:
+                    p_vb, v_vb, self.lstm_hidden_vb, self.lstm_hidden_vb2 = self.model(state_vb, self.lstm_hidden_vb, self.lstm_hidden_vb2)
             else:
                 p_vb, v_vb = self.model(state_vb)
 
@@ -92,7 +108,10 @@ class A3CSingleProcess(mp.Process):
         # NOTE continous control p_vb here is the mu_vb of continous action dist
         else:
             if self.master.enable_lstm:
-                p_vb, sig_vb, v_vb, self.lstm_hidden_vb = self.model(state_vb, self.lstm_hidden_vb)
+                if self.lstm_layer_count == 1:
+                    p_vb, sig_vb, v_vb, self.lstm_hidden_vb = self.model(state_vb, self.lstm_hidden_vb)
+                elif self.lstm_layer_count == 2:
+                    p_vb, sig_vb, v_vb, self.lstm_hidden_vb, self.lstm_hidden_vb2 = self.model(state_vb, self.lstm_hidden_vb, self.lstm_hidden_vb2)
             else:
                 p_vb, sig_vb, v_vb = self.model(state_vb)
 
@@ -169,12 +188,18 @@ class A3CLearner(A3CSingleProcess):
             sT_vb = self._preprocessState(self.rollout.state1[-1], True)        # bootstrap from last state
             if self.master.enable_continuous:
                 if self.master.enable_lstm:
-                    _, _, valueT_vb, _ = self.model(sT_vb, self.lstm_hidden_vb) # NOTE: only doing inference here
+                    if self.lstm_layer_count == 1:
+                        _, _, valueT_vb, _ = self.model(sT_vb, self.lstm_hidden_vb) # NOTE: only doing inference here
+                    elif self.lstm_layer_count == 2:
+                        _, _, valueT_vb, _, _ = self.model(sT_vb, self.lstm_hidden_vb, self.lstm_hidden_vb2)  # NOTE: only doing inference here
                 else:
                     _, _, valueT_vb = self.model(sT_vb)                         # NOTE: only doing inference here
             else:
                 if self.master.enable_lstm:
-                    _, valueT_vb, _ = self.model(sT_vb, self.lstm_hidden_vb)    # NOTE: only doing inference here
+                    if self.lstm_layer_count == 1:
+                        _, valueT_vb, _ = self.model(sT_vb, self.lstm_hidden_vb)    # NOTE: only doing inference here
+                    elif self.lstm_layer_count == 2:
+                        _, valueT_vb, _, _ = self.model(sT_vb, self.lstm_hidden_vb, self.lstm_hidden_vb2)  # NOTE: only doing inference here
                 else:
                     _, valueT_vb = self.model(sT_vb)                            # NOTE: only doing inference here
             valueT_vb = Variable(valueT_vb.data)

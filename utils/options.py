@@ -24,7 +24,8 @@ CONFIGS = [
 [ "a3c",      "minisim",   "minisim",                  "a3c-mlp-minisim",  "none"],  # 8
 [ "a3c",      "minisim",   "minisim",                  "a3c-mlp-minisim-narrowing",  "none"],  # 9
 [ "a3c",      "minisim",   "minisim",                  "a3c-mlp-deeper",  "none"],  # 10
-[ "dqn",      "minisim",   "minisim",                  "mlp",      "sequential"  ]   # 11
+[ "a3c",      "minisim",   "minisim",                  "a3c-mlp-deeper2",  "none"],  # 11
+[ "dqn",      "minisim",   "minisim",                  "mlp",      "sequential"  ]   # 12
 ]
 
 minisim_num_robots = 1
@@ -38,7 +39,7 @@ class Params(object):   # NOTE: shared across all modules
         self.timestamp   = "17081100"   # "yymmdd##"
         # training configuration
         self.mode        = 1            # 1(train) | 2(test model_file)
-        self.config      = 10
+        self.config      = 11
 
         self.seed        = 123
         self.render      = False        # whether render the window from the original envs or not
@@ -78,9 +79,6 @@ class Params(object):   # NOTE: shared across all modules
             self.hidden_vb_dim      = 128
 
             if self.env_type == "minisim":
-                self.hist_len = 1
-                self.hidden_dim = 56
-                self.hidden_vb_dim = self.hidden_dim // 4
                 self.num_processes = 6
 
             self.use_cuda           = False
@@ -151,6 +149,14 @@ class ModelParams(Params):  # settings for network architecture
 
         if self.env_type == "minisim":
             self.num_robots = minisim_num_robots
+            if self.config == 10:
+                self.hist_len = 1
+                self.hidden_dim = 56
+                self.hidden_vb_dim = self.hidden_dim // 4
+            elif self.config == 11:
+                self.hist_len = 1
+                self.hidden_dim = 56
+                self.hidden_vb_dim = self.hidden_dim // 4
 
 class MemoryParams(Params):     # settings for replay memory
     def __init__(self):
