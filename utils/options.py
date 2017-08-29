@@ -36,11 +36,11 @@ class Params(object):   # NOTE: shared across all modules
         self.verbose     = 2            # 0(warning) | 1(info) | 2(debug)
 
         # training signature
-        self.machine     = "pearl8"     # "machine_id"
-        self.timestamp   = "17082400"   # "yymmdd##"
+        self.machine     = "pearl4"     # "machine_id"
+        self.timestamp   = "17082900"   # "yymmdd##"
         # training configuration
         self.mode        = 1            # 1(train) | 2(test model_file)
-        self.config      = 12
+        self.config      = 9
 
         self.seed        = 123
         self.render      = False        # whether render the window from the original envs or not
@@ -150,18 +150,9 @@ class ModelParams(Params):  # settings for network architecture
 
         if self.env_type == "minisim":
             self.num_robots = minisim_num_robots
-            if self.config == 10:
-                self.hist_len = 1
-                self.hidden_dim = 56
-                self.hidden_vb_dim = self.hidden_dim // 4
-            elif self.config == 11:
-                self.hist_len = 1
-                self.hidden_dim = 56
-                self.hidden_vb_dim = self.hidden_dim // 4
-            elif self.config == 12:
-                self.hist_len = 1
-                self.hidden_dim = 56
-                self.hidden_vb_dim = self.hidden_dim // 4
+            self.hist_len = 1
+            self.hidden_dim = 56
+            self.hidden_vb_dim = self.hidden_dim // 4
 
 class MemoryParams(Params):     # settings for replay memory
     def __init__(self):
@@ -288,7 +279,7 @@ class AgentParams(Params):  # hyperparameters for drl agents
             self.prog_freq           = self.eval_freq
             self.test_nepisodes      = 10
 
-            self.rollout_steps       = 50       # max look-ahead steps in a single rollout
+            self.rollout_steps       = 100      # max look-ahead steps in a single rollout
             self.tau                 = 1.
             self.entropy_weight      = 0.02
         else:
