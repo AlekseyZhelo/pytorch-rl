@@ -29,18 +29,18 @@ CONFIGS = [
 [ "dqn",      "minisim",   "minisim",                  "mlp",      "sequential"  ]   # 13
 ]
 
-minisim_num_robots = 1
+minisim_num_robots = 3
 
 class Params(object):   # NOTE: shared across all modules
     def __init__(self):
         self.verbose     = 2            # 0(warning) | 1(info) | 2(debug)
 
         # training signature
-        self.machine     = "pearl3"     # "machine_id"
-        self.timestamp   = "17082900"   # "yymmdd##"
+        self.machine     = "pearl7"     # "machine_id"
+        self.timestamp   = "17083100"   # "yymmdd##"
         # training configuration
         self.mode        = 1            # 1(train) | 2(test model_file)
-        self.config      = 9
+        self.config      = 10
 
         self.seed        = 123
         self.render      = False        # whether render the window from the original envs or not
@@ -81,6 +81,8 @@ class Params(object):   # NOTE: shared across all modules
 
             if self.env_type == "minisim":
                 self.num_processes = 6
+                if minisim_num_robots > 1:
+                    self.num_processes = 4
 
             self.use_cuda           = False
             self.dtype              = torch.FloatTensor

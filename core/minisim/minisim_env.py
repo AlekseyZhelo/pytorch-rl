@@ -55,6 +55,8 @@ class MinisimEnv(Env):
         else:
             self.enable_continuous = False
 
+        # TODO: history is currently broken (however it was not useful according to the experiments anyway)
+        # it was harmful, even
         if hasattr(args, "hist_len"):
             self.hist_len = args.hist_len
             self.state_buffer = np.zeros((self.hist_len, self.state_shape + 2 * self.num_robots))
@@ -117,12 +119,18 @@ class MinisimEnv(Env):
             self.exp_state1, self.exp_reward, self.exp_terminal1, _ = self.client.step(self.exp_action)
         else:
             # print("actions taken:", [self.actions[i] for i in self._to_n_dim_idx(action_index, self.num_robots)])
+            # self.exp_state1, self.exp_reward, self.exp_terminal1, _ = self.client.step(
+            #     [self.actions[i] for i in self._to_n_dim_idx(action_index, self.num_robots)]
+            # )
             self.exp_state1, self.exp_reward, self.exp_terminal1, _ = self.client.step(
-                [self.actions[i] for i in self._to_n_dim_idx(action_index, self.num_robots)])
+                [self.actions[i] for i in action_index.reshape(-1)]
+            )
             if self.hist_len > 1:
                 self._append_to_history(self._preprocessState(self.exp_state1))
         return self._get_experience()
 
+    # was supposed to be useful for a large network with a single action index output, which would
+    # be expanded into individual robot actions
     def _to_n_dim_idx(self, idx, n_dims):
         res = np.zeros(n_dims, dtype=np.int)
         for i in range(n_dims):

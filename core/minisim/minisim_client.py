@@ -34,7 +34,8 @@ class MinisimClient(object):
 
     @property
     def state_shape(self):
-        return self.num_robots * MinisimClient.laser_rays_per_robot
+        # return self.num_robots * MinisimClient.laser_rays_per_robot
+        return MinisimClient.laser_rays_per_robot  # batch, not all together as one input
 
     def setup(self):
         try:
@@ -62,7 +63,8 @@ class MinisimClient(object):
                     "WARNING: SimulationStep service improperly called, message: {0}".format(resp.message))
                 return None
             else:
-                return np.array(resp.state), resp.reward, resp.terminal, resp.message
+                # return np.array(resp.state), resp.reward, resp.terminal, resp.message
+                return np.array(resp.state).reshape(self.num_robots, -1), resp.reward, resp.terminal, resp.message
         except rospy.ServiceException, e:
             print("SimulationStep service call failed: %s" % e)
 
