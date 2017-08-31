@@ -114,6 +114,7 @@ class MinisimEnv(Env):
 
     def step(self, action_index):
         self.exp_action = action_index
+        print (action_index)
         if self.enable_continuous:
             # TODO: not implemented
             self.exp_state1, self.exp_reward, self.exp_terminal1, _ = self.client.step(self.exp_action)
