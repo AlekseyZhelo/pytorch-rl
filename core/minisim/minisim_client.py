@@ -76,7 +76,7 @@ class MinisimClient(object):
                     "WARNING: ResetSimulation service improperly called, message: {0}".format(resp.message))
                 return None
             else:
-                return np.array(resp.state)
+                return np.array(resp.state).reshape(self.num_robots, -1)
         except rospy.ServiceException, e:
             print("ResetSimulation service call failed: %s" % e)
 

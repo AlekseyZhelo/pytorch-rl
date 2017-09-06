@@ -82,7 +82,7 @@ class Params(object):   # NOTE: shared across all modules
             if self.env_type == "minisim":
                 self.num_processes = 6
                 if minisim_num_robots > 1:
-                    self.num_processes = 4
+                    self.num_processes = 1  # 4
 
             self.use_cuda           = False
             self.dtype              = torch.FloatTensor
