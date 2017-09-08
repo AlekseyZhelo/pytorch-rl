@@ -267,35 +267,38 @@ class AgentParams(Params):  # hyperparameters for drl agents
             self.memory_interval     = 1
             self.train_interval      = 32
         elif self.agent_type == "a3c":
-            self.steps               = 20000000 # max #iterations
-            self.early_stop          = None     # max #steps per episode
-            self.gamma               = 0.99
-            self.clip_grad           = 40.
-            self.lr                  = 0.0001
-            self.lr_decay            = False
-            self.weight_decay        = 1e-4 if self.enable_continuous else 0.
-            self.eval_freq           = 60       # NOTE: here means every this many seconds
-            self.eval_steps          = 3000
-            self.prog_freq           = self.eval_freq
-            self.test_nepisodes      = 10
+            if self.env_type == "minisim":
+                self.steps = 2000000     # max #iterations
+                self.early_stop = 26500  # max #steps per episode
+                self.gamma = 0.99
+                self.clip_grad = 40.
+                self.lr = 0.0001
+                self.lr_decay = False
+                self.weight_decay = 1e-4 if self.enable_continuous else 0.
+                self.eval_freq = 60      # NOTE: here means every this many seconds
+                self.eval_steps = 60000
+                self.prog_freq = self.eval_freq
+                self.test_nepisodes = 10
 
-            self.rollout_steps       = 20       # max look-ahead steps in a single rollout
-            self.tau                 = 1.
-            self.beta = 0.01                    # coefficient for entropy penalty
-        elif self.agent_type == "a3c" and self.env_type == "minisim":
-            self.steps               = 2000000   # max #iterations
-            self.early_stop          = 26500     # max #steps per episode
-            self.gamma               = 0.99
-            self.clip_grad           = 40.
-            self.lr                  = 0.0001
-            self.eval_freq           = 60       # NOTE: here means every this many seconds
-            self.eval_steps          = 60000
-            self.prog_freq           = self.eval_freq
-            self.test_nepisodes      = 10
+                self.rollout_steps = 50  # max look-ahead steps in a single rollout
+                self.tau = 1.
+                self.beta = 0.02         # coefficient for entropy penalty
+            else:
+                self.steps               = 20000000 # max #iterations
+                self.early_stop          = None     # max #steps per episode
+                self.gamma               = 0.99
+                self.clip_grad           = 40.
+                self.lr                  = 0.0001
+                self.lr_decay            = False
+                self.weight_decay        = 1e-4 if self.enable_continuous else 0.
+                self.eval_freq           = 60       # NOTE: here means every this many seconds
+                self.eval_steps          = 3000
+                self.prog_freq           = self.eval_freq
+                self.test_nepisodes      = 10
 
-            self.rollout_steps       = 50       # max look-ahead steps in a single rollout
-            self.tau                 = 1.
-            self.beta = 0.01                    # coefficient for entropy penalty
+                self.rollout_steps       = 20       # max look-ahead steps in a single rollout
+                self.tau                 = 1.
+                self.beta = 0.01                    # coefficient for entropy penalty
         elif self.agent_type == "acer":
             self.steps               = 20000000 # max #iterations
             self.early_stop          = 200      # max #steps per episode
