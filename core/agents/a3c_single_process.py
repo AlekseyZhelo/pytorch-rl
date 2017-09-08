@@ -455,6 +455,7 @@ class A3CEvaluator(A3CSingleProcess):
                 eval_nepisodes += 1
                 if self.experience.terminal1:
                     eval_nepisodes_solved += 1
+                    self.master.terminations_count.value += 1
 
                 # This episode is finished, report and reset
                 # NOTE make no sense for continuous
