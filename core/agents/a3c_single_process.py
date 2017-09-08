@@ -1,35 +1,20 @@
 from __future__ import absolute_import
 from __future__ import division
+from __future__ import print_function
 import numpy as np
 import random
 import time
 import math
-
 import torch
-import torch.multiprocessing as mp
 from torch.autograd import Variable
 import torch.nn.functional as F
 
-from utils.helpers import Experience, AugmentedExperience, one_hot
+from utils.helpers import A3C_Experience
+from core.agent_single_process import AgentSingleProcess
 
-class A3CSingleProcess(mp.Process):
+class A3CSingleProcess(AgentSingleProcess):
     def __init__(self, master, process_id=0):
-        super(A3CSingleProcess, self).__init__(name = "Process-%d" % process_id)
-        # NOTE: self.master.* refers to parameters shared across all processes
-        # NOTE: self.*        refers to process-specific properties
-        # NOTE: we are not copying self.master.* to self.* to keep the code clean
-
-        self.master = master
-        self.process_id = process_id
-
-        # env
-        self.env = self.master.env_prototype(self.master.env_params, self.process_id)
-        # model
-        self.model = self.master.model_prototype(self.master.model_params)
-        self._sync_local_with_global()
-
-        # experience
-        self._reset_experience()
+        super(A3CSingleProcess, self).__init__(master, process_id)
 
         # lstm hidden states
         if self.master.enable_lstm:
@@ -44,41 +29,46 @@ class A3CSingleProcess(mp.Process):
 
         self.master.logger.warning("Registered A3C-SingleProcess-Agent #" + str(self.process_id) + " w/ Env (seed:" + str(self.env.seed) + ").")
 
-    def _reset_experience(self):    # for getting one set of observation from env for every action taken
-        self.experience = Experience(state0 = None,
-                                     action = None,
-                                     reward = None,
-                                     state1 = None,
-                                     terminal1 = False) # TODO: should check this again
-
     # NOTE: to be called at the beginning of each new episode, clear up the hidden state
     def _reset_lstm_hidden_vb_episode(self, training=True): # seq_len, batch_size, hidden_vb_dim
         not_training = not training
 
-        if self.master.enable_continuous:
-            self.lstm_hidden_vb = (Variable(torch.zeros(2, self.model.hidden_vb_dim).type(self.master.dtype), volatile=not_training),
-                                   Variable(torch.zeros(2, self.model.hidden_vb_dim).type(self.master.dtype), volatile=not_training))
-            if self.lstm_layer_count == 2:
-                self.lstm_hidden_vb2 = (Variable(torch.zeros(2, self.model.hidden_vb2_dim).type(self.master.dtype), volatile=not_training),
-                                        Variable(torch.zeros(2, self.model.hidden_vb2_dim).type(self.master.dtype), volatile=not_training))
+        if hasattr(self.master, "num_robots"):
+            r = self.master.num_robots
+            if self.master.enable_continuous:  # TODO: what here?
+                self.lstm_hidden_vb = (Variable(torch.zeros(2, self.model.hidden_vb_dim).type(self.master.dtype), volatile=not_training),
+                                       Variable(torch.zeros(2, self.model.hidden_vb_dim).type(self.master.dtype), volatile=not_training))
+                if self.lstm_layer_count == 2:
+                    self.lstm_hidden_vb2 = (Variable(torch.zeros(2, self.model.hidden_vb2_dim).type(self.master.dtype), volatile=not_training),
+                                            Variable(torch.zeros(2, self.model.hidden_vb2_dim).type(self.master.dtype), volatile=not_training))
+            else:
+                self.lstm_hidden_vb = (Variable(torch.zeros(r, self.model.hidden_vb_dim).type(self.master.dtype), volatile=not_training),
+                                       Variable(torch.zeros(r, self.model.hidden_vb_dim).type(self.master.dtype), volatile=not_training))
+                if self.lstm_layer_count == 2:
+                    self.lstm_hidden_vb2 = (Variable(torch.zeros(r, self.model.hidden_vb2_dim).type(self.master.dtype), volatile=not_training),
+                                            Variable(torch.zeros(r, self.model.hidden_vb2_dim).type(self.master.dtype), volatile=not_training))
         else:
-            self.lstm_hidden_vb = (Variable(torch.zeros(1, self.model.hidden_vb_dim).type(self.master.dtype), volatile=not_training),
-                                   Variable(torch.zeros(1, self.model.hidden_vb_dim).type(self.master.dtype), volatile=not_training))
-            if self.lstm_layer_count == 2:
-                self.lstm_hidden_vb2 = (Variable(torch.zeros(1, self.model.hidden_vb2_dim).type(self.master.dtype), volatile=not_training),
-                                        Variable(torch.zeros(1, self.model.hidden_vb2_dim).type(self.master.dtype), volatile=not_training))
+            if self.master.enable_continuous:
+                self.lstm_hidden_vb = (Variable(torch.zeros(2, self.model.hidden_vb_dim).type(self.master.dtype), volatile=not_training),
+                                       Variable(torch.zeros(2, self.model.hidden_vb_dim).type(self.master.dtype), volatile=not_training))
+                if self.lstm_layer_count == 2:
+                    self.lstm_hidden_vb2 = (Variable(torch.zeros(2, self.model.hidden_vb2_dim).type(self.master.dtype), volatile=not_training),
+                                            Variable(torch.zeros(2, self.model.hidden_vb2_dim).type(self.master.dtype), volatile=not_training))
+            else:
+                self.lstm_hidden_vb = (Variable(torch.zeros(1, self.model.hidden_vb_dim).type(self.master.dtype), volatile=not_training),
+                                       Variable(torch.zeros(1, self.model.hidden_vb_dim).type(self.master.dtype), volatile=not_training))
+                if self.lstm_layer_count == 2:
+                    self.lstm_hidden_vb2 = (Variable(torch.zeros(1, self.model.hidden_vb2_dim).type(self.master.dtype), volatile=not_training),
+                                            Variable(torch.zeros(1, self.model.hidden_vb2_dim).type(self.master.dtype), volatile=not_training))
 
     # NOTE: to be called at the beginning of each rollout, detach the previous variable from the graph
-    # TODO: so what does this do, actually?
     def _reset_lstm_hidden_vb_rollout(self):
+        # TODO: other hidden state size for several robots needed
         self.lstm_hidden_vb = (Variable(self.lstm_hidden_vb[0].data),
                                Variable(self.lstm_hidden_vb[1].data))
         if self.lstm_layer_count == 2:
             self.lstm_hidden_vb2 = (Variable(self.lstm_hidden_vb2[0].data),
                                     Variable(self.lstm_hidden_vb2[1].data))
-
-    def _sync_local_with_global(self):  # grab the current global model for local learning/evaluating
-        self.model.load_state_dict(self.master.model.state_dict())
 
     def _preprocessState(self, state, is_valotile=False):
         if isinstance(state, list):
@@ -90,58 +80,51 @@ class A3CSingleProcess(mp.Process):
         return state_vb
 
     def _forward(self, state_vb):
-        if not self.master.enable_continuous:
-            if self.master.enable_lstm:
-                if self.lstm_layer_count == 1:
-                    p_vb, v_vb, self.lstm_hidden_vb = self.model(state_vb, self.lstm_hidden_vb)
-                elif self.lstm_layer_count == 2:
-                    p_vb, v_vb, self.lstm_hidden_vb, self.lstm_hidden_vb2 = self.model(state_vb, self.lstm_hidden_vb, self.lstm_hidden_vb2)
-            else:
-                p_vb, v_vb = self.model(state_vb)
-
-            if self.training:
-                action = p_vb.multinomial().data[0][0]
-            else:
-                action = p_vb.max(1)[1].data.squeeze().numpy()[0]
-            return action, p_vb, v_vb
-
-        # NOTE continous control p_vb here is the mu_vb of continous action dist
-        else:
+        if self.master.enable_continuous: # NOTE continous control p_vb here is the mu_vb of continous action dist
             if self.master.enable_lstm:
                 if self.lstm_layer_count == 1:
                     p_vb, sig_vb, v_vb, self.lstm_hidden_vb = self.model(state_vb, self.lstm_hidden_vb)
                 elif self.lstm_layer_count == 2:
-                    p_vb, sig_vb, v_vb, self.lstm_hidden_vb, self.lstm_hidden_vb2 = self.model(state_vb, self.lstm_hidden_vb, self.lstm_hidden_vb2)
+                    p_vb, sig_vb, v_vb, self.lstm_hidden_vb, self.lstm_hidden_vb2 = self.model(state_vb,
+                                                                                               self.lstm_hidden_vb,
+                                                                                               self.lstm_hidden_vb2)
             else:
                 p_vb, sig_vb, v_vb = self.model(state_vb)
-
             if self.training:
                 _eps = torch.randn(p_vb.size())
-                action = (p_vb + sig_vb.sqrt()*Variable(_eps)).data.numpy()
+                action = (p_vb + sig_vb.sqrt()*Variable(_eps)).data.numpy()  # TODO:?
             else:
                 action = p_vb.data.numpy()
-
             return action, p_vb, sig_vb, v_vb
+        else:
+            if self.master.enable_lstm:
+                if self.lstm_layer_count == 1:
+                    p_vb, v_vb, self.lstm_hidden_vb = self.model(state_vb, self.lstm_hidden_vb)
+                elif self.lstm_layer_count == 2:
+                    p_vb, v_vb, self.lstm_hidden_vb, self.lstm_hidden_vb2 = self.model(state_vb, self.lstm_hidden_vb,
+                                                                                       self.lstm_hidden_vb2)
+            else:
+                p_vb, v_vb = self.model(state_vb)
+            if self.training:  # TODO: right?
+                action = p_vb.multinomial().data.squeeze().numpy()
+            else:
+                action = p_vb.max(1)[1].data.squeeze().numpy()
+            return action, p_vb, v_vb
 
     def _normal(self, x, mu, sigma_sq):
-        a = (-1*(x-mu).pow(2)/(2*sigma_sq)).exp()
-        b = 1/(2*sigma_sq*self.pi_vb.expand_as(sigma_sq)).sqrt()
-        return (a*b).log()
-
-    def run(self):
-        raise NotImplementedError("not implemented in base calss")
+        a = (-1 * (x - mu).pow(2) / (2 * sigma_sq)).exp()
+        b = 1 / (2 * sigma_sq * self.pi_vb.expand_as(sigma_sq)).sqrt()
+        return (a * b).log()
 
 class A3CLearner(A3CSingleProcess):
     def __init__(self, master, process_id=0):
         master.logger.warning("<===================================> A3C-Learner #" + str(process_id) + " {Env & Model}")
         super(A3CLearner, self).__init__(master, process_id)
 
-        # learning algorithm    # TODO: adjust learning to each process maybe ???
-        self.optimizer = self.master.optim(self.model.parameters(), lr = self.master.lr)
-
         self._reset_rollout()
 
         self.training = True    # choose actions by polinomial
+        self.model.train(self.training)
         # local counters
         self.frame_step   = 0   # local frame step counter
         self.train_step   = 0   # local train step counter
@@ -162,50 +145,46 @@ class A3CLearner(A3CSingleProcess):
         self.loss_counter = 0
 
     def _reset_rollout(self):       # for storing the experiences collected through one rollout
-        self.rollout = AugmentedExperience(state0 = [],
-                                           action = [],
-                                           reward = [],
-                                           state1 = [],
-                                           terminal1 = [],
-                                           policy_vb = [],
-                                           sigmoid_vb = [],
-                                           value0_vb = [])
-
-    # NOTE: since no backward passes has ever been run on the global model
-    # NOTE: its grad has never been initialized, here we ensure proper initialization
-    # NOTE: reference: https://discuss.pytorch.org/t/problem-on-variable-grad-data/957
-    def _ensure_global_grads(self):
-        for global_param, local_param in zip(self.master.model.parameters(),
-                                             self.model.parameters()):
-            if global_param.grad is not None:
-                return
-            global_param._grad = local_param.grad
+        self.rollout = A3C_Experience(state0 = [],
+                                      action = [],
+                                      reward = [],
+                                      state1 = [],
+                                      terminal1 = [],
+                                      policy_vb = [],
+                                      sigmoid_vb = [],
+                                      value0_vb = [])
 
     def _get_valueT_vb(self):
         if self.rollout.terminal1[-1]:  # for terminal sT
-            valueT_vb = Variable(torch.zeros(1, 1))
-        else:                           # for non-terminal sT
-            sT_vb = self._preprocessState(self.rollout.state1[-1], True)        # bootstrap from last state
+            valueT_vb = Variable(torch.zeros(1, 1))  # TODO: is it ok returnung a scalar for several robots here?
+        else:  # for non-terminal sT
+            sT_vb = self._preprocessState(self.rollout.state1[-1], True)  # bootstrap from last state
             if self.master.enable_continuous:
                 if self.master.enable_lstm:
                     if self.lstm_layer_count == 1:
-                        _, _, valueT_vb, _ = self.model(sT_vb, self.lstm_hidden_vb) # NOTE: only doing inference here
+                        _, _, valueT_vb, _ = self.model(sT_vb, self.lstm_hidden_vb)  # NOTE: only doing inference here
                     elif self.lstm_layer_count == 2:
-                        _, _, valueT_vb, _, _ = self.model(sT_vb, self.lstm_hidden_vb, self.lstm_hidden_vb2)  # NOTE: only doing inference here
+                        _, _, valueT_vb, _, _ = self.model(sT_vb, self.lstm_hidden_vb,
+                                                           self.lstm_hidden_vb2)  # NOTE: only doing inference here
                 else:
-                    _, _, valueT_vb = self.model(sT_vb)                         # NOTE: only doing inference here
+                    _, _, valueT_vb = self.model(sT_vb)  # NOTE: only doing inference here
             else:
                 if self.master.enable_lstm:
                     if self.lstm_layer_count == 1:
-                        _, valueT_vb, _ = self.model(sT_vb, self.lstm_hidden_vb)    # NOTE: only doing inference here
+                        _, valueT_vb, _ = self.model(sT_vb, self.lstm_hidden_vb)  # NOTE: only doing inference here
                     elif self.lstm_layer_count == 2:
-                        _, valueT_vb, _, _ = self.model(sT_vb, self.lstm_hidden_vb, self.lstm_hidden_vb2)  # NOTE: only doing inference here
+                        _, valueT_vb, _, _ = self.model(sT_vb, self.lstm_hidden_vb,
+                                                        self.lstm_hidden_vb2)  # NOTE: only doing inference here
                 else:
-                    _, valueT_vb = self.model(sT_vb)                            # NOTE: only doing inference here
+                    _, valueT_vb = self.model(sT_vb)  # NOTE: only doing inference here
+            # NOTE: here valueT_vb.volatile=True since sT_vb.volatile=True
+            # NOTE: if we use detach() here, it would remain volatile
+            # NOTE: then all the follow-up computations would only give volatile loss variables
             valueT_vb = Variable(valueT_vb.data)
 
         return valueT_vb
 
+    # TODO: seems to be working for several robots, but check carefully again!
     def _backward(self):
         # preparation
         rollout_steps = len(self.rollout.reward)
@@ -220,15 +199,19 @@ class A3CLearner(A3CSingleProcess):
             if self.master.use_cuda:
                 action_batch_vb = action_batch_vb.cuda()
             policy_log_vb = [torch.log(policy_vb[i]) for i in range(rollout_steps)]
+            # TODO: correct?
             entropy_vb    = [- (policy_log_vb[i] * policy_vb[i]).sum(1) for i in range(rollout_steps)]
-            policy_log_vb = [policy_log_vb[i].gather(1, action_batch_vb[i].unsqueeze(0)) for i in range(rollout_steps) ]
-        valueT_vb     = self._get_valueT_vb()
+            if hasattr(self.master, "num_robots"):  # TODO: right? what is this even for?
+                policy_log_vb = [policy_log_vb[i].gather(1, action_batch_vb[i].unsqueeze(0).view(self.master.num_robots, -1)) for i in range(rollout_steps) ]
+            else:
+                policy_log_vb = [policy_log_vb[i].gather(1, action_batch_vb[i].unsqueeze(0)) for i in range(rollout_steps) ]
+        valueT_vb     = self._get_valueT_vb()  # TODO: check what happens in non-terminal!
         self.rollout.value0_vb.append(Variable(valueT_vb.data)) # NOTE: only this last entry is Volatile, all others are still in the graph
         gae_ts        = torch.zeros(1, 1)
 
         # compute loss
-        policy_loss_vb = Variable(torch.zeros(1, 1))
-        value_loss_vb  = Variable(torch.zeros(1, 1))
+        policy_loss_vb = 0.
+        value_loss_vb  = 0.
         for i in reversed(range(rollout_steps)):
             valueT_vb     = self.master.gamma * valueT_vb + self.rollout.reward[i]
             advantage_vb  = valueT_vb - self.rollout.value0_vb[i]
@@ -239,12 +222,13 @@ class A3CLearner(A3CSingleProcess):
             gae_ts   = self.master.gamma * gae_ts * self.master.tau + tderr_ts
             if self.master.enable_continuous:
                 _log_prob = self._normal(action_batch_vb[i], policy_vb[i], sigma_vb[i])
-                _entropy = -0.5*((sigma_vb[i]+2*self.pi_vb.expand_as(sigma_vb[i])).log()+1)
-                policy_loss_vb = policy_loss_vb - (_log_prob * Variable(gae_ts).expand_as(_log_prob)).sum() - self.master.entropy_weight * _entropy.sum()
+                _entropy = 0.5 * ((sigma_vb[i] * 2 * self.pi_vb.expand_as(sigma_vb[i])).log() + 1)
+                policy_loss_vb -= (_log_prob * Variable(gae_ts).expand_as(_log_prob)).sum() + self.master.beta * _entropy.sum()
             else:
-                policy_loss_vb = policy_loss_vb - policy_log_vb[i] * Variable(gae_ts) - self.master.entropy_weight * entropy_vb[i]
+                policy_loss_vb -= policy_log_vb[i] * Variable(gae_ts) + (self.master.beta * entropy_vb[i]).view(self.master.num_robots, -1)
 
         loss_vb = policy_loss_vb + 0.5 * value_loss_vb
+        loss_vb = loss_vb.mean(dim=0)  # TODO: even remotely right?
         loss_vb.backward()
         torch.nn.utils.clip_grad_norm(self.model.parameters(), self.master.clip_grad)
 
@@ -253,6 +237,11 @@ class A3CLearner(A3CSingleProcess):
         self.train_step += 1
         self.master.train_step.value += 1
 
+        # adjust learning rate if enabled
+        if self.master.lr_decay:
+            self.master.lr_adjusted.value = max(self.master.lr * (self.master.steps - self.master.train_step.value) / self.master.steps, 1e-32)
+            adjust_learning_rate(self.master.optimizer, self.master.lr_adjusted.value)
+
         # log training stats
         self.p_loss_avg   += policy_loss_vb.data.numpy()
         self.v_loss_avg   += value_loss_vb.data.numpy()
@@ -260,6 +249,9 @@ class A3CLearner(A3CSingleProcess):
         self.loss_counter += 1
 
     def _rollout(self, episode_steps, episode_reward):
+        # reset rollout experiences
+        self._reset_rollout()
+
         t_start = self.frame_step
         # continue to rollout only if:
         # 1. not running out of max steps of this current rollout, and
@@ -292,10 +284,11 @@ class A3CLearner(A3CSingleProcess):
             self.frame_step += 1
             self.master.frame_step.value += 1
 
-            if self.master.train_step.value % 1000 == 0:
-                print "train step: {0}, frame step {1}, time: {2}".format(self.master.train_step.value, self.master.frame_step.value, time.time())
+            if self.master.frame_step.value % (1000 * self.master.rollout_steps) == 0:
+                print("train step: {0}, frame step {1}, time: {2}".format(self.master.train_step.value,
+                                                                          self.master.frame_step.value, time.time()))
 
-            # NOTE: we put this condition inside to make sure this current rollout won't be empty
+            # NOTE: we put this condition in the end to make sure this current rollout won't be empty
             if self.master.train_step.value >= self.master.steps:
                 break
 
@@ -313,9 +306,7 @@ class A3CLearner(A3CSingleProcess):
         while self.master.train_step.value < self.master.steps:
             # sync in every step
             self._sync_local_with_global()
-            self.optimizer.zero_grad()
-            # reset rollout experiences
-            self._reset_rollout()
+            self.model.zero_grad()
 
             # start of a new episode
             if should_start_new:
@@ -343,16 +334,15 @@ class A3CLearner(A3CSingleProcess):
                 should_start_new = True
                 if self.experience.terminal1:
                     nepisodes_solved += 1
-                    self.master.terminations_count.value += 1
 
             # calculate loss
             self._backward()
 
             # copy local training stats to global at prog_freq, and clear up local stats
             if time.time() - self.last_prog >= self.master.prog_freq:
-                self.master.p_loss_avg.value   += self.p_loss_avg
-                self.master.v_loss_avg.value   += self.v_loss_avg
-                self.master.loss_avg.value     += self.loss_avg
+                self.master.p_loss_avg.value   += self.p_loss_avg.mean()
+                self.master.v_loss_avg.value   += self.v_loss_avg.mean()
+                self.master.loss_avg.value     += self.loss_avg.mean()
                 self.master.loss_counter.value += self.loss_counter
                 self._reset_training_loggings()
                 self.last_prog = time.time()
@@ -363,6 +353,7 @@ class A3CEvaluator(A3CSingleProcess):
         super(A3CEvaluator, self).__init__(master, process_id)
 
         self.training = False   # choose actions w/ max probability
+        self.model.train(self.training)
         self._reset_loggings()
 
         self.start_time = time.time()
@@ -468,7 +459,7 @@ class A3CEvaluator(A3CSingleProcess):
                 # This episode is finished, report and reset
                 # NOTE make no sense for continuous
                 if self.master.enable_continuous:
-                    eval_entropy_log.append([-0.5*((sig_vb+2*self.pi_vb.expand_as(sig_vb)).log()+1).data.numpy()])
+                    eval_entropy_log.append([0.5 * ((sig_vb * 2 * self.pi_vb.expand_as(sig_vb)).log() + 1).data.numpy()])
                 else:
                     eval_entropy_log.append([np.mean((-torch.log(p_vb.data.squeeze()) * p_vb.data.squeeze()).numpy())])
                 eval_v_log.append([v_vb.data.numpy()])
@@ -484,19 +475,44 @@ class A3CEvaluator(A3CSingleProcess):
         v_loss_avg = self.master.v_loss_avg.value / loss_counter if loss_counter > 0 else 0.
         loss_avg = self.master.loss_avg.value / loss_counter if loss_counter > 0 else 0.
         self.master._reset_training_loggings()
-        self.p_loss_avg_log.append([eval_at_train_step, p_loss_avg])
-        self.v_loss_avg_log.append([eval_at_train_step, v_loss_avg])
-        self.loss_avg_log.append([eval_at_train_step, loss_avg])
-        self.entropy_avg_log.append([eval_at_train_step, np.mean(np.asarray(eval_entropy_log))])
-        self.v_avg_log.append([eval_at_train_step, np.mean(np.asarray(eval_v_log))])
-        self.steps_avg_log.append([eval_at_train_step, np.mean(np.asarray(eval_episode_steps_log))])
-        self.steps_std_log.append([eval_at_train_step, np.std(np.asarray(eval_episode_steps_log))]); del eval_episode_steps_log
-        self.reward_avg_log.append([eval_at_train_step, np.mean(np.asarray(eval_episode_reward_log))])
-        self.reward_std_log.append([eval_at_train_step, np.std(np.asarray(eval_episode_reward_log))]); del eval_episode_reward_log
-        self.nepisodes_log.append([eval_at_train_step, eval_nepisodes])
-        self.nepisodes_solved_log.append([eval_at_train_step, eval_nepisodes_solved])
-        self.repisodes_solved_log.append([eval_at_train_step, (eval_nepisodes_solved/eval_nepisodes) if eval_nepisodes > 0 else 0.])
-        self.terminals_reached_log.append([self.master.train_step.value, self.master.terminations_count.value])
+        def _log_at_step(eval_at_step):
+            self.p_loss_avg_log.append([eval_at_step, p_loss_avg])
+            self.v_loss_avg_log.append([eval_at_step, v_loss_avg])
+            self.loss_avg_log.append([eval_at_step, loss_avg])
+            self.entropy_avg_log.append([eval_at_step, np.mean(np.asarray(eval_entropy_log))])
+            self.v_avg_log.append([eval_at_step, np.mean(np.asarray(eval_v_log))])
+            self.steps_avg_log.append([eval_at_step, np.mean(np.asarray(eval_episode_steps_log))])
+            self.steps_std_log.append([eval_at_step, np.std(np.asarray(eval_episode_steps_log))])
+            self.reward_avg_log.append([eval_at_step, np.mean(np.asarray(eval_episode_reward_log))])
+            self.reward_std_log.append([eval_at_step, np.std(np.asarray(eval_episode_reward_log))])
+            self.nepisodes_log.append([eval_at_step, eval_nepisodes])
+            self.nepisodes_solved_log.append([eval_at_step, eval_nepisodes_solved])
+            self.repisodes_solved_log.append([eval_at_step, (eval_nepisodes_solved/eval_nepisodes) if eval_nepisodes > 0 else 0.])
+            self.terminals_reached_log.append([self.master.train_step.value, self.master.terminations_count.value])
+            # logging
+            self.master.logger.warning("Reporting       @ Step: " + str(eval_at_step) + " | Elapsed Time: " + str(time.time() - self.start_time))
+            self.master.logger.warning("Iteration: {}; lr: {}".format(eval_at_step, self.master.lr_adjusted.value))
+            self.master.logger.warning("Iteration: {}; p_loss_avg: {}".format(eval_at_step, self.p_loss_avg_log[-1][1]))
+            self.master.logger.warning("Iteration: {}; v_loss_avg: {}".format(eval_at_step, self.v_loss_avg_log[-1][1]))
+            self.master.logger.warning("Iteration: {}; loss_avg: {}".format(eval_at_step, self.loss_avg_log[-1][1]))
+            self.master._reset_training_loggings()
+            self.master.logger.warning("Evaluating      @ Step: " + str(eval_at_train_step) + " | (" + str(eval_at_frame_step) + " frames)...")
+            self.master.logger.warning("Evaluation        Took: " + str(time.time() - self.last_eval))
+            self.master.logger.warning("Iteration: {}; entropy_avg: {}".format(eval_at_step, self.entropy_avg_log[-1][1]))
+            self.master.logger.warning("Iteration: {}; v_avg: {}".format(eval_at_step, self.v_avg_log[-1][1]))
+            self.master.logger.warning("Iteration: {}; steps_avg: {}".format(eval_at_step, self.steps_avg_log[-1][1]))
+            self.master.logger.warning("Iteration: {}; steps_std: {}".format(eval_at_step, self.steps_std_log[-1][1]))
+            self.master.logger.warning("Iteration: {}; reward_avg: {}".format(eval_at_step, self.reward_avg_log[-1][1]))
+            self.master.logger.warning("Iteration: {}; reward_std: {}".format(eval_at_step, self.reward_std_log[-1][1]))
+            self.master.logger.warning("Iteration: {}; nepisodes: {}".format(eval_at_step, self.nepisodes_log[-1][1]))
+            self.master.logger.warning("Iteration: {}; nepisodes_solved: {}".format(eval_at_step, self.nepisodes_solved_log[-1][1]))
+            self.master.logger.warning("Iteration: {}; repisodes_solved: {}".format(eval_at_step, self.repisodes_solved_log[-1][1]))
+            self.master.logger.warning("Iteration: {}; terminals_reached: {}".format(eval_at_step, self.terminals_reached_log[-1][1]))
+        if self.master.enable_log_at_train_step:
+            _log_at_step(eval_at_train_step)
+        else:
+            _log_at_step(eval_at_frame_step)
+
         # plotting
         if self.master.visualize:
             self.win_p_loss_avg = self.master.vis.scatter(X=np.array(self.p_loss_avg_log), env=self.master.refs, win=self.win_p_loss_avg, opts=dict(title="p_loss_avg"))
@@ -511,24 +527,10 @@ class A3CEvaluator(A3CSingleProcess):
             self.win_nepisodes = self.master.vis.scatter(X=np.array(self.nepisodes_log), env=self.master.refs, win=self.win_nepisodes, opts=dict(title="nepisodes"))
             self.win_nepisodes_solved = self.master.vis.scatter(X=np.array(self.nepisodes_solved_log), env=self.master.refs, win=self.win_nepisodes_solved, opts=dict(title="nepisodes_solved"))
             self.win_repisodes_solved = self.master.vis.scatter(X=np.array(self.repisodes_solved_log), env=self.master.refs, win=self.win_repisodes_solved, opts=dict(title="repisodes_solved"))
-            self.win_terminals_reached = self.master.vis.scatter(X=np.array(self.terminals_reached_log), env=self.master.refs, win=self.win_terminals_reached, opts=dict(title="terminals_reached"))
-        # logging
-        self.master.logger.warning("Reporting       @ Step: " + str(eval_at_train_step) + " | Elapsed Time: " + str(time.time() - self.start_time))
-        self.master.logger.warning("Iteration: {}; p_loss_avg: {}".format(eval_at_train_step, self.p_loss_avg_log[-1][1]))
-        self.master.logger.warning("Iteration: {}; v_loss_avg: {}".format(eval_at_train_step, self.v_loss_avg_log[-1][1]))
-        self.master.logger.warning("Iteration: {}; loss_avg: {}".format(eval_at_train_step, self.loss_avg_log[-1][1]))
-        self.master._reset_training_loggings()
-        self.master.logger.warning("Evaluating      @ Step: " + str(eval_at_train_step) + " | (" + str(eval_at_frame_step) + " frames)...")
-        self.master.logger.warning("Evaluation        Took: " + str(time.time() - self.last_eval))
-        self.master.logger.warning("Iteration: {}; entropy_avg: {}".format(eval_at_train_step, self.entropy_avg_log[-1][1]))
-        self.master.logger.warning("Iteration: {}; v_avg: {}".format(eval_at_train_step, self.v_avg_log[-1][1]))
-        self.master.logger.warning("Iteration: {}; steps_avg: {}".format(eval_at_train_step, self.steps_avg_log[-1][1]))
-        self.master.logger.warning("Iteration: {}; steps_std: {}".format(eval_at_train_step, self.steps_std_log[-1][1]))
-        self.master.logger.warning("Iteration: {}; reward_avg: {}".format(eval_at_train_step, self.reward_avg_log[-1][1]))
-        self.master.logger.warning("Iteration: {}; reward_std: {}".format(eval_at_train_step, self.reward_std_log[-1][1]))
-        self.master.logger.warning("Iteration: {}; nepisodes: {}".format(eval_at_train_step, self.nepisodes_log[-1][1]))
-        self.master.logger.warning("Iteration: {}; nepisodes_solved: {}".format(eval_at_train_step, self.nepisodes_solved_log[-1][1]))
-        self.master.logger.warning("Iteration: {}; repisodes_solved: {}".format(eval_at_train_step, self.repisodes_solved_log[-1][1]))
+            self.win_terminals_reached = self.master.vis.scatter(X=np.array(self.terminals_reached_log),
+                                                                 env=self.master.refs, win=self.win_terminals_reached,
+                                                                 opts=dict(title="terminals_reached"))
+
         self.last_eval = time.time()
 
         # save model
@@ -547,10 +549,12 @@ class A3CTester(A3CSingleProcess):
         super(A3CTester, self).__init__(master, process_id)
 
         self.training = False   # choose actions w/ max probability
+        self.model.train(self.training)
         self._reset_loggings()
 
         self.start_time = time.time()
 
+    # TODO: add terminations count to the log here too?
     def _reset_loggings(self):
         # testing stats
         self.steps_avg_log = []

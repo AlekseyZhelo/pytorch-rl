@@ -1,11 +1,13 @@
 from __future__ import absolute_import
 from __future__ import division
+from __future__ import print_function
 import numpy as np
 import random
 import time
 import torch
 from torch.autograd import Variable
 
+from optims.helpers import adjust_learning_rate
 from core.agent import Agent
 
 class DQNAgent(Agent):
@@ -106,7 +108,8 @@ class DQNAgent(Agent):
             q_values_vb = self.model(state1_batch_vb)
             # Detach this variable from the current graph since we don't want gradients to propagate
             q_values_vb = Variable(q_values_vb.data)
-            _, q_max_actions_vb = q_values_vb.max(dim=1)
+            # _, q_max_actions_vb = q_values_vb.max(dim=1)              # 0.1.12
+            _, q_max_actions_vb = q_values_vb.max(dim=1, keepdim=True)  # 0.2.0
             # Now, estimate Q values using the target network but select the values with the
             # highest Q value wrt to the online model (as computed above).
             next_max_q_values_vb = self.target_model(state1_batch_vb)
@@ -120,14 +123,16 @@ class DQNAgent(Agent):
             next_max_q_values_vb = self.target_model(state1_batch_vb)
             # Detach this variable from the current graph since we don't want gradients to propagate
             next_max_q_values_vb = Variable(next_max_q_values_vb.data)
-            next_max_q_values_vb, _ = next_max_q_values_vb.max(dim = 1)
+            # next_max_q_values_vb, _ = next_max_q_values_vb.max(dim = 1)               # 0.1.12
+            next_max_q_values_vb, _ = next_max_q_values_vb.max(dim = 1, keepdim=True)   # 0.2.0
 
         # Compute r_t + gamma * max_a Q(s_t+1, a) and update the targets accordingly
         # but only for the affected output units (as given by action_batch).
         current_q_values_vb = self.model(state0_batch_vb).gather(1, action_batch_vb.unsqueeze(1)).squeeze()
         # Set discounted reward to zero for all states that were terminal.
         next_max_q_values_vb = next_max_q_values_vb * terminal1_batch_vb.unsqueeze(1)
-        expected_q_values_vb = reward_batch_vb + self.gamma * next_max_q_values_vb
+        # expected_q_values_vb = reward_batch_vb + self.gamma * next_max_q_values_vb            # 0.1.12
+        expected_q_values_vb = reward_batch_vb + self.gamma * next_max_q_values_vb.squeeze()    # 0.2.0
         # Compute temporal difference error, use huber loss to mitigate outlier impact
         # TODO: can optionally use huber loss from here: https://medium.com/@karpathy/yes-you-should-understand-backprop-e2f06eab496b
         td_error_vb = self.value_criteria(current_q_values_vb, expected_q_values_vb)
@@ -206,6 +211,11 @@ class DQNAgent(Agent):
             # Perform the update
             self.optimizer.step()
 
+        # adjust learning rate if enabled
+        if self.lr_decay:
+            self.lr_adjusted = max(self.lr * (self.steps - self.step) / self.steps, 1e-32)
+            adjust_learning_rate(self.optimizer, self.lr_adjusted)
+
         if self.target_model_update >= 1 and self.step % self.target_model_update == 0:
             self._update_target_model_hard()    # Hard update every `target_model_update` steps.
         if self.target_model_update < 1.:       # TODO: have not tested
@@ -218,8 +228,9 @@ class DQNAgent(Agent):
         self.memory = self.memory_prototype(limit = self.memory_params.memory_size,
                                             window_length = self.memory_params.hist_len)
         self.eps = self.eps_start
-        # self.optimizer = self.optim(self.model.parameters(), lr=self.lr, alpha=0.95, eps=0.01)  # RMSprop
-        self.optimizer = self.optim(self.model.parameters(), lr=self.lr)    # Adam
+        # self.optimizer = self.optim(self.model.parameters(), lr=self.lr, alpha=0.95, eps=0.01, weight_decay=self.weight_decay)  # RMSprop
+        self.optimizer = self.optim(self.model.parameters(), lr=self.lr, weight_decay=self.weight_decay)    # Adam
+        self.lr_adjusted = self.lr
 
         self.logger.warning("<===================================> Training ...")
         self.training = True
@@ -274,7 +285,7 @@ class DQNAgent(Agent):
             self.step += 1
 
             if self.step % 1000 == 0:
-                print self.step
+                print(self.step)
 
             if should_start_new:
                 # We are in a terminal state but the agent hasn't yet seen it. We therefore
@@ -296,6 +307,7 @@ class DQNAgent(Agent):
             # report training stats
             if self.step % self.prog_freq == 0:
                 self.logger.warning("Reporting       @ Step: " + str(self.step) + " | Elapsed Time: " + str(time.time() - self.start_time))
+                self.logger.warning("Training Stats:   lr:               {}".format(self.lr_adjusted))
                 self.logger.warning("Training Stats:   epsilon:          {}".format(self.eps))
                 self.logger.warning("Training Stats:   total_reward:     {}".format(total_reward))
                 self.logger.warning("Training Stats:   avg_reward:       {}".format(total_reward/nepisodes if nepisodes > 0 else 0.))

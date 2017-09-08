@@ -84,7 +84,7 @@ class MinisimEnv(Env):
 
     @property
     def action_dim(self):
-        return len(self.actions) ** self.num_robots
+        return len(self.actions)
 
     def render(self):
         self.logger.warning("WARNING: asked to render minisim - user rviz instead")
@@ -114,7 +114,6 @@ class MinisimEnv(Env):
 
     def step(self, action_index):
         self.exp_action = action_index
-        print (action_index)
         if self.enable_continuous:
             # TODO: not implemented
             self.exp_state1, self.exp_reward, self.exp_terminal1, _ = self.client.step(self.exp_action)

@@ -73,10 +73,14 @@ This repo currently contains the following agents:
 - Double DQN [[3]](http://arxiv.org/abs/1509.06461)
 - Dueling network DQN (Dueling DQN) [[4]](https://arxiv.org/abs/1511.06581)
 - Asynchronous Advantage Actor-Critic (A3C) (w/ both discrete/continuous action space support) [[5]](https://arxiv.org/abs/1602.01783), [[6]](https://arxiv.org/abs/1506.02438)
+- Sample Efficient Actor-Critic with Experience Replay (ACER) (currently w/ discrete action space support (Truncated Importance Sampling, 1st Order TRPO)) [[7]](https://arxiv.org/abs/1611.01224), [[8]](https://arxiv.org/abs/1606.02647)
 
 Work in progress:
-- Deep Deterministic Policy Gradient (DDPG) [[7]](http://arxiv.org/abs/1509.02971)
-- Continuous DQN (CDQN or NAF) [[8]](http://arxiv.org/abs/1603.00748)
+- Testing ACER
+
+Future Plans:
+- Deep Deterministic Policy Gradient (DDPG) [[9]](http://arxiv.org/abs/1509.02971), [[10]](http://proceedings.mlr.press/v32/silver14.pdf)
+- Continuous DQN (CDQN or NAF) [[11]](http://arxiv.org/abs/1603.00748)
 
 
 ## Code structure & Naming conventions:
@@ -100,9 +104,9 @@ NOTE: we follow the exact code structure as [pytorch-dnc](https://github.com/jin
 
 ## Dependencies
 - Python 2.7
-- [PyTorch](http://pytorch.org/)
+- [PyTorch >=v0.2.0](http://pytorch.org/)
 - [Visdom](https://github.com/facebookresearch/visdom)
-- [OpenAI Gym](https://github.com/openai/gym)
+- [OpenAI Gym >=v0.9.0 (for lower versoins, just need to change into the available games, e.g. change PongDeterministic-v4 to PongDeterministic-v3)](https://github.com/openai/gym)
 - [mujoco-py (Optional: for training continuous version of a3c)](https://github.com/openai/mujoco-py)
 *******
 
@@ -123,9 +127,22 @@ You only need to modify some parameters in ```./utils/options.py``` to train a n
 *******
 
 
+## Bonus Scripts :)
+We also provide 2 additional scripts for quickly evaluating your results after training. (Dependecies: [lmj-plot](https://github.com/lmjohns3/py-plot))
+* ```plot.sh``` (e.g., plot from log file: ```logs/machine1_17080801.log```)
+> * ```./plot.sh machine1 17080801```
+> * the generated figures will be saved into ```figs/machine1_17080801/```
+* ```plot_compare.sh``` (e.g., compare log files: ```logs/machine1_17080801.log```,```logs/machine2_17080802.log```)
+> ```./plot.sh 00 machine1 17080801 machine2 17080802```
+> * the generated figures will be saved into ```figs/compare_00/```
+> * the color coding will be in the order of: ```red green blue magenta yellow cyan```
+*******
+
+
 ## Repos we referred to during the development of this repo:
 * [matthiasplappert/keras-rl](https://github.com/matthiasplappert/keras-rl)
 * [transedward/pytorch-dqn](https://github.com/transedward/pytorch-dqn)
 * [ikostrikov/pytorch-a3c](https://github.com/ikostrikov/pytorch-a3c)
 * [onlytailei/A3C-PyTorch](https://github.com/onlytailei/A3C-PyTorch)
+* [Kaixhin/ACER](https://github.com/Kaixhin/ACER)
 * And a private implementation of A3C from [@stokasto](https://github.com/stokasto)
