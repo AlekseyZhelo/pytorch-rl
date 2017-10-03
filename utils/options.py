@@ -31,15 +31,15 @@ CONFIGS = [
 [ "dqn",      "minisim",   "minisim",                  "mlp",      "sequential"  ]   # 13
 ]
 
-minisim_num_robots = 3
+minisim_num_robots = 1  # 3
 
 class Params(object):   # NOTE: shared across all modules
     def __init__(self):
         self.verbose     = 2            # 0(warning) | 1(info) | 2(debug)
 
         # training signature
-        self.machine     = "pearl7"     # "machine_id"
-        self.timestamp   = "17090800"   # "yymmdd##"
+        self.machine     = "pearl1"     # "machine_id"
+        self.timestamp   = "17100300"   # "yymmdd##"
         # training configuration
         self.mode        = 1            # 1(train) | 2(test model_file)
         self.config      = 10
