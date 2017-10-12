@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="PublishConfigData" serverName="pearl1.informatik.uni-freiburg.de">
+    <serverData>
+      <paths name="pearl1.informatik.uni-freiburg.de">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/rl/pytorch-rl" local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+    </serverData>
+  </component>
+</project>

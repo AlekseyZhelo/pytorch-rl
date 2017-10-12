@@ -39,10 +39,10 @@ class Params(object):   # NOTE: shared across all modules
 
         # training signature
         self.machine     = "pearl1"     # "machine_id"
-        self.timestamp   = "17100301"   # "yymmdd##"
+        self.timestamp   = "17101200"   # "yymmdd##"
         # training configuration
         self.mode        = 1            # 1(train) | 2(test model_file)
-        self.config      = 10
+        self.config      = 12
 
         self.seed        = 123
         self.render      = False        # whether render the window from the original envs or not
