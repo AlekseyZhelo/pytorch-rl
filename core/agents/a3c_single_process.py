@@ -63,7 +63,6 @@ class A3CSingleProcess(AgentSingleProcess):
 
     # NOTE: to be called at the beginning of each rollout, detach the previous variable from the graph
     def _reset_lstm_hidden_vb_rollout(self):
-        # TODO: other hidden state size for several robots needed
         self.lstm_hidden_vb = (Variable(self.lstm_hidden_vb[0].data),
                                Variable(self.lstm_hidden_vb[1].data))
         if self.lstm_layer_count == 2:
@@ -80,7 +79,7 @@ class A3CSingleProcess(AgentSingleProcess):
         return state_vb
 
     def _forward(self, state_vb):
-        if self.master.enable_continuous: # NOTE continous control p_vb here is the mu_vb of continous action dist
+        if self.master.enable_continuous: # NOTE continuous control p_vb here is the mu_vb of continuous action dist
             if self.master.enable_lstm:
                 if self.lstm_layer_count == 1:
                     p_vb, sig_vb, v_vb, self.lstm_hidden_vb = self.model(state_vb, self.lstm_hidden_vb)
@@ -105,10 +104,10 @@ class A3CSingleProcess(AgentSingleProcess):
                                                                                        self.lstm_hidden_vb2)
             else:
                 p_vb, v_vb = self.model(state_vb)
-            if self.training:  # TODO: right?
-                action = p_vb.multinomial().data.squeeze().numpy()
+            if self.training:
+                action = p_vb.multinomial().data.squeeze().numpy()  # TODO: right? debug
             else:
-                action = p_vb.max(1)[1].data.squeeze().numpy()
+                action = p_vb.max(1)[1].data.squeeze().numpy()  # TODO: right? debug
             return action, p_vb, v_vb
 
     def _normal(self, x, mu, sigma_sq):
