@@ -227,7 +227,7 @@ class A3CLearner(A3CSingleProcess):
                 policy_loss_vb -= policy_log_vb[i] * Variable(gae_ts) + (self.master.beta * entropy_vb[i]).view(self.master.num_robots, -1)
 
         loss_vb = policy_loss_vb + 0.5 * value_loss_vb
-        loss_vb = loss_vb.mean(dim=0)  # TODO: even remotely right?
+        loss_vb = loss_vb.mean(dim=0)
         loss_vb.backward()
         torch.nn.utils.clip_grad_norm(self.model.parameters(), self.master.clip_grad)
 
