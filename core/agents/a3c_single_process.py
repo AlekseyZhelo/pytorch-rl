@@ -231,6 +231,10 @@ class A3CLearner(A3CSingleProcess):
         loss_vb.backward()
         torch.nn.utils.clip_grad_norm(self.model.parameters(), self.master.clip_grad)
 
+        # targets random for each episode, each robot has its target
+        # random map for each episode
+        # update a3c code for rewards for each robot
+
         self._ensure_global_grads()
         self.master.optimizer.step()
         self.train_step += 1
