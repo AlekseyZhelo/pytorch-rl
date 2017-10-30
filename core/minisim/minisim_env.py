@@ -65,7 +65,7 @@ class MinisimEnv(Env):
 
         self._reset_experience()
 
-    def _preprocessState(self, state):  # NOTE: here no preprocessing is needed
+    def _preprocessState(self, state):
         return state
 
     def _reset_experience(self):
@@ -118,11 +118,19 @@ class MinisimEnv(Env):
             # TODO: not implemented
             self.exp_state1, self.exp_reward, self.exp_terminal1, _ = self.client.step(self.exp_action)
         else:
+            # enumerated action combinations
             # print("actions taken:", [self.actions[i] for i in self._to_n_dim_idx(action_index, self.num_robots)])
             # self.exp_state1, self.exp_reward, self.exp_terminal1, _ = self.client.step(
             #     [self.actions[i] for i in self._to_n_dim_idx(action_index, self.num_robots)]
             # )
-            self.exp_state1, self.exp_reward, self.exp_terminal1, _ = self.client.step(
+
+            # unstructured reward
+            # self.exp_state1, self.exp_reward, self.exp_terminal1, _ = self.client.step(
+            #     [self.actions[i] for i in action_index.reshape(-1)]
+            # )
+
+            # structured reward
+            self.exp_state1, self.exp_reward, self.exp_terminal1, _ = self.client.step_structured(
                 [self.actions[i] for i in action_index.reshape(-1)]
             )
             if self.hist_len > 1:

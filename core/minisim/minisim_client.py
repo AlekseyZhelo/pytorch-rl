@@ -2,10 +2,11 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import time
+
 import geometry_msgs.msg
 import numpy as np
 import rospy
-import time
 from minisim.srv import *
 
 
@@ -23,13 +24,17 @@ class MinisimClient(object):
 
         self.setup_robots_name = self.sim_prefix + '/setup_robots'
         self.simulation_step_name = self.sim_prefix + '/simulation_step'
+        self.simulation_step_structured_name = self.sim_prefix + '/simulation_step_structured'
         self.reset_simulation_name = self.sim_prefix + '/reset_simulation'
         rospy.wait_for_service(self.setup_robots_name)
         rospy.wait_for_service(self.simulation_step_name)
+        rospy.wait_for_service(self.simulation_step_structured_name)
         rospy.wait_for_service(self.reset_simulation_name)
 
         self.setup_robots = rospy.ServiceProxy(self.setup_robots_name, SetupRobots, persistent=True)
         self.simulation_step = rospy.ServiceProxy(self.simulation_step_name, SimulationStep, persistent=True)
+        self.simulation_step_structured = rospy.ServiceProxy(self.simulation_step_structured_name,
+                                                             SimulationStepStructured, persistent=True)
         self.reset_simulation = rospy.ServiceProxy(self.reset_simulation_name, ResetSimulation, persistent=True)
 
     @property
@@ -68,6 +73,30 @@ class MinisimClient(object):
         except rospy.ServiceException, e:
             print("SimulationStep service call failed: %s" % e)
 
+    def step_structured(self, actions):
+        if len(actions) != self.num_robots:
+            self.logger.warning(
+                "WARNING: Wrong number of actions in SimulationStepStructured: expected {0}, received {1}".format(
+                    self.num_robots,
+                    len(actions)))
+            return None
+
+        for i, vel in enumerate(actions):
+            self.twists[i].linear.x = vel[0]
+            self.twists[i].angular.z = vel[1]
+
+        try:
+            resp = self.simulation_step_structured(self.twists)
+            if resp.message != MinisimClient.message_ok:
+                self.logger.warning(
+                    "WARNING: SimulationStepStructured service improperly called, message: {0}".format(resp.message))
+                return None
+            else:
+                # return np.array(resp.state), resp.reward, resp.terminal, resp.message
+                return np.array(resp.state).reshape(self.num_robots, -1), resp.reward, resp.terminal, resp.message
+        except rospy.ServiceException, e:
+            print("SimulationStepStructured service call failed: %s" % e)
+
     def reset(self):
         try:
             resp = self.reset_simulation()
@@ -87,7 +116,7 @@ if __name__ == '__main__':
             print(args, kwargs)
 
 
-    client = MinisimClient(1, 213, "", DummyLogger())
+    client = MinisimClient(1, 213, False, "", DummyLogger())
     client.setup()
     # print(client.reset())
     actions = [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]]
@@ -98,6 +127,6 @@ if __name__ == '__main__':
         if i % 1000 == 0:
             client.reset()
         client.step([actions[np.random.randint(0, len(actions))]])
-    print ("Time elapsed for {0} steps: {1} sec".format(steps, time.time() - start))
+    print("Time elapsed for {0} steps: {1} sec".format(steps, time.time() - start))
     # about 11 seconds for 10000 steps, seems too slow
     # and about 9 seconds without resets every 1000 steps, why do they take so much time?
