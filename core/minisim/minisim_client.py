@@ -2,11 +2,10 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import time
-
 import geometry_msgs.msg
 import numpy as np
 import rospy
+import time
 from minisim.srv import *
 
 
@@ -93,7 +92,8 @@ class MinisimClient(object):
                 return None
             else:
                 # return np.array(resp.state), resp.reward, resp.terminal, resp.message
-                return np.array(resp.state).reshape(self.num_robots, -1), resp.reward, resp.terminal, resp.message
+                return np.array(resp.state).reshape(self.num_robots, -1), np.array(
+                    resp.reward), resp.terminal, resp.message
         except rospy.ServiceException, e:
             print("SimulationStepStructured service call failed: %s" % e)
 

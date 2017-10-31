@@ -31,7 +31,7 @@ CONFIGS = [
 [ "dqn",      "minisim",   "minisim",                  "mlp",      "sequential"  ]   # 13
 ]
 
-minisim_num_robots = 1  # 3
+minisim_num_robots = 3  # 3
 
 class Params(object):   # NOTE: shared across all modules
     def __init__(self):

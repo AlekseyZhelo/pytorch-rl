@@ -105,9 +105,9 @@ class A3CSingleProcess(AgentSingleProcess):
             else:
                 p_vb, v_vb = self.model(state_vb)
             if self.training:
-                action = p_vb.multinomial().data.squeeze().numpy()  # TODO: right? debug
+                action = p_vb.multinomial().data.squeeze().numpy()
             else:
-                action = p_vb.max(1)[1].data.squeeze().numpy()  # TODO: right? debug
+                action = p_vb.max(1)[1].data.squeeze().numpy()
             return action, p_vb, v_vb
 
     def _normal(self, x, mu, sigma_sq):
@@ -155,7 +155,7 @@ class A3CLearner(A3CSingleProcess):
 
     def _get_valueT_vb(self):
         if self.rollout.terminal1[-1]:  # for terminal sT
-            valueT_vb = Variable(torch.zeros(1, 1))  # TODO: is it ok returnung a scalar for several robots here?
+            valueT_vb = Variable(torch.zeros(self.master.num_robots, 1))
         else:  # for non-terminal sT
             sT_vb = self._preprocessState(self.rollout.state1[-1], True)  # bootstrap from last state
             if self.master.enable_continuous:
@@ -183,7 +183,7 @@ class A3CLearner(A3CSingleProcess):
 
         return valueT_vb
 
-    # TODO: seems to be working for several robots, but check carefully again!
+    # TODO: seems to be working for several robots (with diff rewards), but check carefully again!
     def _backward(self):
         # preparation
         rollout_steps = len(self.rollout.reward)
@@ -200,24 +200,25 @@ class A3CLearner(A3CSingleProcess):
             policy_log_vb = [torch.log(policy_vb[i]) for i in range(rollout_steps)]
             # TODO: correct?
             entropy_vb    = [- (policy_log_vb[i] * policy_vb[i]).sum(1) for i in range(rollout_steps)]
-            if hasattr(self.master, "num_robots"):  # TODO: right? what is this even for?
+            if hasattr(self.master, "num_robots"):
                 policy_log_vb = [policy_log_vb[i].gather(1, action_batch_vb[i].unsqueeze(0).view(self.master.num_robots, -1)) for i in range(rollout_steps) ]
             else:
                 policy_log_vb = [policy_log_vb[i].gather(1, action_batch_vb[i].unsqueeze(0)) for i in range(rollout_steps) ]
-        valueT_vb     = self._get_valueT_vb()  # TODO: check what happens in non-terminal!
+        valueT_vb     = self._get_valueT_vb()
         self.rollout.value0_vb.append(Variable(valueT_vb.data)) # NOTE: only this last entry is Volatile, all others are still in the graph
-        gae_ts        = torch.zeros(1, 1)
+        gae_ts        = torch.zeros(self.master.num_robots, 1)
 
         # compute loss
         policy_loss_vb = 0.
         value_loss_vb  = 0.
         for i in reversed(range(rollout_steps)):
-            valueT_vb     = self.master.gamma * valueT_vb + self.rollout.reward[i]
+            reward_vb = Variable(torch.from_numpy(self.rollout.reward[i])).float().view(-1, 1)
+            valueT_vb     = self.master.gamma * valueT_vb + reward_vb
             advantage_vb  = valueT_vb - self.rollout.value0_vb[i]
             value_loss_vb = value_loss_vb + 0.5 * advantage_vb.pow(2)
 
             # Generalized Advantage Estimation
-            tderr_ts = self.rollout.reward[i] + self.master.gamma * self.rollout.value0_vb[i + 1].data - self.rollout.value0_vb[i].data
+            tderr_ts = reward_vb.data + self.master.gamma * self.rollout.value0_vb[i + 1].data - self.rollout.value0_vb[i].data
             gae_ts   = self.master.gamma * gae_ts * self.master.tau + tderr_ts
             if self.master.enable_continuous:
                 _log_prob = self._normal(action_batch_vb[i], policy_vb[i], sigma_vb[i])
@@ -314,7 +315,7 @@ class A3CLearner(A3CSingleProcess):
             # start of a new episode
             if should_start_new:
                 episode_steps = 0
-                episode_reward = 0.
+                episode_reward = np.zeros(self.master.num_robots)
                 # reset lstm_hidden_vb for new episode
                 if self.master.enable_lstm:
                     # NOTE: clear hidden state at the beginning of each episode
