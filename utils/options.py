@@ -38,8 +38,8 @@ class Params(object):   # NOTE: shared across all modules
         self.verbose     = 2            # 0(warning) | 1(info) | 2(debug)
 
         # training signature
-        self.machine     = "pearl1"     # "machine_id"
-        self.timestamp   = "17103100"   # "yymmdd##"
+        self.machine     = "aiscpu4"     # "machine_id"
+        self.timestamp   = "17103100"    # "yymmdd##"
         # training configuration
         self.mode        = 1            # 1(train) | 2(test model_file)
         self.config      = 10
@@ -84,9 +84,9 @@ class Params(object):   # NOTE: shared across all modules
             self.hidden_vb_dim      = 128
 
             if self.env_type == "minisim":
-                self.num_processes = 6  # 6
+                self.num_processes = 23  # 6
                 if minisim_num_robots > 1:
-                    self.num_processes = 4  # 4
+                    self.num_processes = 23  # 4
 
             self.use_cuda           = False
             self.dtype              = torch.FloatTensor
