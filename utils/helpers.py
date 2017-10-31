@@ -2,7 +2,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 import logging
-import cv2
+from cv2 import resize, INTER_LINEAR
 import numpy as np
 from collections import namedtuple
 
@@ -35,8 +35,8 @@ ACER_Off_Policy_Experience = namedtuple('ACER_Off_Policy_Experience', 'state0, a
 
 def preprocessAtari(frame):
     frame = frame[34:34 + 160, :160]
-    frame = cv2.resize(frame, (80, 80))
-    frame = cv2.resize(frame, (42, 42))
+    frame = resize(frame, (80, 80))
+    frame = resize(frame, (42, 42))
     frame = frame.mean(2)
     frame = frame.astype(np.float32)
     frame*= (1. / 255.)
@@ -57,8 +57,8 @@ def rgb2y(rgb):
     return y_image
 
 def scale(image, hei_image, wid_image):
-    return cv2.resize(image, (wid_image, hei_image),
-                      interpolation=cv2.INTER_LINEAR)
+    return resize(image, (wid_image, hei_image),
+                      interpolation=INTER_LINEAR)
 
 def one_hot(n_classes, labels):
     one_hot_labels = np.zeros(labels.shape + (n_classes,))
