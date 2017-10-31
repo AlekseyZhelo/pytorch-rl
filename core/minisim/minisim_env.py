@@ -157,7 +157,8 @@ class MinisimEnv(Env):
         except roslaunch.rospkg.ResourceNotFound:
             self.logger.warning("WARNING: minisim not found")
             sys.exit(-1)
-        map_server_rlaunch_path = os.path.join(minisim_path, 'launch', 'map_server_small.launch')
+        # map_server_rlaunch_path = os.path.join(minisim_path, 'launch', 'map_server_small.launch')
+        map_server_rlaunch_path = os.path.join(minisim_path, 'launch', 'map_server_small_simple.launch')
         uuid = roslaunch.rlutil.get_or_generate_uuid(None, False)
         roslaunch.configure_logging(uuid)
         MinisimEnv.roslaunch_map_server = roslaunch.parent.ROSLaunchParent(uuid, [map_server_rlaunch_path])
