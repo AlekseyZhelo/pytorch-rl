@@ -2,7 +2,6 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 import logging
-import cv2
 import numpy as np
 from collections import namedtuple
 
@@ -34,6 +33,7 @@ ACER_On_Policy_Experience  = namedtuple('ACER_On_Policy_Experience',  'state0, a
 ACER_Off_Policy_Experience = namedtuple('ACER_Off_Policy_Experience', 'state0, action, reward,                                                                              detached_old_policy_vb')
 
 def preprocessAtari(frame):
+    import cv2
     frame = frame[34:34 + 160, :160]
     frame = cv2.resize(frame, (80, 80))
     frame = cv2.resize(frame, (42, 42))
@@ -57,6 +57,7 @@ def rgb2y(rgb):
     return y_image
 
 def scale(image, hei_image, wid_image):
+    import cv2
     return cv2.resize(image, (wid_image, hei_image),
                       interpolation=cv2.INTER_LINEAR)
 
