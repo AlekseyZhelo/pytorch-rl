@@ -39,10 +39,10 @@ class Params(object):   # NOTE: shared across all modules
 
         # training signature
         self.machine     = "aiscpu4"     # "machine_id"
-        self.timestamp   = "17103100"    # "yymmdd##"
+        self.timestamp   = "17110100"    # "yymmdd##"
         # training configuration
         self.mode        = 1            # 1(train) | 2(test model_file)
-        self.config      = 10
+        self.config      = 12
 
         self.seed        = 123
         self.render      = False        # whether render the window from the original envs or not
@@ -84,9 +84,9 @@ class Params(object):   # NOTE: shared across all modules
             self.hidden_vb_dim      = 128
 
             if self.env_type == "minisim":
-                self.num_processes = 23  # 6
+                self.num_processes = 22  # 6
                 if minisim_num_robots > 1:
-                    self.num_processes = 23  # 4
+                    self.num_processes = 22  # 4
 
             self.use_cuda           = False
             self.dtype              = torch.FloatTensor
