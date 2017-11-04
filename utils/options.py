@@ -38,11 +38,11 @@ class Params(object):   # NOTE: shared across all modules
         self.verbose     = 2            # 0(warning) | 1(info) | 2(debug)
 
         # training signature
-        self.machine     = "aiscpu2"     # "machine_id"
+        self.machine     = "aiscpu4"     # "machine_id"
         self.timestamp   = "17110400"    # "yymmdd##"
         # training configuration
         self.mode        = 1            # 1(train) | 2(test model_file)
-        self.config      = 10
+        self.config      = 12
 
         self.seed        = 123
         self.render      = False        # whether render the window from the original envs or not
@@ -84,9 +84,9 @@ class Params(object):   # NOTE: shared across all modules
             self.hidden_vb_dim      = 128
 
             if self.env_type == "minisim":
-                self.num_processes = 22  # 6
+                self.num_processes = 23  # 6
                 if minisim_num_robots > 1:
-                    self.num_processes = 22  # 4
+                    self.num_processes = 23  # 4
 
             self.use_cuda           = False
             self.dtype              = torch.FloatTensor
@@ -282,7 +282,7 @@ class AgentParams(Params):  # hyperparameters for drl agents
 
                 self.rollout_steps = 50  # max look-ahead steps in a single rollout
                 self.tau = 1.
-                self.beta = 0.02         # coefficient for entropy penalty
+                self.beta = 0.05         # coefficient for entropy penalty
             else:
                 self.steps               = 20000000 # max #iterations
                 self.early_stop          = None     # max #steps per episode
