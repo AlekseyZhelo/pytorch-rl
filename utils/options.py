@@ -38,10 +38,10 @@ class Params(object):   # NOTE: shared across all modules
         self.verbose     = 2            # 0(warning) | 1(info) | 2(debug)
 
         # training signature
-        self.machine     = "pearl1"     # "machine_id"
-        self.timestamp   = "17103100"   # "yymmdd##"
+        self.machine     = "aiscpu2"     # "machine_id"
+        self.timestamp   = "17110500"   # "yymmdd##"
         # training configuration
-        self.mode        = 1            # 1(train) | 2(test model_file)
+        self.mode        = 2            # 1(train) | 2(test model_file)
         self.config      = 10
 
         self.seed        = 123
@@ -105,7 +105,8 @@ class Params(object):   # NOTE: shared across all modules
         # NOTE: will save the current model to model_name
         self.model_name  = self.root_dir + "/models/" + self.refs + ".pth"
         # NOTE: will load pretrained model_file if not None
-        self.model_file  = None#self.root_dir + "/models/{TODO:FILL_IN_PRETAINED_MODEL_FILE}.pth"
+        # self.model_file  = None
+        self.model_file  = self.root_dir + "/models/aiscpu2_17110500.pth"
         if self.mode == 2:
             self.model_file  = self.model_name  # NOTE: so only need to change self.mode to 2 to test the current training
             assert self.model_file is not None, "Pre-Trained model is None, Testing aborted!!!"
@@ -276,13 +277,13 @@ class AgentParams(Params):  # hyperparameters for drl agents
                 self.lr_decay = False
                 self.weight_decay = 1e-4 if self.enable_continuous else 0.
                 self.eval_freq = 60      # NOTE: here means every this many seconds
-                self.eval_steps = 60000
+                self.eval_steps = 30000
                 self.prog_freq = self.eval_freq
                 self.test_nepisodes = 10
 
                 self.rollout_steps = 50  # max look-ahead steps in a single rollout
                 self.tau = 1.
-                self.beta = 0.02         # coefficient for entropy penalty
+                self.beta = 0.10         # coefficient for entropy penalty
             else:
                 self.steps               = 20000000 # max #iterations
                 self.early_stop          = None     # max #steps per episode
