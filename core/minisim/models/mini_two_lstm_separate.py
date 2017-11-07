@@ -36,10 +36,10 @@ class A3CMlpDeeperSeparateHiddenMinisimModel(Model):
         else:
             final_input_size = self.hidden_dim // 4
         # 1. policy output
-        self.policy_7 = nn.Linear(final_input_size + 2 * self.num_robots * self.hist_len, self.output_dims)
+        self.policy_7 = nn.Linear(final_input_size + 2 * self.hist_len, self.output_dims)
         self.policy_6 = nn.Softmax()
         # 2. value output
-        self.value_8 = nn.Linear(final_input_size + 2 * self.num_robots * self.hist_len, 1)
+        self.value_8 = nn.Linear(final_input_size + 2 * self.hist_len, 1)
 
         self._reset()
 
