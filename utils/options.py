@@ -38,11 +38,11 @@ class Params(object):   # NOTE: shared across all modules
         self.verbose     = 2            # 0(warning) | 1(info) | 2(debug)
 
         # training signature
-        self.machine     = "aiscpu4"     # "machine_id"
-        self.timestamp   = "17110700"    # "yymmdd##"
+        self.machine     = "aiscpu2"     # "machine_id"
+        self.timestamp   = "17110800"    # "yymmdd##"
         # training configuration
         self.mode        = 1            # 1(train) | 2(test model_file)
-        self.config      = 12
+        self.config      = 10
 
         self.seed        = 123
         self.render      = False        # whether render the window from the original envs or not
@@ -282,7 +282,7 @@ class AgentParams(Params):  # hyperparameters for drl agents
 
                 self.rollout_steps = 50  # max look-ahead steps in a single rollout
                 self.tau = 1.
-                self.beta = 0.02         # coefficient for entropy penalty
+                self.beta = 0.05         # coefficient for entropy penalty
             else:
                 self.steps               = 20000000 # max #iterations
                 self.early_stop          = None     # max #steps per episode
