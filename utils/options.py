@@ -39,7 +39,7 @@ class Params(object):   # NOTE: shared across all modules
         self.verbose     = 2            # 0(warning) | 1(info) | 2(debug)
 
         # training signature
-        self.machine     = "aiscpu2"    # "machine_id"
+        self.machine     = "aiscpu4"    # "machine_id"
         self.timestamp   = "17112800"   # "yymmdd##"
         # training configuration
         self.mode        = 1            # 1(train) | 2(test model_file)
