@@ -12,7 +12,7 @@ from utils.init_weights import init_weights, normalized_columns_initializer
 
 class A3CMlpNoLSTMMinisimModel(Model):
     def __init__(self, args):
-        super(A3CMlpDeeperMinisimModel, self).__init__(args)
+        super(A3CMlpNoLSTMMinisimModel, self).__init__(args)
 
         self.lstm_layer_count = 0
         self.num_robots = args.num_robots
