@@ -29,6 +29,10 @@ class A3CAgent(Agent):
         self._load_model(self.model_file)   # load pretrained model if provided
         self.model.share_memory()           # NOTE
 
+        if hasattr(self.model, "lstm_layer_count"):
+            if self.model.lstm_layer_count == 0:
+                self.enable_lstm = False
+
         # learning algorithm
         self.optimizer    = self.optim(self.model.parameters(), lr = self.lr)
         self.optimizer.share_memory()       # NOTE
