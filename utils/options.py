@@ -28,7 +28,8 @@ CONFIGS = [
 [ "a3c",      "minisim",   "minisim",                  "a3c-mlp-deeper",  "none"],  # 10
 [ "a3c",      "minisim",   "minisim",                  "a3c-mlp-deeper2",  "none"],  # 11
 [ "a3c",      "minisim",   "minisim",                  "a3c-mlp-deeper-sep-hid",  "none"],  # 12
-[ "dqn",      "minisim",   "minisim",                  "mlp",      "sequential"  ]   # 13
+[ "a3c",      "minisim",   "minisim",                  "a3c-mlp-no-lstm",  "none"],  # 13
+[ "dqn",      "minisim",   "minisim",                  "mlp",      "sequential"  ]   # 14
 ]
 
 minisim_num_robots = 3  # 3
