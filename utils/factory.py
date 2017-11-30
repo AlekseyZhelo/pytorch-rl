@@ -26,6 +26,7 @@ from core.minisim.models.mini_two_lstm_separate import A3CMlpDeeperSeparateHidde
 from core.minisim.models.mini_two_lstm_separate_target_to_lstm import A3CMlpDeeper2MinisimModel
 from core.minisim.models.mini_two_lstm_shared import A3CMlpDeeperMinisimModel
 from core.minisim.models.mini_wide import A3CMlpMinisimModel
+from core.minisim.models.mini_no_lstm import A3CMlpNoLSTMMinisimModel
 ModelDict = {"empty":        EmptyModel,        # contains nothing, only should be used w/ EmptyAgent
              "dqn-mlp":      DQNMlpModel,       # for dqn low-level    input
              "dqn-cnn":      DQNCnnModel,       # for dqn pixel-level  input
@@ -38,7 +39,8 @@ ModelDict = {"empty":        EmptyModel,        # contains nothing, only should 
              "a3c-mlp-minisim-narrowing": A3CMlpNarrowingMinisimModel,
              "a3c-mlp-deeper": A3CMlpDeeperMinisimModel,
              "a3c-mlp-deeper2": A3CMlpDeeper2MinisimModel,
-             "a3c-mlp-deeper-sep-hid": A3CMlpDeeperSeparateHiddenMinisimModel}
+             "a3c-mlp-deeper-sep-hid": A3CMlpDeeperSeparateHiddenMinisimModel,
+             "a3c-mlp-no-lstm": A3CMlpNoLSTMMinisimModel}
 
 from core.memories.sequential import SequentialMemory
 from core.memories.episode_parameter import EpisodeParameterMemory
