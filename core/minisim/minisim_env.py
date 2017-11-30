@@ -138,7 +138,7 @@ class MinisimEnv(Env):
             self.exp_state1, self.exp_reward, self.exp_terminal1, _ = self.client.step_structured(
                 [self.actions[i] for i in action_index.reshape(-1)]
             )
-            print("actions: ", action_index)
+            # print("actions: ", action_index)
             if self.hist_len > 1:
                 self._append_to_history(self._preprocessState(self.exp_state1))
         return self._get_experience()

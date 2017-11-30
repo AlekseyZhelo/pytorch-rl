@@ -39,8 +39,8 @@ class Params(object):   # NOTE: shared across all modules
         self.verbose     = 2            # 0(warning) | 1(info) | 2(debug)
 
         # training signature
-        self.machine     = "aiscpu4"    # "machine_id"
-        self.timestamp   = "17112800"   # "yymmdd##"
+        self.machine     = "aiscpu2"    # "machine_id"
+        self.timestamp   = "17113000"   # "yymmdd##"
         # training configuration
         self.mode        = 1            # 1(train) | 2(test model_file)
         self.config      = 13
@@ -85,9 +85,9 @@ class Params(object):   # NOTE: shared across all modules
             self.hidden_vb_dim      = 128
 
             if self.env_type == "minisim":
-                self.num_processes = 6  # 6
+                self.num_processes = 23  # 6
                 if minisim_num_robots > 1:
-                    self.num_processes = 4  # 4
+                    self.num_processes = 23  # 4
 
             self.use_cuda           = False
             self.dtype              = torch.FloatTensor
@@ -270,7 +270,7 @@ class AgentParams(Params):  # hyperparameters for drl agents
             self.train_interval      = 32
         elif self.agent_type == "a3c":
             if self.env_type == "minisim":
-                self.steps = 2000000     # max #iterations
+                self.steps = 3000000     # max #iterations
                 self.early_stop = 26500  # max #steps per episode
                 self.gamma = 0.99
                 self.clip_grad = 40.
@@ -278,13 +278,13 @@ class AgentParams(Params):  # hyperparameters for drl agents
                 self.lr_decay = False
                 self.weight_decay = 1e-4 if self.enable_continuous else 0.
                 self.eval_freq = 60      # NOTE: here means every this many seconds
-                self.eval_steps = 30000
+                self.eval_steps = 30000  # 60000
                 self.prog_freq = self.eval_freq
                 self.test_nepisodes = 10
 
                 self.rollout_steps = 50  # max look-ahead steps in a single rollout
                 self.tau = 1.
-                self.beta = 0.10         # coefficient for entropy penalty
+                self.beta = 0.01         # coefficient for entropy penalty
             else:
                 self.steps               = 20000000 # max #iterations
                 self.early_stop          = None     # max #steps per episode
