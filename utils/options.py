@@ -41,7 +41,7 @@ class Params(object):   # NOTE: shared across all modules
         self.machine     = "aiscpu2"     # "machine_id"
         self.timestamp   = "17110500"   # "yymmdd##"
         # training configuration
-        self.mode        = 2            # 1(train) | 2(test model_file)
+        self.mode        = 1            # 1(train) | 2(test model_file)
         self.config      = 10
 
         self.seed        = 123
@@ -105,8 +105,8 @@ class Params(object):   # NOTE: shared across all modules
         # NOTE: will save the current model to model_name
         self.model_name  = self.root_dir + "/models/" + self.refs + ".pth"
         # NOTE: will load pretrained model_file if not None
-        # self.model_file  = None
-        self.model_file  = self.root_dir + "/models/aiscpu2_17110500.pth"
+        self.model_file  = None
+        # self.model_file  = self.root_dir + "/models/aiscpu2_17110500.pth"
         if self.mode == 2:
             self.model_file  = self.model_name  # NOTE: so only need to change self.mode to 2 to test the current training
             assert self.model_file is not None, "Pre-Trained model is None, Testing aborted!!!"

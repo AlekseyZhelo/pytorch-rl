@@ -68,7 +68,8 @@ class A3CAgent(Agent):
 
     def test_model(self):
         self.jobs = []
-        self.jobs.append(A3CTester(self))
+        self.jobs.append(A3CTester(self))  # TODO: add small chance for random actions to prevent stalling in place
+        # TODO: check performance on a similar, but slightly changed map
 
         self.logger.warning("<===================================> Testing ...")
         for job in self.jobs:
