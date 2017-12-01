@@ -39,8 +39,8 @@ class Params(object):   # NOTE: shared across all modules
         self.verbose     = 2            # 0(warning) | 1(info) | 2(debug)
 
         # training signature
-        self.machine     = "aiscpu4"    # "machine_id"
-        self.timestamp   = "17113000"   # "yymmdd##"
+        self.machine     = "pearl3"    # "machine_id"
+        self.timestamp   = "17120100"   # "yymmdd##"
         # training configuration
         self.mode        = 1            # 1(train) | 2(test model_file)
         self.config      = 13
@@ -145,6 +145,7 @@ class EnvParams(Params):    # settings for simulation environment
         elif self.env_type == "minisim":
             self.num_robots = minisim_num_robots
             self.curriculum = True
+            self.randomize_maps = True
             pass
         else:
             assert False, "env_type must be: gym | atari-ram | atari | lab | minisim"

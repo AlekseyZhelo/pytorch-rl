@@ -8,6 +8,8 @@ import time
 
 import numpy as np
 import roslaunch
+import rosparam
+import subprocess
 
 from core.env import Env
 from core.minisim.minisim_client import MinisimClient
@@ -15,10 +17,13 @@ from utils.helpers import Experience
 from utils.options import EnvParams
 
 
+# TODO: figure out logging
 class MinisimEnv(Env):
     initialized = False
     roslaunch_map_server = None
     roslaunch_node_starter = None
+    roscore = None
+    map_dir = None
 
     def __init__(self, args, env_ind=0):
         tmp = self._reset_experience
@@ -30,6 +35,7 @@ class MinisimEnv(Env):
 
         self.num_robots = args.num_robots
         self.curriculum = args.curriculum if hasattr(args, "curriculum") else False
+        self.randomize_maps = args.randomize_maps if hasattr(args, "randomize_maps") else False
         self.mode = args.mode  # 1(train) | 2(test model_file)
 
         if self.mode == 2:
@@ -38,10 +44,11 @@ class MinisimEnv(Env):
         self.sim_name = 'sim' + str(self.ind)
 
         if not MinisimEnv.initialized:
-            self.init_roslaunch()
+            self._init_roslaunch()
 
-        self.node = self.launch_node()
-        self.client = MinisimClient(self.num_robots, self.seed, self.curriculum, self.mode, '/' + self.sim_name, self.logger)
+        self.node = self._launch_node()
+        self.client = MinisimClient(self.num_robots, self.seed, self.curriculum, self.mode, '/' + self.sim_name,
+                                    self.logger)
         self.client.setup()  # TODO: move to client's init?
 
         # action space setup  # [linear velocity, angular velocity]
@@ -69,6 +76,10 @@ class MinisimEnv(Env):
             self.hist_len = 1
 
         self._reset_experience()
+
+    def __del__(self):
+        if self.node is not None:
+            self.node.stop()
 
     def _preprocessState(self, state):
         return state
@@ -156,33 +167,51 @@ class MinisimEnv(Env):
                 res[i] = idx % len(self.actions)
         return res
 
-    def init_roslaunch(self):
+    def _init_roslaunch(self):
         rospack = roslaunch.rospkg.RosPack()
         try:
             minisim_path = rospack.get_path('minisim')
         except roslaunch.rospkg.ResourceNotFound:
             self.logger.warning("WARNING: minisim not found")
             sys.exit(-1)
-        # map_server_rlaunch_path = os.path.join(minisim_path, 'launch', 'map_server_small.launch')
-        map_server_rlaunch_path = os.path.join(minisim_path, 'launch', 'map_server_small_simple.launch')
-        uuid = roslaunch.rlutil.get_or_generate_uuid(None, False)
-        roslaunch.configure_logging(uuid)
-        MinisimEnv.roslaunch_map_server = roslaunch.parent.ROSLaunchParent(uuid, [map_server_rlaunch_path])
-        MinisimEnv.roslaunch_map_server.start()
+
+        if not self.randomize_maps:
+            # map_server_rlaunch_path = os.path.join(minisim_path, 'launch', 'map_server_small.launch')
+            map_server_rlaunch_path = os.path.join(minisim_path, 'launch', 'map_server_small_simple.launch')
+            uuid = roslaunch.rlutil.get_or_generate_uuid(None, False)
+            roslaunch.configure_logging(uuid)
+            MinisimEnv.roslaunch_map_server = roslaunch.parent.ROSLaunchParent(uuid, [map_server_rlaunch_path])
+            MinisimEnv.roslaunch_map_server.start()
+        else:
+            master = roslaunch.scriptapi.Master()
+            if not master.is_running():
+                MinisimEnv.roscore = subprocess.Popen('roscore')
+
+            rlaunch_path = os.path.join(minisim_path, 'launch', 'sim_srv_multimap.launch')
+            loader = roslaunch.xmlloader.XmlLoader(resolve_anon=False)
+            config = roslaunch.config.ROSLaunchConfig()
+            loader.load(rlaunch_path, config, verbose=False)
+            MinisimEnv.map_dir = config.params.values()[0].value
 
         MinisimEnv.roslaunch_node_starter = roslaunch.scriptapi.ROSLaunch()
         MinisimEnv.roslaunch_node_starter.start()
         MinisimEnv.initialized = True
 
-    def launch_node(self):
+    def _launch_node(self):
         package = 'minisim'
-        executable = 'minisim_srv'
+        executable = 'minisim_srv' if not self.randomize_maps else 'minisim_srv_standalone'
         node = roslaunch.core.Node(package, executable, required=True, name=self.sim_name,
                                    namespace=self.sim_name, output='screen')
+
+        if self.randomize_maps:
+            rosparam.set_param("/{0}/{0}/map_dir".format(self.sim_name), MinisimEnv.map_dir)
 
         return MinisimEnv.roslaunch_node_starter.launch(node)
 
 
 if __name__ == '__main__':
-    env = MinisimEnv(EnvParams(), 0)
+    params = EnvParams()
+
+    env_0 = MinisimEnv(params, 0)
+    env_1 = MinisimEnv(params, 1)
     time.sleep(10000)
