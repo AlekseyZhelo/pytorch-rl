@@ -85,7 +85,7 @@ class Params(object):   # NOTE: shared across all modules
             self.hidden_vb_dim      = 128
 
             if self.env_type == "minisim":
-                self.num_processes = 1  # 6
+                self.num_processes = 23  # 6
                 if minisim_num_robots > 1:
                     self.num_processes = 23  # 4
 
