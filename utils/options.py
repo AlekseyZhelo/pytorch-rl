@@ -39,11 +39,11 @@ class Params(object):   # NOTE: shared across all modules
         self.verbose     = 2            # 0(warning) | 1(info) | 2(debug)
 
         # training signature
-        self.machine     = "aiscpu4"    # "machine_id"
-        self.timestamp   = "17121300"   # "yymmdd##"
+        self.machine     = "aiscpu2"    # "machine_id"
+        self.timestamp   = "17121400"   # "yymmdd##"
         # training configuration
         self.mode        = 1            # 1(train) | 2(test model_file)
-        self.config      = 12
+        self.config      = 10
 
         self.seed        = 123
         self.render      = False        # whether render the window from the original envs or not
@@ -62,7 +62,7 @@ class Params(object):   # NOTE: shared across all modules
                 self.hidden_dim     = 16
             elif self.env_type == "minisim":
                 self.hist_len = 4
-                self.hidden_dim = 24
+                self.hidden_dim = 48  # 24
             else:
                 self.hist_len       = 4
                 self.hidden_dim     = 256
