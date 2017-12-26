@@ -39,11 +39,11 @@ class Params(object):   # NOTE: shared across all modules
         self.verbose     = 2            # 0(warning) | 1(info) | 2(debug)
 
         # training signature
-        self.machine     = "aiscpu4"    # "machine_id"
-        self.timestamp   = "17122300"   # "yymmdd##"
+        self.machine     = "aiscpu2"    # "machine_id"
+        self.timestamp   = "17122600"   # "yymmdd##"
         # training configuration
         self.mode        = 1            # 1(train) | 2(test model_file)
-        self.config      = 10
+        self.config      = 9
 
         self.seed        = 123
         self.render      = False        # whether render the window from the original envs or not
@@ -62,7 +62,7 @@ class Params(object):   # NOTE: shared across all modules
                 self.hidden_dim     = 16
             elif self.env_type == "minisim":
                 self.hist_len = 4
-                self.hidden_dim = 48  # 24
+                self.hidden_dim = 36  # 24
             else:
                 self.hist_len       = 4
                 self.hidden_dim     = 256
@@ -285,7 +285,7 @@ class AgentParams(Params):  # hyperparameters for drl agents
 
                 self.rollout_steps = 50  # max look-ahead steps in a single rollout
                 self.tau = 1.
-                self.beta = 0.01         # coefficient for entropy penalty
+                self.beta = 0.15         # coefficient for entropy penalty
             else:
                 self.steps               = 20000000 # max #iterations
                 self.early_stop          = None     # max #steps per episode
