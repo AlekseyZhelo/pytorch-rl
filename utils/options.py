@@ -39,11 +39,11 @@ class Params(object):   # NOTE: shared across all modules
         self.verbose     = 2            # 0(warning) | 1(info) | 2(debug)
 
         # training signature
-        self.machine     = "aiscpu4"    # "machine_id"
-        self.timestamp   = "17122600"   # "yymmdd##"
+        self.machine     = "aiscpu2"    # "machine_id"
+        self.timestamp   = "17122700"   # "yymmdd##"
         # training configuration
         self.mode        = 1            # 1(train) | 2(test model_file)
-        self.config      = 10
+        self.config      = 9
 
         self.seed        = 123
         self.render      = False        # whether render the window from the original envs or not
@@ -275,7 +275,7 @@ class AgentParams(Params):  # hyperparameters for drl agents
                 self.early_stop = 26500  # max #steps per episode
                 self.gamma = 0.99
                 self.clip_grad = 40.
-                self.lr = 0.0001
+                self.lr = 0.00001   # 0.0001
                 self.lr_decay = False
                 self.weight_decay = 1e-4 if self.enable_continuous else 0.
                 self.eval_freq = 60      # NOTE: here means every this many seconds
