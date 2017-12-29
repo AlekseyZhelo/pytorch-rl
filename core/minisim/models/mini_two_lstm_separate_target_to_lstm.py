@@ -32,7 +32,7 @@ class A3CMlpDeeper2MinisimModel(Model):
         # lstm
         if self.enable_lstm:
             self.lstm = nn.LSTMCell(self.hidden_dim // 4, self.hidden_vb_dim, 1)
-            self.lstm2 = nn.LSTMCell(self.hidden_vb_dim + 2 * self.num_robots * self.hist_len, self.hidden_vb2_dim, 1)
+            self.lstm2 = nn.LSTMCell(self.hidden_vb_dim + 2 * self.hist_len, self.hidden_vb2_dim, 1)
             final_input_size = self.hidden_vb2_dim
         else:
             final_input_size = self.hidden_dim // 4

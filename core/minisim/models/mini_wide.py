@@ -35,10 +35,10 @@ class A3CMlpMinisimModel(Model):
         else:
             next_dim = self.hidden_dim
         # 1. policy output
-        self.policy_5 = nn.Linear(next_dim + 2 * self.num_robots * self.hist_len, self.output_dims)
+        self.policy_5 = nn.Linear(next_dim + 2 * self.hist_len, self.output_dims)
         self.policy_6 = nn.Softmax()
         # 2. value output
-        self.value_5 = nn.Linear(next_dim + 2 * self.num_robots * self.hist_len, 1)
+        self.value_5 = nn.Linear(next_dim + 2 * self.hist_len, 1)
 
         self._reset()
 
