@@ -32,14 +32,14 @@ CONFIGS = [
 [ "dqn",      "minisim",   "minisim",                  "mlp",      "sequential"  ]   # 14
 ]
 
-minisim_num_robots = 1  # 3
+minisim_num_robots = 2  # 3
 
 class Params(object):   # NOTE: shared across all modules
     def __init__(self):
         self.verbose     = 2            # 0(warning) | 1(info) | 2(debug)
 
         # training signature
-        self.machine     = "aiscpu2"    # "machine_id"
+        self.machine     = "aiscpu4"    # "machine_id"
         self.timestamp   = "17122900"   # "yymmdd##"
         # training configuration
         self.mode        = 1            # 1(train) | 2(test model_file)
