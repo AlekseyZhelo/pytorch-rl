@@ -56,6 +56,9 @@ class AgentSingleProcess(mp.Process):
         for global_param, local_param in zip(self.master.model.parameters(),
                                              self.model.parameters()):
             if global_param.grad is not None:
+                # print("proc_id: {1}, same var: {0}".format(local_param.grad is global_param._grad,
+                #                                             self.process_id))
+                # print(global_param._grad.__repr__())
                 break
             global_param._grad = local_param.grad
 
