@@ -13,6 +13,7 @@ import torch.multiprocessing as mp
 
 from utils.helpers import Experience, one_hot
 
+
 class AgentSingleProcess(mp.Process):
     def __init__(self, master, process_id=0):
         super(AgentSingleProcess, self).__init__(name = "Process-%d" % process_id)
@@ -27,6 +28,9 @@ class AgentSingleProcess(mp.Process):
         self.env = self.master.env_prototype(self.master.env_params, self.process_id)
         # model
         self.model = self.master.model_prototype(self.master.model_params)
+        if self.master.icm:
+            self.icm_inv_model = self.master.icm_inv_model_prototype(self.master.model_params)
+            self.icm_fwd_model = self.master.icm_fwd_model_prototype(self.master.model_params)
         self._sync_local_with_global()
 
         # experience
@@ -37,10 +41,13 @@ class AgentSingleProcess(mp.Process):
                                      action = None,
                                      reward = None,
                                      state1 = None,
-                                     terminal1 = False) # TODO: should check this again
+                                     terminal1 = False)
 
     def _sync_local_with_global(self):  # grab the current global model for local learning/evaluating
         self.model.load_state_dict(self.master.model.state_dict())
+        if self.master.icm:
+            self.icm_inv_model.load_state_dict(self.master.icm_inv_model.state_dict())
+            self.icm_fwd_model.load_state_dict(self.master.icm_fwd_model.state_dict())
 
     # NOTE: since no backward passes has ever been run on the global model
     # NOTE: its grad has never been initialized, here we ensure proper initialization
@@ -49,14 +56,27 @@ class AgentSingleProcess(mp.Process):
         for global_param, local_param in zip(self.master.model.parameters(),
                                              self.model.parameters()):
             if global_param.grad is not None:
-                return
+                break
             global_param._grad = local_param.grad
 
+        if self.master.icm:  # TODO: will work the same?
+            for global_param, local_param in zip(self.master.icm_inv_model.parameters(),
+                                                 self.icm_inv_model.parameters()):
+                if global_param.grad is not None:
+                    break
+                global_param._grad = local_param.grad
+
+            for global_param, local_param in zip(self.master.icm_fwd_model.parameters(),
+                                                 self.icm_fwd_model.parameters()):
+                if global_param.grad is not None:
+                    break
+                global_param._grad = local_param.grad
+
     def _forward(self, observation):
-        raise NotImplementedError("not implemented in base calss")
+        raise NotImplementedError("not implemented in base class")
 
     def _backward(self, reward, terminal):
-        raise NotImplementedError("not implemented in base calss")
+        raise NotImplementedError("not implemented in base class")
 
     def run(self):
-        raise NotImplementedError("not implemented in base calss")
+        raise NotImplementedError("not implemented in base class")

@@ -39,18 +39,21 @@ class Params(object):   # NOTE: shared across all modules
         self.verbose     = 2            # 0(warning) | 1(info) | 2(debug)
 
         # training signature
-        self.machine     = "aiscpu4"    # "machine_id"
-        self.timestamp   = "17122900"   # "yymmdd##"
+        self.machine     = "pearl7"    # "machine_id"
+        self.timestamp   = "18010400"   # "yymmdd##"
         # training configuration
         self.mode        = 1            # 1(train) | 2(test model_file)
-        self.config      = 13
+        self.config      = 9
 
         self.seed        = 123
         self.render      = False        # whether render the window from the original envs or not
         self.visualize   = True         # whether do online plotting and stuff or not
         self.save_best   = False        # save model w/ highest reward if True, otherwise always save the latest model
+        self.icm_save_best   = False
 
         self.agent_type, self.env_type, self.game, self.model_type, self.memory_type = CONFIGS[self.config]
+
+        self.icm = False
 
         if self.agent_type == "dqn":
             self.enable_double_dqn  = False
@@ -85,9 +88,15 @@ class Params(object):   # NOTE: shared across all modules
             self.hidden_vb_dim      = 128
 
             if self.env_type == "minisim":
-                self.num_processes = 23  # 6
+                from core.minisim.models.icm.icm_inverse import ICMInverseModel
+                from core.minisim.models.icm.icm_forward import ICMForwardModel
+                # self.icm = True
+                self.icm = False  # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                self.icm_inv_model = ICMInverseModel
+                self.icm_fwd_model = ICMForwardModel
+                self.num_processes = 1  # 6, 23
                 if minisim_num_robots > 1:
-                    self.num_processes = 23  # 4
+                    self.num_processes = 1  # 4, 23
 
             self.use_cuda           = False
             self.dtype              = torch.FloatTensor
@@ -112,6 +121,12 @@ class Params(object):   # NOTE: shared across all modules
             self.model_file  = self.model_name  # NOTE: so only need to change self.mode to 2 to test the current training
             assert self.model_file is not None, "Pre-Trained model is None, Testing aborted!!!"
             self.refs = self.refs + "_test"     # NOTE: using this as env for visdom for testing, to avoid accidentally redraw on the training plots
+
+        if self.icm:
+            self.icm_inv_model_name = "{0}/models/{1}_icm_inv.pth".format(self.root_dir, self.refs)
+            self.icm_fwd_model_name = "{0}/models/{1}_icm_fwd.pth".format(self.root_dir, self.refs)
+            self.icm_inv_model_file = self.icm_inv_model_name
+            self.icm_fwd_model_file = self.icm_fwd_model_name
 
         # logging configs
         self.log_name    = self.root_dir + "/logs/" + self.refs + ".log"
@@ -162,6 +177,12 @@ class ModelParams(Params):  # settings for network architecture
             self.hist_len = 1
             self.hidden_dim = 56
             self.hidden_vb_dim = self.hidden_dim // 4
+
+            self.icm_inv_hidden_dim         = 128
+            self.icm_inv_hidden_vb_dim      = 128  # unused
+            self.icm_fwd_hidden_dim         = 128
+            self.icm_fwd_hidden_vb_dim      = 128  # unused
+            self.icm_feature_dim = 6  # TODO: tweak
 
 class MemoryParams(Params):     # settings for replay memory
     def __init__(self):
@@ -275,7 +296,9 @@ class AgentParams(Params):  # hyperparameters for drl agents
                 self.early_stop = 26500  # max #steps per episode
                 self.gamma = 0.99
                 self.clip_grad = 40.
-                self.lr = 0.00001   # 0.0001
+                self.lr = 0.0001
+                self.icm_inv_lr = 0.0001
+                self.icm_fwd_lr = 0.0001
                 self.lr_decay = False
                 self.weight_decay = 1e-4 if self.enable_continuous else 0.
                 self.eval_freq = 60      # NOTE: here means every this many seconds

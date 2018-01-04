@@ -12,13 +12,13 @@ import torch.nn.functional as F
 from utils.helpers import A3C_Experience
 from core.agent_single_process import AgentSingleProcess
 
+
 class A3CSingleProcess(AgentSingleProcess):
     def __init__(self, master, process_id=0):
         super(A3CSingleProcess, self).__init__(master, process_id)
 
         # lstm hidden states
         if self.master.enable_lstm:
-            # TODO: this solution with layer_count and all the ifs is stupid and not scalable, but will do for now
             self.lstm_layer_count = self.model.lstm_layer_count if hasattr(self.model, "lstm_layer_count") else 1
             self._reset_lstm_hidden_vb_episode() # clear up hidden state
             self._reset_lstm_hidden_vb_rollout() # detach the previous variable from the computation graph
@@ -115,6 +115,8 @@ class A3CSingleProcess(AgentSingleProcess):
         b = 1 / (2 * sigma_sq * self.pi_vb.expand_as(sigma_sq)).sqrt()
         return (a * b).log()
 
+
+# noinspection PyPep8Naming
 class A3CLearner(A3CSingleProcess):
     def __init__(self, master, process_id=0):
         master.logger.warning("<===================================> A3C-Learner #" + str(process_id) + " {Env & Model}")
@@ -122,8 +124,12 @@ class A3CLearner(A3CSingleProcess):
 
         self._reset_rollout()
 
-        self.training = True    # choose actions by polinomial
+        self.training = True    # choose actions by polynomial
         self.model.train(self.training)
+        if self.master.icm:
+            self.icm_inv_model.train(self.training)
+            self.icm_fwd_model.train(self.training)
+
         # local counters
         self.frame_step   = 0   # local frame step counter
         self.train_step   = 0   # local train step counter
@@ -183,7 +189,6 @@ class A3CLearner(A3CSingleProcess):
 
         return valueT_vb
 
-    # TODO: seems to be working for several robots (with diff rewards), but check carefully again!
     def _backward(self):
         # preparation
         rollout_steps = len(self.rollout.reward)
@@ -198,7 +203,6 @@ class A3CLearner(A3CSingleProcess):
             if self.master.use_cuda:
                 action_batch_vb = action_batch_vb.cuda()
             policy_log_vb = [torch.log(policy_vb[i]) for i in range(rollout_steps)]
-            # TODO: correct?
             entropy_vb    = [- (policy_log_vb[i] * policy_vb[i]).sum(1) for i in range(rollout_steps)]
             if hasattr(self.master, "num_robots"):
                 policy_log_vb = [policy_log_vb[i].gather(1, action_batch_vb[i].unsqueeze(0).view(self.master.num_robots, -1)) for i in range(rollout_steps) ]
@@ -232,9 +236,11 @@ class A3CLearner(A3CSingleProcess):
         loss_vb.backward()
         torch.nn.utils.clip_grad_norm(self.model.parameters(), self.master.clip_grad)
 
-        # targets random for each episode, each robot has its target
-        # random map for each episode
-        # update a3c code for rewards for each robot
+        # targets random for each episode, each robot has its target  # DONE
+        # random map for each episode  # DONE
+        # update a3c code for rewards for each robot  # DONE
+
+        # TODO: ICM here
 
         self._ensure_global_grads()
         self.master.optimizer.step()
@@ -311,6 +317,9 @@ class A3CLearner(A3CSingleProcess):
             # sync in every step
             self._sync_local_with_global()
             self.model.zero_grad()
+            if self.master.icm:
+                self.icm_inv_model.zero_grad()
+                self.icm_fwd_model.zero_grad()
 
             # start of a new episode
             if should_start_new:
@@ -352,6 +361,7 @@ class A3CLearner(A3CSingleProcess):
                 self._reset_training_loggings()
                 self.last_prog = time.time()
 
+
 class A3CEvaluator(A3CSingleProcess):
     def __init__(self, master, process_id=0):
         master.logger.warning("<===================================> A3C-Evaluator {Env & Model}")
@@ -359,6 +369,10 @@ class A3CEvaluator(A3CSingleProcess):
 
         self.training = False   # choose actions w/ max probability
         self.model.train(self.training)
+        if self.master.icm:
+            self.icm_inv_model.train(self.training)
+            self.icm_fwd_model.train(self.training)
+
         self._reset_loggings()
 
         self.start_time = time.time()
@@ -548,6 +562,7 @@ class A3CEvaluator(A3CSingleProcess):
         # we also do a final evaluation after training is done
         self._eval_model()
 
+
 class A3CTester(A3CSingleProcess):
     def __init__(self, master, process_id=0):
         master.logger.warning("<===================================> A3C-Tester {Env & Model}")
@@ -555,6 +570,10 @@ class A3CTester(A3CSingleProcess):
 
         self.training = False   # choose actions w/ max probability
         self.model.train(self.training)
+        if self.master.icm:
+            self.icm_inv_model.train(self.training)
+            self.icm_fwd_model.train(self.training)
+
         self._reset_loggings()
 
         self.start_time = time.time()

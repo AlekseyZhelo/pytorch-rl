@@ -6,6 +6,7 @@ import torch.multiprocessing as mp
 from core.agent import Agent
 from core.agents.a3c_single_process import A3CLearner, A3CEvaluator, A3CTester
 
+
 class A3CAgent(Agent):
     def __init__(self, args, env_prototype, model_prototype, memory_prototype):
         super(A3CAgent, self).__init__(args, env_prototype, model_prototype, memory_prototype)
@@ -33,10 +34,24 @@ class A3CAgent(Agent):
             if self.model.lstm_layer_count == 0:
                 self.enable_lstm = False
 
+        if self.icm:
+            self.icm_inv_model = self.icm_inv_model_prototype(self.model_params)
+            self.icm_fwd_model = self.icm_fwd_model_prototype(self.model_params)
+            self.icm_inv_model.share_memory()
+            self.icm_fwd_model.share_memory()
+
         # learning algorithm
         self.optimizer    = self.optim(self.model.parameters(), lr = self.lr)
         self.optimizer.share_memory()       # NOTE
         self.lr_adjusted  = mp.Value('d', self.lr) # adjusted lr
+        if self.icm:
+            self.icm_inv_optimizer = self.optim(self.icm_inv_model.parameters(), lr=self.icm_inv_lr)
+            self.icm_inv_optimizer.share_memory()
+            self.icm_inv_lr_adjusted = mp.Value('d', self.icm_inv_lr)  # adjusted lr
+
+            self.icm_fwd_optimizer = self.optim(self.icm_fwd_model.parameters(), lr=self.icm_fwd_lr)
+            self.icm_fwd_optimizer.share_memory()
+            self.icm_fwd_lr_adjusted = mp.Value('d', self.icm_fwd_lr)  # adjusted lr
 
         # global counters
         self.frame_step   = mp.Value('l', 0) # global frame step counter
@@ -47,6 +62,12 @@ class A3CAgent(Agent):
         self.v_loss_avg   = mp.Value('d', 0.) # global value loss
         self.loss_avg     = mp.Value('d', 0.) # global loss
         self.loss_counter = mp.Value('l', 0)  # storing this many losses
+        if self.icm:
+            self.icm_inv_loss_avg = mp.Value('d', 0.)  # global ICM inverse loss
+            self.icm_fwd_loss_avg = mp.Value('d', 0.)  # global ICM forward loss
+            self.steps_since_last_log = mp.Value('l', 0)  # for online mean calculation
+            self.icm_inv_accuracy_avg = mp.Value('d', 0.)
+            self.icm_fwd_accuracy_avg = mp.Value('d', 0.)
         self._reset_training_loggings()
 
     def _reset_training_loggings(self):

@@ -23,6 +23,21 @@ class Agent(object):
         self.model_name = args.model_name           # NOTE: will save the current model to model_name
         self.model_file = args.model_file           # NOTE: will load pretrained model_file if not None
 
+        # icm
+        self.icm = args.icm if hasattr(args, "icm") else False
+        if self.icm:
+            self.icm_inv_lr = args.icm_inv_lr
+            self.icm_fwd_lr = args.icm_fwd_lr
+            self.icm_inv_model_prototype = args.icm_inv_model
+            self.icm_fwd_model_prototype = args.icm_fwd_model
+            self.icm_inv_model = None  # initialize in subclasses
+            self.icm_fwd_model = None  # initialize in subclasses
+
+            self.icm_inv_model_name = args.icm_inv_model_name
+            self.icm_inv_model_file = args.icm_inv_model_file
+            self.icm_fwd_model_name = args.icm_fwd_model_name
+            self.icm_fwd_model_file = args.icm_fwd_model_file
+
         self.render = args.render
         self.visualize = args.visualize
         if self.visualize:
@@ -30,9 +45,15 @@ class Agent(object):
             self.refs = args.refs
 
         self.save_best = args.save_best
+        self.icm_save_best = args.icm_save_best
         if self.save_best:
             self.best_step   = None                 # NOTE: achieves best_reward at this step
             self.best_reward = None                 # NOTE: only save a new model if achieves higher reward
+        if self.icm_save_best:
+            self.best_icm_inv_step = None
+            self.best_icm_inv_loss = None
+            self.best_icm_fwd_step = None
+            self.best_icm_fwd_loss = None
 
         self.hist_len = args.hist_len
         self.hidden_dim = args.hidden_dim
@@ -132,6 +153,54 @@ class Agent(object):
         else:
             torch.save(self.model.state_dict(), self.model_name)
             self.logger.warning("Saved  Model    @ Step: " + str(step) + ": " + self.model_name + ".")
+
+    # TODO: use!!!!!!!!!!!!!!!!!!!!
+    def _load_icm_models(self, inv_model_file, fwd_model_file):
+        if inv_model_file and fwd_model_file:
+            self.logger.warning("Loading ICM Inverse Model: " + inv_model_file + " ...")
+            self.icm_inv_model.load_state_dict(torch.load(inv_model_file))
+            self.logger.warning("Loaded ICM Inverse  Model: " + inv_model_file + " ...")
+            self.logger.warning("Loading ICM Forward Model: " + fwd_model_file + " ...")
+            self.icm_fwd_model.load_state_dict(torch.load(fwd_model_file))
+            self.logger.warning("Loaded ICM Forward  Model: " + fwd_model_file + " ...")
+        else:
+            self.logger.warning("No Pretrained ICM Models. Will Train From Scratch.")
+
+    # TODO: use!!!!!!!!!!!!!!!!!!!!
+    def _save_icm_models(self, step, curr_inv_loss, curr_fwd_loss):
+        self.logger.warning("Saving ICM Inverse Model    @ Step: " + str(step) + ": "
+                            + self.icm_inv_model_file + " ...")
+        if self.icm_save_best:
+            if self.best_icm_inv_step is None:
+                self.best_icm_inv_step = step
+                self.best_icm_inv_loss = curr_inv_loss
+            if curr_inv_loss < self.best_icm_inv_loss:
+                self.best_icm_inv_step = step
+                self.best_icm_inv_loss = curr_inv_loss
+                torch.save(self.icm_inv_model.state_dict(), self.icm_inv_model_file)
+            self.logger.warning(
+                "Saved ICM Inverse Model    @ Step: " + str(step) + ": " + self.icm_inv_model_file + ". {Best Step: " + str(
+                    self.best_icm_inv_step) + " | Best Loss: " + str(self.best_icm_inv_loss) + "}")
+
+            self.logger.warning("Saving ICM Forward Model    @ Step: " + str(step) + ": "
+                                + self.icm_fwd_model_file + " ...")
+            if self.best_icm_fwd_step is None:
+                self.best_icm_fwd_step = step
+                self.best_icm_fwd_loss = curr_fwd_loss
+            if curr_fwd_loss < self.best_icm_fwd_loss:
+                self.best_icm_fwd_step = step
+                self.best_icm_fwd_loss = curr_fwd_loss
+                torch.save(self.icm_fwd_model.state_dict(), self.icm_fwd_model_file)
+            self.logger.warning(
+                "Saved ICM Forward Model    @ Step: " + str(step) + ": " + self.icm_inv_model_file + ". {Best Step: " + str(
+                    self.best_icm_fwd_step) + " | Best Loss: " + str(self.best_icm_fwd_loss) + "}")
+        else:
+            torch.save(self.icm_inv_model.state_dict(), self.icm_inv_model_file)
+            self.logger.warning("Saved ICM Inverse Model    @ Step: " + str(step) + ": " + self.icm_inv_model_file + ".")
+
+            self.logger.warning("Saving ICM Forward Model    @ Step: " + str(step) + ": " + self.icm_fwd_model_file + " ...")
+            torch.save(self.icm_fwd_model.state_dict(), self.icm_fwd_model_file)
+            self.logger.warning("Saved ICM Forward  Model    @ Step: " + str(step) + ": " + self.icm_fwd_model_file + ".")
 
     def _forward(self, observation):
         raise NotImplementedError("not implemented in base calss")
