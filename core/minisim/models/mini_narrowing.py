@@ -67,7 +67,7 @@ class A3CMlpNarrowingMinisimModel(Model):
             target_data = target_data.contiguous().view(self.num_robots, 2)
             laser_scans = x[:, :, :self.input_dims[1]]
         # TODO: contiguous here will slow everything down a lot?
-        x = laser_scans.contiguous().view(laser_scans.size(0), self.input_dims[0] * self.input_dims[1])
+        x = laser_scans.contiguous()
 
         x = self.rl1(self.fc1(x))
         x = self.rl2(self.fc2(x))
