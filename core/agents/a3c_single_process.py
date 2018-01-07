@@ -240,7 +240,22 @@ class A3CLearner(A3CSingleProcess):
         # random map for each episode  # DONE
         # update a3c code for rewards for each robot  # DONE
 
-        # TODO: ICM here
+        # TODO: ICM here, remove if
+        if rollout_steps > 1:
+            # TODO: also use target data in the state?
+            state_start = np.array(self.rollout.state0).reshape(-1, self.master.state_shape + 2)[:, :self.master.state_shape]
+            state_next = np.array(self.rollout.state1).reshape(-1, self.master.state_shape + 2)[:, :self.master.state_shape]
+            state_start = Variable(torch.from_numpy(state_start).type(self.master.dtype))
+            state_next = Variable(torch.from_numpy(state_next).type(self.master.dtype))
+            actions = np.array(self.rollout.action).reshape(-1)
+            actions = Variable(torch.from_numpy(actions))
+
+            action_logits, action_probs = self.icm_inv_model.forward((state_start, state_next))
+            icm_inv_loss = self.icm_inv_loss_criterion(action_logits, actions)
+            icm_inv_loss.backward()
+
+            
+            pass
 
         self._ensure_global_grads()
         self.master.optimizer.step()

@@ -21,7 +21,7 @@ class ICMInverseModel(Model):
 
         self.hidden_dim = args.icm_inv_hidden_dim
         self.hidden_vb_dim = args.icm_inv_hidden_vb_dim
-        self.feature_dim = self.icm_feature_dim
+        self.feature_dim = args.icm_feature_dim
         self.output_dims = args.action_dim  # same as the superclass, repeated for clarity
 
         # build model
@@ -67,7 +67,7 @@ class ICMInverseModel(Model):
             1
         )
 
-        p = self.action_4(x)
-        p = self.action_5(p)
+        p_lin = self.action_4(x)
+        p = self.action_5(p_lin)
 
-        return p
+        return p_lin, p

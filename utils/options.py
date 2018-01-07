@@ -90,8 +90,8 @@ class Params(object):   # NOTE: shared across all modules
             if self.env_type == "minisim":
                 from core.minisim.models.icm.icm_inverse import ICMInverseModel
                 from core.minisim.models.icm.icm_forward import ICMForwardModel
-                # self.icm = True
-                self.icm = False  # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                self.icm = True
+                # self.icm = False  # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                 self.icm_inv_model = ICMInverseModel
                 self.icm_fwd_model = ICMForwardModel
                 self.num_processes = 1  # 6, 23

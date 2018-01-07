@@ -21,7 +21,7 @@ class ICMForwardModel(Model):
 
         self.hidden_dim = args.icm_fwd_hidden_dim
         self.hidden_vb_dim = args.icm_fwd_hidden_vb_dim
-        self.feature_dim = self.icm_feature_dim
+        self.feature_dim = args.icm_feature_dim
         self.action_dim = args.action_dim  # same as the superclass, repeated for clarity
 
         # build model
@@ -43,8 +43,6 @@ class ICMForwardModel(Model):
         self.fc2.bias.data.fill_(0)
         self.fc3.weight.data = normalized_columns_initializer(self.fc3.weight.data, 0.01)
         self.fc3.bias.data.fill_(0)
-        self.action_4.weight.data = normalized_columns_initializer(self.action_4.weight.data, 0.01)
-        self.action_4.bias.data.fill_(0)
 
     def forward(self, input_):
         state_features, action = input_
