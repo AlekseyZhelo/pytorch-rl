@@ -138,6 +138,9 @@ class A3CLearner(A3CSingleProcess):
         self.v_loss_avg   = 0.  # global value loss
         self.loss_avg     = 0.  # global value loss
         self.loss_counter = 0   # storing this many losses
+        self.icm_inv_loss_avg = 0.
+        self.icm_fwd_loss_avg = 0.
+        self.icm_inv_accuracy_avg = 0.
         self._reset_training_loggings()
 
         # copy local training stats to global every prog_freq
@@ -148,6 +151,10 @@ class A3CLearner(A3CSingleProcess):
         self.v_loss_avg   = 0.
         self.loss_avg     = 0.
         self.loss_counter = 0
+        self.icm_inv_loss_avg = 0.
+        self.icm_fwd_loss_avg = 0.
+        self.icm_inv_accuracy_avg = 0.
+        self.icm_fwd_accuracy_avg = 0.
 
     def _reset_rollout(self):       # for storing the experiences collected through one rollout
         self.rollout = A3C_Experience(state0 = [],
@@ -240,8 +247,11 @@ class A3CLearner(A3CSingleProcess):
         # random map for each episode  # DONE
         # update a3c code for rewards for each robot  # DONE
 
-        # TODO: ICM here, remove if
-        if rollout_steps > 1:
+        # TODO: ICM here
+        if self.master.icm:
+            if rollout_steps > 1:
+                pass
+
             # TODO: also use target data in the state?
             state_start = np.array(self.rollout.state0).reshape(-1, self.master.state_shape + 2)[:, :self.master.state_shape]
             state_next = np.array(self.rollout.state1).reshape(-1, self.master.state_shape + 2)[:, :self.master.state_shape]
@@ -250,15 +260,25 @@ class A3CLearner(A3CSingleProcess):
             actions = np.array(self.rollout.action).reshape(-1)
             actions = Variable(torch.from_numpy(actions))
 
-            action_logits, action_probs = self.icm_inv_model.forward((state_start, state_next))
+            features, features_next, action_logits, action_probs = \
+                self.icm_inv_model.forward((state_start, state_next))
             icm_inv_loss = self.icm_inv_loss_criterion(action_logits, actions)
             icm_inv_loss.backward()
 
-            
-            pass
+            features_next_pred = self.icm_fwd_model.forward((features, actions))
+            icm_fwd_loss = self.icm_fwd_loss_criterion(features_next_pred, features_next)
+            # TODO: does this backpropagate through the inverse model too?
+            icm_fwd_loss.backward()
+
+            self.icm_inv_loss_avg += icm_inv_loss.data.numpy()
+            self.icm_fwd_loss_avg += icm_fwd_loss.data.numpy()
+            self.icm_fwd_accuracy_avg += actions.eq(action_probs.max(1)[1]).sum()  # TODO
 
         self._ensure_global_grads()
         self.master.optimizer.step()
+        if self.master.icm:
+            self.master.icm_inv_optimizer.step()
+            self.master.icm_fwd_optimizer.step()
         self.train_step += 1
         self.master.train_step.value += 1
 
@@ -272,6 +292,7 @@ class A3CLearner(A3CSingleProcess):
         self.v_loss_avg   += value_loss_vb.data.numpy()
         self.loss_avg     += loss_vb.data.numpy()
         self.loss_counter += 1
+
 
     def _rollout(self, episode_steps, episode_reward):
         # reset rollout experiences

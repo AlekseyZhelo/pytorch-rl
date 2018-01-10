@@ -65,9 +65,7 @@ class A3CAgent(Agent):
         if self.icm:
             self.icm_inv_loss_avg = mp.Value('d', 0.)  # global ICM inverse loss
             self.icm_fwd_loss_avg = mp.Value('d', 0.)  # global ICM forward loss
-            self.steps_since_last_log = mp.Value('l', 0)  # for online mean calculation
             self.icm_inv_accuracy_avg = mp.Value('d', 0.)
-            self.icm_fwd_accuracy_avg = mp.Value('d', 0.)
         self._reset_training_loggings()
 
     def _reset_training_loggings(self):
@@ -75,6 +73,9 @@ class A3CAgent(Agent):
         self.v_loss_avg.value   = 0.
         self.loss_avg.value     = 0.
         self.loss_counter.value = 0
+        self.icm_inv_loss_avg.value = 0.
+        self.icm_fwd_loss_avg.value = 0.
+        self.icm_inv_accuracy_avg.value = 0.
 
     def fit_model(self):
         self.jobs = []

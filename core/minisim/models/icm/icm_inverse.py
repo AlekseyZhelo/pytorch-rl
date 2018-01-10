@@ -1,11 +1,8 @@
 from __future__ import absolute_import
 from __future__ import division
 
-import numpy as np
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
-from torch.autograd import Variable
 
 from core.model import Model
 from utils.init_weights import init_weights, normalized_columns_initializer
@@ -33,7 +30,7 @@ class ICMInverseModel(Model):
         self.fc3 = nn.Linear(self.hidden_dim // 2, self.feature_dim)
         self.rl3 = nn.ELU()
 
-        # 1. action output
+        # 1. action output  # TODO: more layers here?
         self.action_4 = nn.Linear(2 * self.feature_dim, self.output_dims)
         self.action_5 = nn.Softmax()
 
@@ -56,7 +53,6 @@ class ICMInverseModel(Model):
         x_1 = self.rl1(self.fc1(state))
         x_1 = self.rl2(self.fc2(x_1))
         x_1 = self.rl3(self.fc3(x_1))
-        # x = x.view(1, -1)
 
         x_2 = self.rl1(self.fc1(state_next))
         x_2 = self.rl2(self.fc2(x_2))
@@ -70,4 +66,4 @@ class ICMInverseModel(Model):
         p_lin = self.action_4(x)
         p = self.action_5(p_lin)
 
-        return p_lin, p
+        return x_1, x_2, p_lin, p
