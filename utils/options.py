@@ -39,8 +39,8 @@ class Params(object):   # NOTE: shared across all modules
         self.verbose     = 2            # 0(warning) | 1(info) | 2(debug)
 
         # training signature
-        self.machine     = "pearl7"    # "machine_id"
-        self.timestamp   = "18010400"   # "yymmdd##"
+        self.machine     = "aiscpu2"    # "machine_id"
+        self.timestamp   = "18011100"   # "yymmdd##"
         # training configuration
         self.mode        = 1            # 1(train) | 2(test model_file)
         self.config      = 9
@@ -94,9 +94,9 @@ class Params(object):   # NOTE: shared across all modules
                 # self.icm = False  # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                 self.icm_inv_model = ICMInverseModel
                 self.icm_fwd_model = ICMForwardModel
-                self.num_processes = 1  # 6, 23
+                self.num_processes = 23  # 6, 23
                 if minisim_num_robots > 1:
-                    self.num_processes = 1  # 4, 23
+                    self.num_processes = 23  # 4, 23
 
             self.use_cuda           = False
             self.dtype              = torch.FloatTensor
