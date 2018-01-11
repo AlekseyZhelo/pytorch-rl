@@ -125,8 +125,11 @@ class Params(object):   # NOTE: shared across all modules
         if self.icm:
             self.icm_inv_model_name = "{0}/models/{1}_icm_inv.pth".format(self.root_dir, self.refs)
             self.icm_fwd_model_name = "{0}/models/{1}_icm_fwd.pth".format(self.root_dir, self.refs)
-            self.icm_inv_model_file = self.icm_inv_model_name
-            self.icm_fwd_model_file = self.icm_fwd_model_name
+            self.icm_inv_model_file = None
+            self.icm_fwd_model_file = None
+            if self.mode == 2:  # NOTE: so only need to change self.mode to 2 to test the current training
+                self.icm_inv_model_file = self.icm_inv_model_name
+                self.icm_fwd_model_file = self.icm_fwd_model_name
 
         # logging configs
         self.log_name    = self.root_dir + "/logs/" + self.refs + ".log"
