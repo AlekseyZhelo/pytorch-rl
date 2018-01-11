@@ -37,6 +37,7 @@ class A3CAgent(Agent):
         if self.icm:
             self.icm_inv_model = self.icm_inv_model_prototype(self.model_params)
             self.icm_fwd_model = self.icm_fwd_model_prototype(self.model_params)
+            self._load_icm_models(self.icm_inv_model_file, self.icm_fwd_model_file)
             self.icm_inv_model.share_memory()
             self.icm_fwd_model.share_memory()
 

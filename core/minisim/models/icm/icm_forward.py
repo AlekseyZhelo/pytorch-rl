@@ -1,10 +1,8 @@
 from __future__ import absolute_import
 from __future__ import division
 
-import numpy as np
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 from torch.autograd import Variable
 
 from core.model import Model
@@ -48,7 +46,8 @@ class ICMForwardModel(Model):
         state_features, action = input_
 
         x = torch.cat(
-            (state_features, helpers.one_hot(self.action_dim, action)),
+            (state_features,
+             Variable(torch.from_numpy(helpers.one_hot(self.action_dim, action.data.numpy())).type(self.dtype))),
             1
         )
 

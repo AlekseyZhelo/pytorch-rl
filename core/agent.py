@@ -154,7 +154,7 @@ class Agent(object):
             torch.save(self.model.state_dict(), self.model_name)
             self.logger.warning("Saved  Model    @ Step: " + str(step) + ": " + self.model_name + ".")
 
-    # TODO: use!!!!!!!!!!!!!!!!!!!!
+    # TODO: used everywhere where needed? (a3c.py)
     def _load_icm_models(self, inv_model_file, fwd_model_file):
         if inv_model_file and fwd_model_file:
             self.logger.warning("Loading ICM Inverse Model: " + inv_model_file + " ...")
@@ -166,7 +166,7 @@ class Agent(object):
         else:
             self.logger.warning("No Pretrained ICM Models. Will Train From Scratch.")
 
-    # TODO: use!!!!!!!!!!!!!!!!!!!!
+    # TODO: used everywhere where needed? (a3c_single_process.py)
     def _save_icm_models(self, step, curr_inv_loss, curr_fwd_loss):
         self.logger.warning("Saving ICM Inverse Model    @ Step: " + str(step) + ": "
                             + self.icm_inv_model_file + " ...")
