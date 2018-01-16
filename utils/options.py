@@ -39,11 +39,11 @@ class Params(object):   # NOTE: shared across all modules
         self.verbose     = 2            # 0(warning) | 1(info) | 2(debug)
 
         # training signature
-        self.machine     = "aiscpu4"    # "machine_id"
-        self.timestamp   = "18011400"   # "yymmdd##"
+        self.machine     = "aiscpu2"    # "machine_id"
+        self.timestamp   = "18011600"   # "yymmdd##"
         # training configuration
         self.mode        = 1            # 1(train) | 2(test model_file)
-        self.config      = 12
+        self.config      = 10
 
         self.seed        = 123
         self.render      = False        # whether render the window from the original envs or not
@@ -178,14 +178,14 @@ class ModelParams(Params):  # settings for network architecture
         if self.env_type == "minisim":
             self.num_robots = minisim_num_robots
             self.hist_len = 1
-            self.hidden_dim = 56
+            self.hidden_dim = 96  # 56
             self.hidden_vb_dim = self.hidden_dim // 4
 
             self.icm_inv_hidden_dim         = 128
             self.icm_inv_hidden_vb_dim      = 128  # unused
             self.icm_fwd_hidden_dim         = 128
             self.icm_fwd_hidden_vb_dim      = 128  # unused
-            self.icm_feature_dim = 9  # 6 TODO: tweak
+            self.icm_feature_dim = 3  # 6 TODO: tweak
 
 class MemoryParams(Params):     # settings for replay memory
     def __init__(self):
