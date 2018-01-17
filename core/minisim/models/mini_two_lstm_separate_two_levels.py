@@ -1,18 +1,16 @@
 from __future__ import absolute_import
 from __future__ import division
-import numpy as np
+
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
-from torch.autograd import Variable
 
 from core.model import Model
 from utils.init_weights import init_weights, normalized_columns_initializer
 
 
-class A3CMlpDeeperSeparateHiddenMinisimModel(Model):
+class A3CMlpDeeperSeparateHiddenTwoLevelsMinisimModel(Model):
     def __init__(self, args):
-        super(A3CMlpDeeperSeparateHiddenMinisimModel, self).__init__(args)
+        super(A3CMlpDeeperSeparateHiddenTwoLevelsMinisimModel, self).__init__(args)
 
         self.lstm_layer_count = 2
         self.num_robots = args.num_robots
@@ -35,11 +33,15 @@ class A3CMlpDeeperSeparateHiddenMinisimModel(Model):
             final_input_size = self.hidden_vb2_dim
         else:
             final_input_size = self.hidden_dim // 4
+        self.fc4 = nn.Linear(final_input_size + 2 * self.hist_len, self.hidden_dim // 2)
+        self.rl4 = nn.ELU()
+        self.fc5 = nn.Linear(self.hidden_dim // 2, self.hidden_dim // 2)
+        self.rl5 = nn.ELU()
         # 1. policy output
-        self.policy_6 = nn.Linear(final_input_size + 2 * self.hist_len, self.output_dims)
+        self.policy_6 = nn.Linear(self.hidden_dim // 2, self.output_dims)
         self.policy_7 = nn.Softmax()
         # 2. value output
-        self.value_8 = nn.Linear(final_input_size + 2 * self.hist_len, 1)
+        self.value_8 = nn.Linear(self.hidden_dim // 2, 1)
 
         self._reset()
 
@@ -51,6 +53,10 @@ class A3CMlpDeeperSeparateHiddenMinisimModel(Model):
         self.fc2.bias.data.fill_(0)
         self.fc3.weight.data = normalized_columns_initializer(self.fc3.weight.data, 0.01)
         self.fc3.bias.data.fill_(0)
+        self.fc4.weight.data = normalized_columns_initializer(self.fc4.weight.data, 0.01)
+        self.fc4.bias.data.fill_(0)
+        self.fc5.weight.data = normalized_columns_initializer(self.fc5.weight.data, 0.01)
+        self.fc5.bias.data.fill_(0)
         self.policy_6.weight.data = normalized_columns_initializer(self.policy_6.weight.data, 0.01)
         self.policy_6.bias.data.fill_(0)
         self.value_8.weight.data = normalized_columns_initializer(self.value_8.weight.data, 1.0)
@@ -85,9 +91,11 @@ class A3CMlpDeeperSeparateHiddenMinisimModel(Model):
             x = x2
 
         x_aug = torch.cat((x, target_data), 1)
-        p = self.policy_6(x_aug)
+        x = self.rl4(self.fc4(x_aug))
+        x = self.rl5(self.fc5(x))
+        p = self.policy_6(x)
         p = self.policy_7(p)
-        v = self.value_8(x_aug)
+        v = self.value_8(x)
         if self.enable_lstm:
             return p, v, (x1, c1), (x2, c2)
         else:
