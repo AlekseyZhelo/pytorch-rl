@@ -31,8 +31,8 @@ class AgentSingleProcess(mp.Process):
         if self.master.icm:
             self.icm_inv_model = self.master.icm_inv_model_prototype(self.master.model_params)
             self.icm_fwd_model = self.master.icm_fwd_model_prototype(self.master.model_params)
-            self.icm_inv_loss_criterion = torch.nn.CrossEntropyLoss()
-            self.icm_fwd_loss_criterion = torch.nn.MSELoss()
+            self.icm_inv_loss_criterion = torch.nn.CrossEntropyLoss(reduce=False)
+            self.icm_fwd_loss_criterion = torch.nn.MSELoss(reduce=False)
         self._sync_local_with_global()
 
         # experience

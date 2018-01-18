@@ -208,8 +208,47 @@ class A3CLearner(A3CSingleProcess):
         return valueT_vb
 
     def _backward(self):
-        # preparation
         rollout_steps = len(self.rollout.reward)
+
+        # ICM first if enabled
+        if self.master.icm:
+            # if rollout_steps > 1:
+            #     pass
+
+            # TODO: also use target data in the state?
+            state_start = np.array(self.rollout.state0).reshape(-1, self.master.state_shape + 2)[:,
+                          :self.master.state_shape]
+            state_next = np.array(self.rollout.state1).reshape(-1, self.master.state_shape + 2)[:,
+                         :self.master.state_shape]
+            state_start = Variable(torch.from_numpy(state_start).type(self.master.dtype))
+            state_next = Variable(torch.from_numpy(state_next).type(self.master.dtype))
+            actions = np.array(self.rollout.action).reshape(-1)
+            actions = Variable(torch.from_numpy(actions).long(), requires_grad=False)
+
+            features, features_next, action_logits, action_probs = \
+                self.icm_inv_model.forward((state_start, state_next))
+            features_next = features_next.detach()
+            icm_inv_loss = self.icm_inv_loss_criterion(action_logits, actions)
+            icm_inv_loss_mean = icm_inv_loss.mean()
+            icm_inv_loss_mean.backward()
+
+            # TODO: right to create new Variable here?
+            # otherwise RuntimeError: Trying to backward through the graph a second time
+            features_next_pred = self.icm_fwd_model.forward((Variable(features.data), actions))
+            icm_fwd_loss = self.icm_fwd_loss_criterion(features_next_pred, features_next).mean(dim=1)
+            icm_fwd_loss_mean = icm_fwd_loss.mean()
+            # TODO: does this backpropagate through the inverse model too?
+            icm_fwd_loss_mean.backward()
+
+            self.icm_inv_loss_avg += icm_inv_loss_mean.data.numpy()
+            self.icm_fwd_loss_avg += icm_fwd_loss_mean.data.numpy()
+            self.icm_inv_accuracy_avg += actions.eq(action_probs.max(1)[1]).sum().data.numpy()[0] / float(
+                actions.size()[0])
+
+            icm_inv_loss_detached = Variable(icm_inv_loss.data)
+            icm_fwd_loss_detached = Variable(icm_fwd_loss.data)
+
+        # preparation
         policy_vb = self.rollout.policy_vb
         if self.master.enable_continuous:
             action_batch_vb = Variable(torch.from_numpy(np.array(self.rollout.action)))
@@ -239,6 +278,8 @@ class A3CLearner(A3CSingleProcess):
         value_loss_vb = 0.
         for i in reversed(range(rollout_steps)):
             reward_vb = Variable(torch.from_numpy(self.rollout.reward[i])).float().view(-1, 1)
+            if self.master.icm:
+                reward_vb += icm_inv_loss_detached[i] + icm_fwd_loss_detached[i]
             valueT_vb = self.master.gamma * valueT_vb + reward_vb
             advantage_vb = valueT_vb - self.rollout.value0_vb[i]
             value_loss_vb = value_loss_vb + 0.5 * advantage_vb.pow(2)
@@ -264,38 +305,6 @@ class A3CLearner(A3CSingleProcess):
         # targets random for each episode, each robot has its target  # DONE
         # random map for each episode  # DONE
         # update a3c code for rewards for each robot  # DONE
-
-        if self.master.icm:
-            if rollout_steps > 1:
-                pass
-
-            # TODO: also use target data in the state?
-            state_start = np.array(self.rollout.state0).reshape(-1, self.master.state_shape + 2)[:,
-                          :self.master.state_shape]
-            state_next = np.array(self.rollout.state1).reshape(-1, self.master.state_shape + 2)[:,
-                         :self.master.state_shape]
-            state_start = Variable(torch.from_numpy(state_start).type(self.master.dtype))
-            state_next = Variable(torch.from_numpy(state_next).type(self.master.dtype))
-            actions = np.array(self.rollout.action).reshape(-1)
-            actions = Variable(torch.from_numpy(actions), requires_grad=False)
-
-            features, features_next, action_logits, action_probs = \
-                self.icm_inv_model.forward((state_start, state_next))
-            features_next = features_next.detach()
-            icm_inv_loss = self.icm_inv_loss_criterion(action_logits, actions)
-            icm_inv_loss.backward()
-
-            # TODO: right to create new Variable here?
-            # otherwise RuntimeError: Trying to backward through the graph a second time
-            features_next_pred = self.icm_fwd_model.forward((Variable(features.data), actions))
-            icm_fwd_loss = self.icm_fwd_loss_criterion(features_next_pred, features_next)
-            # TODO: does this backpropagate through the inverse model too?
-            icm_fwd_loss.backward()
-
-            self.icm_inv_loss_avg += icm_inv_loss.data.numpy()
-            self.icm_fwd_loss_avg += icm_fwd_loss.data.numpy()
-            self.icm_inv_accuracy_avg += actions.eq(action_probs.max(1)[1]).sum().data.numpy()[0] / float(
-                actions.size()[0])
 
         self._ensure_global_grads()
         self.master.optimizer.step()
