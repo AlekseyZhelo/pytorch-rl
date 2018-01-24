@@ -58,6 +58,8 @@ class MinisimEnv(Env):
         # self.actions = [[0, 0], [10, 0], [-10, 0], [0, 16], [0, -16]]  # ,[1, 1], [1, -1], [-1, 1], [-1, -1]]
         # trying out
         self.actions = [[0, 0], [3, 0], [-3, 0], [0, 8], [0, -8]]  # ,[1, 1], [1, -1], [-1, 1], [-1, -1]]
+        # try to promote more realistic behavior with slower backward movement?
+        # self.actions = [[0, 0], [3, 0], [-1, 0], [0, 8], [0, -8]]  # ,[1, 1], [1, -1], [-1, 1], [-1, -1]]
         self.logger.warning("Action Space: %s", self.actions)
 
         # state space setup

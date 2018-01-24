@@ -74,9 +74,10 @@ class A3CAgent(Agent):
         self.v_loss_avg.value   = 0.
         self.loss_avg.value     = 0.
         self.loss_counter.value = 0
-        self.icm_inv_loss_avg.value = 0.
-        self.icm_fwd_loss_avg.value = 0.
-        self.icm_inv_accuracy_avg.value = 0.
+        if self.icm:
+            self.icm_inv_loss_avg.value = 0.
+            self.icm_fwd_loss_avg.value = 0.
+            self.icm_inv_accuracy_avg.value = 0.
 
     def fit_model(self):
         self.jobs = []

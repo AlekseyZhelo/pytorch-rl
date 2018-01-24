@@ -697,6 +697,7 @@ class A3CTester(A3CSingleProcess):
         super(A3CTester, self).__init__(master, process_id)
 
         self.training = False  # choose actions w/ max probability
+        # self.training = True  # choose actions by polynomial (?)
         self.model.train(self.training)
         if self.master.icm:
             self.icm_inv_model.train(self.training)
