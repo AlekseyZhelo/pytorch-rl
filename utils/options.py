@@ -41,7 +41,7 @@ class Params(object):   # NOTE: shared across all modules
 
         # training signature
         self.machine     = "aiscpu4"    # "machine_id"
-        self.timestamp   = "18012800"   # "yymmdd##"
+        self.timestamp   = "18012801"   # "yymmdd##"
         # training configuration
         self.mode        = 1            # 1(train) | 2(test model_file)
         self.config      = 12
@@ -186,7 +186,7 @@ class ModelParams(Params):  # settings for network architecture
             self.icm_inv_hidden_vb_dim      = 128  # unused
             self.icm_fwd_hidden_dim         = 128
             self.icm_fwd_hidden_vb_dim      = 128  # unused
-            self.icm_feature_dim = 6  # 6 TODO: tweak
+            self.icm_feature_dim = 9  # 6 TODO: tweak
 
 class MemoryParams(Params):     # settings for replay memory
     def __init__(self):
