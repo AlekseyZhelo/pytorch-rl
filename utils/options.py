@@ -41,7 +41,7 @@ class Params(object):   # NOTE: shared across all modules
 
         # training signature
         self.machine     = "aiscpu4"    # "machine_id"
-        self.timestamp   = "18012900"   # "yymmdd##"
+        self.timestamp   = "18012901"   # "yymmdd##"
         # training configuration
         self.mode        = 1            # 1(train) | 2(test model_file)
         self.config      = 12
@@ -312,7 +312,7 @@ class AgentParams(Params):  # hyperparameters for drl agents
 
                 self.rollout_steps = 50  # max look-ahead steps in a single rollout
                 self.tau = 1.
-                self.beta = 0.02         # coefficient for entropy penalty
+                self.beta = 0.10         # coefficient for entropy penalty
             else:
                 self.steps               = 20000000 # max #iterations
                 self.early_stop          = None     # max #steps per episode
