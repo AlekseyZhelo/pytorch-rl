@@ -10,7 +10,7 @@ from minisim.srv import *
 
 
 class MinisimClient(object):
-    laser_rays_per_robot = 36
+    laser_rays_per_robot = 72
     message_ok = "ok"
 
     def __init__(self, num_robots, seed, curriculum, mode, sim_prefix, logger):
