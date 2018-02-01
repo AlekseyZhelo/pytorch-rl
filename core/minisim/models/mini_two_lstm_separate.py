@@ -23,11 +23,11 @@ class A3CMlpDeeperSeparateHiddenMinisimModel(Model):
         # build model
         # 0. feature layers
         self.fc1 = nn.Linear(self.input_dims[0] * self.input_dims[1], self.hidden_dim)
-        self.rl1 = nn.ELU()
+        self.rl1 = nn.SELU()
         self.fc2 = nn.Linear(self.hidden_dim, self.hidden_dim // 2)
-        self.rl2 = nn.ELU()
+        self.rl2 = nn.SELU()
         self.fc3 = nn.Linear(self.hidden_dim // 2, self.hidden_dim // 4)
-        self.rl3 = nn.ELU()
+        self.rl3 = nn.SELU()
         # lstm
         if self.enable_lstm:
             self.lstm = nn.LSTMCell(self.hidden_dim // 4, self.hidden_vb_dim, 1)

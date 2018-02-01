@@ -21,11 +21,11 @@ class A3CMlpDeeperSeparateHiddenTwoLevelsMinisimModel(Model):
         # build model
         # 0. feature layers
         self.fc1 = nn.Linear(self.input_dims[0] * self.input_dims[1], self.hidden_dim)
-        self.rl1 = nn.ELU()
+        self.rl1 = nn.SELU()
         self.fc2 = nn.Linear(self.hidden_dim, self.hidden_dim // 2)
-        self.rl2 = nn.ELU()
+        self.rl2 = nn.SELU()
         self.fc3 = nn.Linear(self.hidden_dim // 2, self.hidden_dim // 4)
-        self.rl3 = nn.ELU()
+        self.rl3 = nn.SELU()
         # lstm
         if self.enable_lstm:
             self.lstm = nn.LSTMCell(self.hidden_dim // 4, self.hidden_vb_dim, 1)
@@ -34,9 +34,9 @@ class A3CMlpDeeperSeparateHiddenTwoLevelsMinisimModel(Model):
         else:
             final_input_size = self.hidden_dim // 4
         self.fc4 = nn.Linear(final_input_size + 2 * self.hist_len, self.hidden_dim // 2)
-        self.rl4 = nn.ELU()
+        self.rl4 = nn.SELU()
         self.fc5 = nn.Linear(self.hidden_dim // 2, self.hidden_dim // 2)
-        self.rl5 = nn.ELU()
+        self.rl5 = nn.SELU()
         # 1. policy output
         self.policy_6 = nn.Linear(self.hidden_dim // 2, self.output_dims)
         self.policy_7 = nn.Softmax()
