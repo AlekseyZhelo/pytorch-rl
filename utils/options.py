@@ -164,7 +164,7 @@ class EnvParams(Params):    # settings for simulation environment
         elif self.env_type == "minisim":
             self.num_robots = minisim_num_robots
             self.curriculum = True
-            self.randomize_maps = True
+            self.randomize_maps = False
             pass
         else:
             assert False, "env_type must be: gym | atari-ram | atari | lab | minisim"
