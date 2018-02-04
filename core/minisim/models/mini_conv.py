@@ -23,7 +23,7 @@ class A3CCnvMinisimModel(Model):
         self.sz_1 = (self.input_dims[0] * self.input_dims[1] - 5) // 2 + 1
         self.rl1 = nn.ELU()
         self.fc2 = nn.Conv1d(self.num_filters, self.num_filters, 3, 2)
-        self.sz_2 = (self.sz_1 - 2) // 2 + 1
+        self.sz_2 = (self.sz_1 - 3) // 2 + 1
         self.rl2 = nn.ELU()
         self.fc3 = nn.Linear(self.sz_2 * 8, self.hidden_dim)
         self.rl3 = nn.ELU()
