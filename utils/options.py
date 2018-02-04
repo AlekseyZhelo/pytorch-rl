@@ -34,18 +34,18 @@ CONFIGS = [
 [ "a3c",      "minisim",   "minisim",                  "a3c-cnv",      "none"  ]   # 16
 ]
 
-minisim_num_robots = 3  # 3
+minisim_num_robots = 1  # 3
 
 class Params(object):   # NOTE: shared across all modules
     def __init__(self):
         self.verbose     = 2            # 0(warning) | 1(info) | 2(debug)
 
         # training signature
-        self.machine     = "aiscpu4"    # "machine_id"
+        self.machine     = "aiscpu2"    # "machine_id"
         self.timestamp   = "18020402"   # "yymmdd##"
         # training configuration
         self.mode        = 1            # 1(train) | 2(test model_file)
-        self.config      = 12
+        self.config      = 16
 
         self.seed        = 123
         self.render      = False        # whether render the window from the original envs or not
