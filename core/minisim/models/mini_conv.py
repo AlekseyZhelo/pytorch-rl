@@ -8,9 +8,9 @@ from core.model import Model
 from utils.init_weights import init_weights, normalized_columns_initializer
 
 
-class A3CConvMinisimModel(Model):
+class A3CCnvMinisimModel(Model):
     def __init__(self, args):
-        super(A3CConvMinisimModel, self).__init__(args)
+        super(A3CCnvMinisimModel, self).__init__(args)
 
         self.lstm_layer_count = 0
         self.num_robots = args.num_robots

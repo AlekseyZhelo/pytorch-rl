@@ -28,14 +28,14 @@ from core.minisim.models.mini_two_lstm_shared import A3CMlpDeeperMinisimModel
 from core.minisim.models.mini_two_lstm_separate_two_levels import A3CMlpDeeperSeparateHiddenTwoLevelsMinisimModel
 from core.minisim.models.mini_wide import A3CMlpMinisimModel
 from core.minisim.models.mini_no_lstm import A3CMlpNoLSTMMinisimModel
-from core.minisim.models.mini_conv import A3CConvMinisimModel
-ModelDict = {"empty":        EmptyModel,        # contains nothing, only should be used w/ EmptyAgent
-             "dqn-mlp":      DQNMlpModel,       # for dqn low-level    input
-             "dqn-cnn":      DQNCnnModel,       # for dqn pixel-level  input
-             "a3c-mlp-con":  A3CMlpConModel,    # for a3c low-level    input (NOTE: continuous must end in "-con")
-             "a3c-cnn-dis":  A3CCnnDisModel,    # for a3c pixel-level  input
-             "acer-mlp-dis": ACERMlpDisModel,   # for acer low-level   input
-             "acer-cnn-dis": ACERCnnDisModel,   # for acer pixel-level input
+from core.minisim.models.mini_conv import A3CCnvMinisimModel
+ModelDict = {"empty":        EmptyModel,  # contains nothing, only should be used w/ EmptyAgent
+             "dqn-mlp":      DQNMlpModel,  # for dqn low-level    input
+             "dqn-cnn":      DQNCnnModel,  # for dqn pixel-level  input
+             "a3c-mlp-con":  A3CMlpConModel,  # for a3c low-level    input (NOTE: continuous must end in "-con")
+             "a3c-cnn-dis":  A3CCnnDisModel,  # for a3c pixel-level  input
+             "acer-mlp-dis": ACERMlpDisModel,  # for acer low-level   input
+             "acer-cnn-dis": ACERCnnDisModel,  # for acer pixel-level input
              "none":         None,
              "a3c-mlp-minisim": A3CMlpMinisimModel,
              "a3c-mlp-minisim-narrowing": A3CMlpNarrowingMinisimModel,
@@ -44,7 +44,7 @@ ModelDict = {"empty":        EmptyModel,        # contains nothing, only should 
              "a3c-mlp-deeper-sep-hid": A3CMlpDeeperSeparateHiddenMinisimModel,
              "a3c-mlp-deeper-sep-hid-two": A3CMlpDeeperSeparateHiddenTwoLevelsMinisimModel,
              "a3c-mlp-no-lstm": A3CMlpNoLSTMMinisimModel,
-             "a3c-conv": A3CConvMinisimModel}
+             "a3c-conv": A3CCnvMinisimModel}
 
 from core.memories.sequential import SequentialMemory
 from core.memories.episode_parameter import EpisodeParameterMemory
