@@ -40,11 +40,11 @@ class Params(object):   # NOTE: shared across all modules
         self.verbose     = 2            # 0(warning) | 1(info) | 2(debug)
 
         # training signature
-        self.machine     = "aiscpu2"    # "machine_id"
-        self.timestamp   = "18020400"   # "yymmdd##"
+        self.machine     = "aiscpu4"    # "machine_id"
+        self.timestamp   = "18020401"   # "yymmdd##"
         # training configuration
         self.mode        = 1            # 1(train) | 2(test model_file)
-        self.config      = 15
+        self.config      = 9
 
         self.seed        = 123
         self.render      = False        # whether render the window from the original envs or not
@@ -179,7 +179,7 @@ class ModelParams(Params):  # settings for network architecture
         if self.env_type == "minisim":
             self.num_robots = minisim_num_robots
             self.hist_len = 1
-            self.hidden_dim = 96  # 56
+            self.hidden_dim = 36  # 56; 96
             self.hidden_vb_dim = self.hidden_dim // 4
 
             self.icm_inv_hidden_dim         = 128
@@ -296,11 +296,11 @@ class AgentParams(Params):  # hyperparameters for drl agents
             self.train_interval      = 32
         elif self.agent_type == "a3c":
             if self.env_type == "minisim":
-                self.steps = 3000000     # max #iterations
+                self.steps = 1000000     # max #iterations; 3
                 self.early_stop = 26500  # max #steps per episode
                 self.gamma = 0.99
                 self.clip_grad = 40.
-                self.lr = 0.00001  # 0.0001
+                self.lr = 0.0001  # 0.00001
                 self.icm_inv_lr = 0.0001
                 self.icm_fwd_lr = 0.0001
                 self.lr_decay = False
