@@ -30,7 +30,8 @@ CONFIGS = [
 [ "a3c",      "minisim",   "minisim",                  "a3c-mlp-deeper-sep-hid",  "none"],  # 12
 [ "a3c",      "minisim",   "minisim",                  "a3c-mlp-no-lstm",  "none"],  # 13
 [ "dqn",      "minisim",   "minisim",                  "mlp",      "sequential"  ],   # 14
-[ "a3c",      "minisim",   "minisim",                  "a3c-mlp-deeper-sep-hid-two",      "none"  ]   # 15
+[ "a3c",      "minisim",   "minisim",                  "a3c-mlp-deeper-sep-hid-two",      "none"  ],   # 15
+[ "a3c",      "minisim",   "minisim",                  "a3c-conv",      "none"  ]   # 16
 ]
 
 minisim_num_robots = 1  # 3
@@ -40,11 +41,11 @@ class Params(object):   # NOTE: shared across all modules
         self.verbose     = 2            # 0(warning) | 1(info) | 2(debug)
 
         # training signature
-        self.machine     = "aiscpu4"    # "machine_id"
+        self.machine     = "aiscpu2"    # "machine_id"
         self.timestamp   = "18020401"   # "yymmdd##"
         # training configuration
         self.mode        = 1            # 1(train) | 2(test model_file)
-        self.config      = 9
+        self.config      = 16
 
         self.seed        = 123
         self.render      = False        # whether render the window from the original envs or not
@@ -95,9 +96,9 @@ class Params(object):   # NOTE: shared across all modules
                 # self.icm = False  # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                 self.icm_inv_model = ICMInverseModel
                 self.icm_fwd_model = ICMForwardModel
-                self.num_processes = 23  # 6, 23
+                self.num_processes = 1  # 6, 23
                 if minisim_num_robots > 1:
-                    self.num_processes = 23  # 4, 23
+                    self.num_processes = 1  # 4, 23
 
             self.use_cuda           = False
             self.dtype              = torch.FloatTensor
