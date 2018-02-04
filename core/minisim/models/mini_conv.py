@@ -67,7 +67,7 @@ class A3CCnvMinisimModel(Model):
 
         x = self.rl1(self.fc1(x))
         x = self.rl2(self.fc2(x))
-        x = x.view(-1, self.sz_2 * 8)
+        x = x.view(self.num_robots, self.sz_2 * 8)  # TODO: correct?
         x = self.rl3(self.fc3(x))
         x = self.rl4(self.fc4(x))
 

@@ -44,7 +44,7 @@ ModelDict = {"empty":        EmptyModel,  # contains nothing, only should be use
              "a3c-mlp-deeper-sep-hid": A3CMlpDeeperSeparateHiddenMinisimModel,
              "a3c-mlp-deeper-sep-hid-two": A3CMlpDeeperSeparateHiddenTwoLevelsMinisimModel,
              "a3c-mlp-no-lstm": A3CMlpNoLSTMMinisimModel,
-             "a3c-conv": A3CCnvMinisimModel}
+             "a3c-cnv": A3CCnvMinisimModel}
 
 from core.memories.sequential import SequentialMemory
 from core.memories.episode_parameter import EpisodeParameterMemory
