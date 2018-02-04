@@ -31,7 +31,7 @@ class A3CConvMinisimModel(Model):
         self.rl4 = nn.ELU()
 
         # 1. policy output
-        self.policy_7 = nn.Linear(self.self.hidden_dim // 2 + 2 * self.hist_len, self.output_dims)
+        self.policy_7 = nn.Linear(self.hidden_dim // 2 + 2 * self.hist_len, self.output_dims)
         self.policy_8 = nn.Softmax()
         # 2. value output
         self.value_8 = nn.Linear(self.hidden_dim // 2 + 2 * self.hist_len, 1)
