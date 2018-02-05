@@ -12,7 +12,6 @@ class A3CAgent(Agent):
         super(A3CAgent, self).__init__(args, env_prototype, model_prototype, memory_prototype)
         self.logger.warning("<===================================> A3C-Master {Env(dummy) & Model}")
 
-        self.hidden_vb_dim = args.hidden_vb_dim
         if hasattr(args, "num_robots"):
             self.num_robots = args.num_robots
 
