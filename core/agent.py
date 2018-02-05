@@ -56,7 +56,7 @@ class Agent(object):
             self.best_icm_fwd_loss = None
 
         self.hist_len = args.hist_len
-        self.hidden_dim = args.hidden_dim
+        self.hidden_dim = args.model_params.hidden_dim
 
         self.use_cuda = args.use_cuda
         self.dtype = args.dtype
