@@ -469,6 +469,7 @@ class A3CEvaluator(A3CSingleProcess):
         self.nepisodes_solved_log = []
         self.repisodes_solved_log = []
         self.terminals_reached_log = []
+        self.action_counts = np.zeros(self.master.action_dim)
         # placeholders for windows for online curve plotting
         if self.master.visualize:
             # training stats across all processes
@@ -489,6 +490,7 @@ class A3CEvaluator(A3CSingleProcess):
             self.win_nepisodes_solved = "win_nepisodes_solved"
             self.win_repisodes_solved = "win_repisodes_solved"
             self.win_terminals_reached = "win_terminals_reached"
+            self.win_action_counts = "action_counts"
 
     def _eval_model(self):
         self.last_eval = time.time()
@@ -536,6 +538,7 @@ class A3CEvaluator(A3CSingleProcess):
             else:
                 eval_action, p_vb, v_vb = self._forward(self._preprocessState(self.experience.state1, True))
             self.experience = self.env.step(eval_action)
+            self.action_counts[eval_action] += 1
             if not self.training:
                 if self.master.visualize: self.env.visual()
                 if self.master.render: self.env.render()
@@ -626,6 +629,8 @@ class A3CEvaluator(A3CSingleProcess):
                 "Iteration: {}; repisodes_solved: {}".format(eval_at_step, self.repisodes_solved_log[-1][1]))
             self.master.logger.warning(
                 "Iteration: {}; terminals_reached: {}".format(eval_at_step, self.terminals_reached_log[-1][1]))
+            self.master.logger.warning(
+                "Iteration: {}; action_counts: {}".format(eval_at_step, self.action_counts))
 
         if self.master.enable_log_at_train_step:
             _log_at_step(eval_at_train_step)
@@ -675,6 +680,8 @@ class A3CEvaluator(A3CSingleProcess):
             self.win_terminals_reached = self.master.vis.scatter(X=np.array(self.terminals_reached_log),
                                                                  env=self.master.refs, win=self.win_terminals_reached,
                                                                  opts=dict(title="terminals_reached"))
+            self.win_action_counts = self.master.vis.bar(X=self.action_counts, env=self.master.refs, win=self.win_action_counts,
+                                                         opts=dict(title="action_counts"))
 
         self.last_eval = time.time()
 
