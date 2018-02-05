@@ -41,11 +41,11 @@ class Params(object):   # NOTE: shared across all modules
         self.verbose     = 2            # 0(warning) | 1(info) | 2(debug)
 
         # training signature
-        self.machine     = "aiscpu2"    # "machine_id"
+        self.machine     = "aiscpu4"    # "machine_id"
         self.timestamp   = "18020500"   # "yymmdd##"
         # training configuration
         self.mode        = 1            # 1(train) | 2(test model_file)
-        self.config      = 16
+        self.config      = 15
 
         self.seed        = 123
         self.render      = False        # whether render the window from the original envs or not
@@ -65,9 +65,6 @@ class Params(object):   # NOTE: shared across all modules
             if self.env_type == "gym":
                 self.hist_len       = 1
                 self.hidden_dim     = 16
-            elif self.env_type == "minisim":
-                self.hist_len = 4
-                self.hidden_dim = 36  # 24
             else:
                 self.hist_len       = 4
                 self.hidden_dim     = 256
@@ -86,8 +83,6 @@ class Params(object):   # NOTE: shared across all modules
             self.num_processes      = 16
 
             self.hist_len           = 1
-            self.hidden_dim         = 128
-            self.hidden_vb_dim      = 128
 
             if self.env_type == "minisim":
                 from core.minisim.models.icm.icm_inverse import ICMInverseModel
@@ -301,7 +296,7 @@ class AgentParams(Params):  # hyperparameters for drl agents
                 self.early_stop = 26500  # max #steps per episode
                 self.gamma = 0.99
                 self.clip_grad = 40.
-                self.lr = 0.0001  # 0.00001
+                self.lr = 0.00001  # 0.0001
                 self.icm_inv_lr = 0.0001
                 self.icm_fwd_lr = 0.0001
                 self.lr_decay = False
