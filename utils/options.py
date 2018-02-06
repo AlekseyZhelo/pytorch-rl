@@ -41,11 +41,11 @@ class Params(object):   # NOTE: shared across all modules
         self.verbose     = 2            # 0(warning) | 1(info) | 2(debug)
 
         # training signature
-        self.machine     = "aiscpu4"    # "machine_id"
+        self.machine     = "aiscpu2"    # "machine_id"
         self.timestamp   = "18020600"   # "yymmdd##"
         # training configuration
         self.mode        = 1            # 1(train) | 2(test model_file)
-        self.config      = 15
+        self.config      = 16
 
         self.seed        = 123
         self.render      = False        # whether render the window from the original envs or not
@@ -293,16 +293,16 @@ class AgentParams(Params):  # hyperparameters for drl agents
         elif self.agent_type == "a3c":
             if self.env_type == "minisim":
                 self.steps = 3000000     # max #iterations; 3
-                self.early_stop = 26500  # max #steps per episode
+                self.early_stop = 7000  # max #steps per episode
                 self.gamma = 0.99
                 self.clip_grad = 40.
-                self.lr = 0.00001  # 0.0001
+                self.lr = 0.0001  # 0.00001
                 self.icm_inv_lr = 0.0001
                 self.icm_fwd_lr = 0.0001
                 self.lr_decay = False
                 self.weight_decay = 1e-4 if self.enable_continuous else 0.
                 self.eval_freq = 60      # NOTE: here means every this many seconds
-                self.eval_steps = 30000  # 60000
+                self.eval_steps = 15000  # 60000
                 self.prog_freq = self.eval_freq
                 self.test_nepisodes = 10
 
