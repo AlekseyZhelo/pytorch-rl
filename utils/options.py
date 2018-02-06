@@ -31,7 +31,8 @@ CONFIGS = [
 [ "a3c",      "minisim",   "minisim",                  "a3c-mlp-no-lstm",  "none"],  # 13
 [ "dqn",      "minisim",   "minisim",                  "mlp",      "sequential"  ],   # 14
 [ "a3c",      "minisim",   "minisim",                  "a3c-mlp-deeper-sep-hid-two",      "none"  ],   # 15
-[ "a3c",      "minisim",   "minisim",                  "a3c-cnv",      "none"  ]   # 16
+[ "a3c",      "minisim",   "minisim",                  "a3c-cnv",      "none"  ],   # 16
+[ "a3c",      "minisim",   "minisim",                  "a3c-target-only",      "none"  ]   # 17
 ]
 
 minisim_num_robots = 1  # 3
@@ -41,11 +42,11 @@ class Params(object):   # NOTE: shared across all modules
         self.verbose     = 2            # 0(warning) | 1(info) | 2(debug)
 
         # training signature
-        self.machine     = "aiscpu2"    # "machine_id"
-        self.timestamp   = "18020600"   # "yymmdd##"
+        self.machine     = "aiscpu4"    # "machine_id"
+        self.timestamp   = "18020601"   # "yymmdd##"
         # training configuration
         self.mode        = 1            # 1(train) | 2(test model_file)
-        self.config      = 16
+        self.config      = 17
 
         self.seed        = 123
         self.render      = False        # whether render the window from the original envs or not
