@@ -43,7 +43,7 @@ class Params(object):   # NOTE: shared across all modules
 
         # training signature
         self.machine     = "aiscpu4"    # "machine_id"
-        self.timestamp   = "18020701"   # "yymmdd##"
+        self.timestamp   = "18020702"   # "yymmdd##"
         # training configuration
         self.mode        = 1            # 1(train) | 2(test model_file)
         self.config      = 17
@@ -160,7 +160,7 @@ class EnvParams(Params):    # settings for simulation environment
             self.img_encoding_type = "passthrough"
         elif self.env_type == "minisim":
             self.num_robots = minisim_num_robots
-            self.curriculum = True
+            self.curriculum = False  # TODO: ensure start outside of target area when True
             self.randomize_maps = False
             pass
         else:
