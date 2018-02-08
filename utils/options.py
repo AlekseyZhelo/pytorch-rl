@@ -303,7 +303,7 @@ class AgentParams(Params):  # hyperparameters for drl agents
                 self.early_stop = 7000  # max #steps per episode
                 self.gamma = 0.99
                 self.clip_grad = 40.
-                self.lr = 0.00004  # 0.0001
+                self.lr = 0.00002  # 0.0001
                 self.icm_inv_lr = 0.0001
                 self.icm_fwd_lr = 0.0001
                 self.lr_decay = False
