@@ -15,7 +15,7 @@ class A3CCnvMinisimModel(Model):
         self.lstm_layer_count = 0
         self.num_robots = args.num_robots
         self.hist_len = args.hist_len
-        self.num_filters = 8
+        self.num_filters = 16  # 8
 
         # build model
         # 0. feature layers
