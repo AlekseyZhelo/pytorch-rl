@@ -19,7 +19,7 @@ class A3CCnvMinisimModel(Model):
 
         # build model
         # 0. feature layers
-        self.fc1 = nn.Conv1d(self.num_robots, self.num_filters, 5, 2)
+        self.fc1 = nn.Conv1d(1, self.num_filters, 5, 2)
         self.sz_1 = (self.input_dims[0] * self.input_dims[1] - 5) // 2 + 1
         self.rl1 = nn.ELU()
         self.fc2 = nn.Conv1d(self.num_filters, self.num_filters, 3, 2)
@@ -65,6 +65,7 @@ class A3CCnvMinisimModel(Model):
         # TODO: contiguous here will slow everything down a lot?
         x = laser_scans.contiguous()
 
+        print(x.size())
         x = self.rl1(self.fc1(x))
         x = self.rl2(self.fc2(x))
         x = x.view(self.num_robots, self.sz_2 * self.num_filters)
