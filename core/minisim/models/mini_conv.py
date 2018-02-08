@@ -17,6 +17,10 @@ class A3CCnvMinisimModel(Model):
         self.hist_len = args.hist_len
         self.num_filters = 8  # 16
 
+        # TODO: how-to running normalization?
+        # self.register_buffer('running_mean', torch.zeros(self.input_dims[1] + 2 * self.hist_len))
+        # self.register_buffer('running_var', torch.ones(self.input_dims[1] + 2 * self.hist_len))
+
         # build model
         # 0. feature layers
         self.fc1 = nn.Conv1d(1, self.num_filters, 5, 2)
