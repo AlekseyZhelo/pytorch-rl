@@ -94,9 +94,9 @@ class Params(object):  # NOTE: shared across all modules
                 # self.icm = False  # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                 self.icm_inv_model = ICMInverseModel
                 self.icm_fwd_model = ICMForwardModel
-                self.num_processes = 22  # 6, 23
+                self.num_processes = 23  # 6, 23
                 if minisim_num_robots > 1:
-                    self.num_processes = 22  # 4, 23
+                    self.num_processes = 23  # 4, 23
 
             self.use_cuda = False
             self.dtype = torch.FloatTensor
