@@ -45,7 +45,7 @@ class Params(object):  # NOTE: shared across all modules
 
         # training signature
         self.machine = "aiscpu4"  # "machine_id"
-        self.timestamp = "18020802"  # "yymmdd##"
+        self.timestamp = "18020900"  # "yymmdd##"
         # training configuration
         self.mode = 1  # 1(train) | 2(test model_file)
         self.config = 16
@@ -303,7 +303,7 @@ class AgentParams(Params):  # hyperparameters for drl agents
                 self.early_stop = 7000  # max #steps per episode
                 self.gamma = 0.99
                 self.clip_grad = 40.
-                self.lr = 0.0000075  # 0.0001
+                self.lr = 1e-05  # 1e-04
                 self.icm_inv_lr = 0.0001
                 self.icm_fwd_lr = 0.0001
                 self.lr_decay = False

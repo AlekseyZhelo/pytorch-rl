@@ -23,10 +23,10 @@ class A3CCnvMinisimModel(Model):
 
         # build model
         # 0. feature layers
-        self.fc1 = nn.Conv1d(1, self.num_filters, 5, 2)
+        self.cnv1 = nn.Conv1d(1, self.num_filters, 5, 2)
         self.sz_1 = (self.input_dims[0] * self.input_dims[1] - 5) // 2 + 1
         self.rl1 = nn.ELU()
-        self.fc2 = nn.Conv1d(self.num_filters, self.num_filters, 3, 2)
+        self.cnv2 = nn.Conv1d(self.num_filters, self.num_filters, 3, 2)
         self.sz_2 = (self.sz_1 - 3) // 2 + 1
         self.rl2 = nn.ELU()
         self.fc3 = nn.Linear(self.sz_2 * self.num_filters, self.hidden_dim)
@@ -43,18 +43,17 @@ class A3CCnvMinisimModel(Model):
         self._reset()
 
     def _init_weights(self):
-        self.apply(init_weights)
-        self.fc1.weight.data = normalized_columns_initializer(self.fc1.weight.data, 0.01)
-        self.fc1.bias.data.fill_(0)
-        self.fc2.weight.data = normalized_columns_initializer(self.fc2.weight.data, 0.01)
-        self.fc2.bias.data.fill_(0)
-        self.fc3.weight.data = normalized_columns_initializer(self.fc3.weight.data, 0.01)
+        nn.init.xavier_uniform(self.cnv1.weight.data, gain=nn.init.calculate_gain('relu'))
+        nn.init.xavier_uniform(self.cnv2.weight.data, gain=nn.init.calculate_gain('relu'))
+        nn.init.xavier_uniform(self.fc3.weight.data, gain=nn.init.calculate_gain('relu'))
+        nn.init.xavier_uniform(self.fc4.weight.data, gain=nn.init.calculate_gain('relu'))
+        nn.init.xavier_uniform(self.policy_7.weight.data, gain=nn.init.calculate_gain('relu'))
+        nn.init.xavier_uniform(self.value_8.weight.data, gain=nn.init.calculate_gain('relu'))
+        self.cnv1.bias.data.fill_(0)
+        self.cnv2.bias.data.fill_(0)
         self.fc3.bias.data.fill_(0)
-        self.fc4.weight.data = normalized_columns_initializer(self.fc4.weight.data, 0.01)
         self.fc4.bias.data.fill_(0)
-        self.policy_7.weight.data = normalized_columns_initializer(self.policy_7.weight.data, 0.01)
         self.policy_7.bias.data.fill_(0)
-        self.value_8.weight.data = normalized_columns_initializer(self.value_8.weight.data, 1.0)
         self.value_8.bias.data.fill_(0)
 
     def forward(self, x, lstm_hidden_vb=None):
@@ -70,8 +69,8 @@ class A3CCnvMinisimModel(Model):
         x = laser_scans.contiguous()
         x = x.view(self.num_robots, 1, self.input_dims[1])
 
-        x = self.rl1(self.fc1(x))
-        x = self.rl2(self.fc2(x))
+        x = self.rl1(self.cnv1(x))
+        x = self.rl2(self.cnv2(x))
         x = x.view(self.num_robots, self.sz_2 * self.num_filters)
         x = self.rl3(self.fc3(x))
         x = self.rl4(self.fc4(x))
