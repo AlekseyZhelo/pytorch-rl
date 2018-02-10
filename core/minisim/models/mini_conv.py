@@ -23,6 +23,7 @@ class A3CCnvMinisimModel(Model):
 
         # build model
         # 0. feature layers
+        self.bn0 = nn.BatchNorm1d(self.input_dims[1] + 2 * self.hist_len)
         self.cnv1 = nn.Conv1d(1, self.num_filters, 5, 2)
         self.sz_1 = (self.input_dims[0] * self.input_dims[1] - 5) // 2 + 1
         self.rl1 = nn.ELU()
@@ -57,6 +58,10 @@ class A3CCnvMinisimModel(Model):
         self.value_8.bias.data.fill_(0)
 
     def forward(self, x, lstm_hidden_vb=None):
+        shape = x.size()
+        x = self.bn0(x.view(self.num_robots, -1))
+        x = x.view(shape)
+
         if self.hist_len > 1:
             target_data = x[:, :, self.input_dims[1]:self.input_dims[1] + 2 * self.num_robots * self.hist_len]
             target_data = target_data.contiguous().view(target_data.size(0), 2 * self.num_robots * self.hist_len)

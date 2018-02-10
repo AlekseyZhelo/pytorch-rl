@@ -36,7 +36,7 @@ CONFIGS = [
     ["a3c", "minisim", "minisim", "a3c-target-only", "none"]  # 17
 ]
 
-minisim_num_robots = 1  # 3
+minisim_num_robots = 2  # 3
 
 
 class Params(object):  # NOTE: shared across all modules
@@ -45,7 +45,7 @@ class Params(object):  # NOTE: shared across all modules
 
         # training signature
         self.machine = "aiscpu4"  # "machine_id"
-        self.timestamp = "18020900"  # "yymmdd##"
+        self.timestamp = "18021000"  # "yymmdd##"
         # training configuration
         self.mode = 1  # 1(train) | 2(test model_file)
         self.config = 16
@@ -94,9 +94,9 @@ class Params(object):  # NOTE: shared across all modules
                 # self.icm = False  # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                 self.icm_inv_model = ICMInverseModel
                 self.icm_fwd_model = ICMForwardModel
-                self.num_processes = 23  # 6, 23
+                self.num_processes = 22  # 6, 23
                 if minisim_num_robots > 1:
-                    self.num_processes = 23  # 4, 23
+                    self.num_processes = 22  # 4, 23
 
             self.use_cuda = False
             self.dtype = torch.FloatTensor
@@ -303,11 +303,11 @@ class AgentParams(Params):  # hyperparameters for drl agents
                 self.early_stop = 7000  # max #steps per episode
                 self.gamma = 0.99
                 self.clip_grad = 40.
-                self.lr = 1e-06  # 1e-04; 1e-05
+                self.lr = 5e-05  # 1e-04; 1e-05
                 self.icm_inv_lr = 0.0001
                 self.icm_fwd_lr = 0.0001
                 self.lr_decay = False
-                self.weight_decay = 1e-4 if self.enable_continuous else 0.
+                self.weight_decay = 1e-4 if self.enable_continuous else 1e-6
                 self.eval_freq = 60  # NOTE: here means every this many seconds
                 self.eval_steps = 15000  # 60000
                 self.prog_freq = self.eval_freq
