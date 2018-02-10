@@ -44,7 +44,7 @@ class Params(object):  # NOTE: shared across all modules
         self.verbose = 2  # 0(warning) | 1(info) | 2(debug)
 
         # training signature
-        self.machine = "aiscpu4"  # "machine_id"
+        self.machine = "aiscpu2"  # "machine_id"
         self.timestamp = "18021000"  # "yymmdd##"
         # training configuration
         self.mode = 1  # 1(train) | 2(test model_file)
@@ -180,7 +180,7 @@ class ModelParams(Params):  # settings for network architecture
         if self.env_type == "minisim":
             self.num_robots = minisim_num_robots
             self.hist_len = 1
-            self.hidden_dim = 128  # 56; 96; 64
+            self.hidden_dim = 64  # 56; 96; 128
             self.hidden_vb_dim = self.hidden_dim // 4
 
             self.icm_inv_hidden_dim = 128
