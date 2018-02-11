@@ -216,9 +216,9 @@ class A3CLearner(A3CSingleProcess):
             #     pass
 
             # TODO: also use target data in the state?
-            state_start = np.array(self.rollout.state0).reshape(-1, self.master.state_shape + 2)[:,
+            state_start = np.array(self.rollout.state0).reshape(-1, self.master.state_shape + 3)[:,
                           :self.master.state_shape]
-            state_next = np.array(self.rollout.state1).reshape(-1, self.master.state_shape + 2)[:,
+            state_next = np.array(self.rollout.state1).reshape(-1, self.master.state_shape + 3)[:,
                          :self.master.state_shape]
             state_start = Variable(torch.from_numpy(state_start).type(self.master.dtype))
             state_next = Variable(torch.from_numpy(state_next).type(self.master.dtype))
