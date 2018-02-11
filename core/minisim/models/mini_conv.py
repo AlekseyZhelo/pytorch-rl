@@ -28,7 +28,7 @@ class A3CCnvMinisimModel(Model):
              2.11777, 2.11766, 2.11773, 2.11837, 2.1188, 2.11859, 2.1181, 2.11772, 2.1176, 2.11801, 2.11861, 2.11923,
              2.11948, 2.11946, 2.11928, 2.11924, 2.11959, 2.12011, 2.12047, 2.12056, 2.12052, 2.12039, 2.12043, 2.12068,
              2.12116, 2.12141, 2.1214, 2.12144, 2.12143, 2.12166, 2.12198, 2.12237, 2.12265, 2.12278, 2.12294,
-             2.12288, -0.358236, 2.30986])
+             2.12288, 0.0, 0.0, 2.30986])
         self.mean = torch.from_numpy(self.mean).float()
         self.std = np.array(
             [1.63815, 1.63882, 1.64022, 1.64186, 1.64313, 1.64411, 1.64401, 1.64434, 1.64557, 1.64721, 1.64877, 1.64977,
@@ -37,7 +37,7 @@ class A3CCnvMinisimModel(Model):
              1.65376, 1.65345, 1.6545, 1.6566, 1.65705, 1.65489, 1.65249, 1.65084, 1.65003, 1.65158, 1.65339, 1.65523,
              1.65525, 1.65451, 1.65341, 1.65292, 1.65404, 1.65531, 1.65629, 1.65594, 1.65482, 1.65363, 1.65295, 1.65293,
              1.65371, 1.654, 1.65289, 1.6515, 1.65009, 1.64942, 1.64911, 1.64904, 1.64909, 1.64876, 1.64799, 1.6474,
-             0.484483, 1.31035])
+             0.70711, 0.70711, 1.31035])
         self.std = torch.from_numpy(self.std).float()
 
         # build model
@@ -55,10 +55,10 @@ class A3CCnvMinisimModel(Model):
         self.rl4 = nn.ELU()
 
         # 1. policy output
-        self.policy_7 = nn.Linear(self.hidden_dim // 2 + 2 * self.hist_len, self.output_dims)
+        self.policy_7 = nn.Linear(self.hidden_dim // 2 + 3 * self.hist_len, self.output_dims)
         self.policy_8 = nn.Softmax()
         # 2. value output
-        self.value_8 = nn.Linear(self.hidden_dim // 2 + 2 * self.hist_len, 1)
+        self.value_8 = nn.Linear(self.hidden_dim // 2 + 3 * self.hist_len, 1)
 
         self._reset()
 
@@ -84,14 +84,10 @@ class A3CCnvMinisimModel(Model):
             x[0, i, :].data -= self.mean
             x[0, i, :].data /= self.std
 
-        if self.hist_len > 1:
-            target_data = x[:, :, self.input_dims[1]:self.input_dims[1] + 2 * self.num_robots * self.hist_len]
-            target_data = target_data.contiguous().view(target_data.size(0), 2 * self.num_robots * self.hist_len)
-            laser_scans = x[:, :, :self.input_dims[1]]
-        else:
-            target_data = x[:, :, self.input_dims[1]:self.input_dims[1] + 2 * self.num_robots]
-            target_data = target_data.contiguous().view(self.num_robots, 2)
-            laser_scans = x[:, :, :self.input_dims[1]]
+        target_data = x[:, :, self.input_dims[1]:self.input_dims[1] + 3 * self.num_robots * self.hist_len]
+        target_data = target_data.contiguous().view(self.num_robots, 3 * self.num_robots * self.hist_len)
+        laser_scans = x[:, :, :self.input_dims[1]]
+
         # TODO: contiguous here will slow everything down a lot?
         x = laser_scans.contiguous()
         x = x.view(self.num_robots, 1, self.input_dims[1])

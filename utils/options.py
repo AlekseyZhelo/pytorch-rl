@@ -44,8 +44,9 @@ class Params(object):  # NOTE: shared across all modules
         self.verbose = 2  # 0(warning) | 1(info) | 2(debug)
 
         # training signature
+        # TODO: fix action stats for multi-robot!
         self.machine = "aiscpu4"  # "machine_id"
-        self.timestamp = "18021100"  # "yymmdd##"
+        self.timestamp = "18021101"  # "yymmdd##"
         # training configuration
         self.mode = 1  # 1(train) | 2(test model_file)
         self.config = 16
