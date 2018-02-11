@@ -36,7 +36,7 @@ CONFIGS = [
     ["a3c", "minisim", "minisim", "a3c-target-only", "none"]  # 17
 ]
 
-minisim_num_robots = 2  # 3
+minisim_num_robots = 1  # 3
 
 
 class Params(object):  # NOTE: shared across all modules
@@ -45,7 +45,7 @@ class Params(object):  # NOTE: shared across all modules
 
         # training signature
         self.machine = "aiscpu2"  # "machine_id"
-        self.timestamp = "18021000"  # "yymmdd##"
+        self.timestamp = "18021100"  # "yymmdd##"
         # training configuration
         self.mode = 1  # 1(train) | 2(test model_file)
         self.config = 16
@@ -94,7 +94,7 @@ class Params(object):  # NOTE: shared across all modules
                 # self.icm = False  # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                 self.icm_inv_model = ICMInverseModel
                 self.icm_fwd_model = ICMForwardModel
-                self.num_processes = 22  # 6, 23
+                self.num_processes = 22  # 6, 23  # 22 seems to be twice faster than 23, why? try other?
                 if minisim_num_robots > 1:
                     self.num_processes = 22  # 4, 23
 
