@@ -337,9 +337,9 @@ class A3CLearner(A3CSingleProcess):
         self.p_loss_avg += policy_loss_vb.data.numpy()
         self.v_loss_avg += value_loss_vb.data.numpy()
         self.loss_avg += loss_vb.data.numpy()
-        self.grad_magnitude_avg += np.mean([np.abs(p.grad.data.mean()) for p in self.model.parameters()])
+        self.grad_magnitude_avg += np.mean([np.abs(p.grad.data.norm()) for p in self.model.parameters()])
         self.grad_magnitude_max = np.max(
-            [np.abs(p.grad.data.mean()) for p in self.model.parameters()] + [self.grad_magnitude_max]
+            [np.abs(p.grad.data.norm()) for p in self.model.parameters()] + [self.grad_magnitude_max]
         )
         self.loss_counter += 1
 
