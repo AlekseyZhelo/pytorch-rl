@@ -62,17 +62,21 @@ class A3CAgent(Agent):
         self.v_loss_avg   = mp.Value('d', 0.) # global value loss
         self.loss_avg     = mp.Value('d', 0.) # global loss
         self.loss_counter = mp.Value('l', 0)  # storing this many losses
+        self.grad_magnitude_avg = mp.Value('d', 0.)
+        self.grad_magnitude_max = mp.Value('d', 0.)
         if self.icm:
             self.icm_inv_loss_avg = mp.Value('d', 0.)  # global ICM inverse loss
             self.icm_fwd_loss_avg = mp.Value('d', 0.)  # global ICM forward loss
             self.icm_inv_accuracy_avg = mp.Value('d', 0.)
-        self._reset_training_loggings()
+        self._reset_training_logs()
 
-    def _reset_training_loggings(self):
+    def _reset_training_logs(self):
         self.p_loss_avg.value   = 0.
         self.v_loss_avg.value   = 0.
         self.loss_avg.value     = 0.
         self.loss_counter.value = 0
+        self.grad_magnitude_avg.value = 0.
+        self.grad_magnitude_max.value = 0.
         if self.icm:
             self.icm_inv_loss_avg.value = 0.
             self.icm_fwd_loss_avg.value = 0.

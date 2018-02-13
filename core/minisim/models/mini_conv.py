@@ -15,7 +15,7 @@ class A3CCnvMinisimModel(Model):
         self.lstm_layer_count = 0
         self.num_robots = args.num_robots
         self.hist_len = args.hist_len
-        self.num_filters = 8  # 16
+        self.num_filters = 8  # 16; 8
 
         # TODO: how-to running normalization?
         # self.register_buffer('running_mean', torch.zeros(self.input_dims[1] + 2 * self.hist_len))

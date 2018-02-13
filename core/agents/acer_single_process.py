@@ -641,7 +641,7 @@ class ACEREvaluator(ACERSingleProcess):
         p_loss_avg = self.master.p_loss_avg.value / loss_counter if loss_counter > 0 else 0.
         v_loss_avg = self.master.v_loss_avg.value / loss_counter if loss_counter > 0 else 0.
         entropy_loss_avg = self.master.entropy_loss_avg.value / loss_counter if loss_counter > 0 else 0.
-        self.master._reset_training_loggings()
+        self.master._reset_training_logs()
         def _log_at_step(eval_at_step):
             self.p_loss_avg_log.append([eval_at_step, p_loss_avg])
             self.v_loss_avg_log.append([eval_at_step, v_loss_avg])
@@ -663,7 +663,7 @@ class ACEREvaluator(ACERSingleProcess):
             self.master.logger.warning("Iteration: {}; p_loss_avg: {}".format(eval_at_step, self.p_loss_avg_log[-1][1]))
             self.master.logger.warning("Iteration: {}; v_loss_avg: {}".format(eval_at_step, self.v_loss_avg_log[-1][1]))
             self.master.logger.warning("Iteration: {}; entropy_loss_avg: {}".format(eval_at_step, self.entropy_loss_avg_log[-1][1]))
-            self.master._reset_training_loggings()
+            self.master._reset_training_logs()
             self.master.logger.warning("Evaluating      @ Step: " + str(eval_at_train_step) + " | (" + str(eval_at_frame_step) + " frames)...")
             self.master.logger.warning("Evaluation        Took: " + str(time.time() - self.last_eval))
             self.master.logger.warning("Iteration: {}; entropy_avg: {}".format(eval_at_step, self.entropy_avg_log[-1][1]))
