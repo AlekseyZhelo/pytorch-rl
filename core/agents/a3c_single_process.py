@@ -39,37 +39,45 @@ class A3CSingleProcess(AgentSingleProcess):
             r = self.master.num_robots
             if self.master.enable_continuous:  # TODO: what here?
                 self.lstm_hidden_vb = (
-                Variable(torch.zeros(2, self.model.hidden_vb_dim).type(self.master.dtype), volatile=not_training),
-                Variable(torch.zeros(2, self.model.hidden_vb_dim).type(self.master.dtype), volatile=not_training))
+                    Variable(torch.zeros(2, self.model.hidden_vb_dim).type(self.master.dtype), volatile=not_training),
+                    Variable(torch.zeros(2, self.model.hidden_vb_dim).type(self.master.dtype), volatile=not_training))
                 if self.lstm_layer_count == 2:
                     self.lstm_hidden_vb2 = (
-                    Variable(torch.zeros(2, self.model.hidden_vb2_dim).type(self.master.dtype), volatile=not_training),
-                    Variable(torch.zeros(2, self.model.hidden_vb2_dim).type(self.master.dtype), volatile=not_training))
+                        Variable(torch.zeros(2, self.model.hidden_vb2_dim).type(self.master.dtype),
+                                 volatile=not_training),
+                        Variable(torch.zeros(2, self.model.hidden_vb2_dim).type(self.master.dtype),
+                                 volatile=not_training))
             else:
                 self.lstm_hidden_vb = (
-                Variable(torch.zeros(r, self.model.hidden_vb_dim).type(self.master.dtype), volatile=not_training),
-                Variable(torch.zeros(r, self.model.hidden_vb_dim).type(self.master.dtype), volatile=not_training))
+                    Variable(torch.zeros(r, self.model.hidden_vb_dim).type(self.master.dtype), volatile=not_training),
+                    Variable(torch.zeros(r, self.model.hidden_vb_dim).type(self.master.dtype), volatile=not_training))
                 if self.lstm_layer_count == 2:
                     self.lstm_hidden_vb2 = (
-                    Variable(torch.zeros(r, self.model.hidden_vb2_dim).type(self.master.dtype), volatile=not_training),
-                    Variable(torch.zeros(r, self.model.hidden_vb2_dim).type(self.master.dtype), volatile=not_training))
+                        Variable(torch.zeros(r, self.model.hidden_vb2_dim).type(self.master.dtype),
+                                 volatile=not_training),
+                        Variable(torch.zeros(r, self.model.hidden_vb2_dim).type(self.master.dtype),
+                                 volatile=not_training))
         else:
             if self.master.enable_continuous:
                 self.lstm_hidden_vb = (
-                Variable(torch.zeros(2, self.model.hidden_vb_dim).type(self.master.dtype), volatile=not_training),
-                Variable(torch.zeros(2, self.model.hidden_vb_dim).type(self.master.dtype), volatile=not_training))
+                    Variable(torch.zeros(2, self.model.hidden_vb_dim).type(self.master.dtype), volatile=not_training),
+                    Variable(torch.zeros(2, self.model.hidden_vb_dim).type(self.master.dtype), volatile=not_training))
                 if self.lstm_layer_count == 2:
                     self.lstm_hidden_vb2 = (
-                    Variable(torch.zeros(2, self.model.hidden_vb2_dim).type(self.master.dtype), volatile=not_training),
-                    Variable(torch.zeros(2, self.model.hidden_vb2_dim).type(self.master.dtype), volatile=not_training))
+                        Variable(torch.zeros(2, self.model.hidden_vb2_dim).type(self.master.dtype),
+                                 volatile=not_training),
+                        Variable(torch.zeros(2, self.model.hidden_vb2_dim).type(self.master.dtype),
+                                 volatile=not_training))
             else:
                 self.lstm_hidden_vb = (
-                Variable(torch.zeros(1, self.model.hidden_vb_dim).type(self.master.dtype), volatile=not_training),
-                Variable(torch.zeros(1, self.model.hidden_vb_dim).type(self.master.dtype), volatile=not_training))
+                    Variable(torch.zeros(1, self.model.hidden_vb_dim).type(self.master.dtype), volatile=not_training),
+                    Variable(torch.zeros(1, self.model.hidden_vb_dim).type(self.master.dtype), volatile=not_training))
                 if self.lstm_layer_count == 2:
                     self.lstm_hidden_vb2 = (
-                    Variable(torch.zeros(1, self.model.hidden_vb2_dim).type(self.master.dtype), volatile=not_training),
-                    Variable(torch.zeros(1, self.model.hidden_vb2_dim).type(self.master.dtype), volatile=not_training))
+                        Variable(torch.zeros(1, self.model.hidden_vb2_dim).type(self.master.dtype),
+                                 volatile=not_training),
+                        Variable(torch.zeros(1, self.model.hidden_vb2_dim).type(self.master.dtype),
+                                 volatile=not_training))
 
     # NOTE: to be called at the beginning of each rollout, detach the previous variable from the graph
     def _reset_lstm_hidden_vb_rollout(self):
@@ -330,7 +338,9 @@ class A3CLearner(A3CSingleProcess):
         self.v_loss_avg += value_loss_vb.data.numpy()
         self.loss_avg += loss_vb.data.numpy()
         self.grad_magnitude_avg += np.mean([np.abs(p.grad.data.mean()) for p in self.model.parameters()])
-        self.grad_magnitude_max = np.max(self.grad_magnitude_max, np.max([np.abs(p.grad.data.mean()) for p in self.model.parameters()]))
+        self.grad_magnitude_max = np.max(
+            [np.abs(p.grad.data.mean()) for p in self.model.parameters()] + [self.grad_magnitude_max]
+        )
         self.loss_counter += 1
 
     def _rollout(self, episode_steps, episode_reward):
@@ -679,14 +689,14 @@ class A3CEvaluator(A3CSingleProcess):
                                                                     win=self.win_icm_inv_accuracy_avg,
                                                                     opts=dict(title="icm_inv_accuracy_avg"))
             self.win_grad_magnitude_avg = self.master.vis.scatter(X=np.array(self.grad_magnitude_avg_log),
-                                                                    env=self.master.refs,
-                                                                    win=self.win_grad_magnitude_avg,
-                                                                    opts=dict(title="grad_magnitude_avg"))
+                                                                  env=self.master.refs,
+                                                                  win=self.win_grad_magnitude_avg,
+                                                                  opts=dict(title="grad_magnitude_avg"))
             # TODO: add avg to name
             self.win_grad_magnitude_max = self.master.vis.scatter(X=np.array(self.grad_magnitude_max_log),
-                                                                    env=self.master.refs,
-                                                                    win=self.win_grad_magnitude_max,
-                                                                    opts=dict(title="grad_magnitude_max_avg"))
+                                                                  env=self.master.refs,
+                                                                  win=self.win_grad_magnitude_max,
+                                                                  opts=dict(title="grad_magnitude_max_avg"))
 
             self.win_entropy_avg = self.master.vis.scatter(X=np.array(self.entropy_avg_log), env=self.master.refs,
                                                            win=self.win_entropy_avg, opts=dict(title="entropy_avg"))
@@ -709,7 +719,8 @@ class A3CEvaluator(A3CSingleProcess):
             self.win_terminals_reached = self.master.vis.scatter(X=np.array(self.terminals_reached_log),
                                                                  env=self.master.refs, win=self.win_terminals_reached,
                                                                  opts=dict(title="terminals_reached"))
-            self.win_action_counts = self.master.vis.bar(X=self.action_counts, env=self.master.refs, win=self.win_action_counts,
+            self.win_action_counts = self.master.vis.bar(X=self.action_counts, env=self.master.refs,
+                                                         win=self.win_action_counts,
                                                          opts=dict(title="action_counts"))
 
         self.last_eval = time.time()
