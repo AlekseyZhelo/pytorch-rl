@@ -444,7 +444,8 @@ class A3CLearner(A3CSingleProcess):
                 self.master.loss_avg.value += self.loss_avg.mean()
                 self.master.loss_counter.value += self.loss_counter
                 self.master.grad_magnitude_avg.value += self.grad_magnitude_avg
-                self.master.grad_magnitude_max.value += self.grad_magnitude_max
+                val = self.master.grad_magnitude_max.value
+                self.master.grad_magnitude_max.value = max(self.grad_magnitude_max, val)
                 self.master.icm_inv_loss_avg.value += self.icm_inv_loss_avg
                 self.master.icm_fwd_loss_avg.value += self.icm_fwd_loss_avg
                 self.master.icm_inv_accuracy_avg.value += self.icm_inv_accuracy_avg
