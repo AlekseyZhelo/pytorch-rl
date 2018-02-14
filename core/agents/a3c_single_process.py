@@ -14,6 +14,8 @@ from utils.helpers import A3C_Experience
 
 
 class A3CSingleProcess(AgentSingleProcess):
+    epsilon = 1e-13
+
     def __init__(self, master, process_id=0):
         super(A3CSingleProcess, self).__init__(master, process_id)
 
@@ -271,7 +273,7 @@ class A3CLearner(A3CSingleProcess):
             action_batch_vb = Variable(torch.from_numpy(np.array(self.rollout.action)).long())
             if self.master.use_cuda:
                 action_batch_vb = action_batch_vb.cuda()
-            policy_log_vb = [torch.log(policy_vb[i]) for i in range(rollout_steps)]
+            policy_log_vb = [torch.log(policy_vb[i] + self.epsilon) for i in range(rollout_steps)]
             entropy_vb = [- (policy_log_vb[i] * policy_vb[i]).sum(1) for i in range(rollout_steps)]
             if hasattr(self.master, "num_robots"):
                 policy_log_vb = [
@@ -585,7 +587,7 @@ class A3CEvaluator(A3CSingleProcess):
                     eval_entropy_log.append(
                         [0.5 * ((sig_vb * 2 * self.pi_vb.expand_as(sig_vb)).log() + 1).data.numpy()])
                 else:
-                    eval_entropy_log.append([np.mean((-torch.log(p_vb.data.squeeze()) * p_vb.data.squeeze()).numpy())])
+                    eval_entropy_log.append([np.mean((-torch.log(p_vb.data.squeeze() + self.epsilon) * p_vb.data.squeeze()).numpy())])
                 eval_v_log.append([v_vb.data.numpy()])
                 eval_episode_steps_log.append([eval_episode_steps])
                 eval_episode_reward_log.append([eval_episode_reward])
