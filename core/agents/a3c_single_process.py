@@ -604,7 +604,7 @@ class A3CEvaluator(A3CSingleProcess):
         icm_fwd_loss_avg = self.master.icm_fwd_loss_avg.value / loss_counter if loss_counter > 0 else 0.
         icm_inv_accuracy_avg = self.master.icm_inv_accuracy_avg.value / loss_counter if loss_counter > 0 else 0.
         grad_magnitude_avg = self.master.grad_magnitude_avg.value / loss_counter if loss_counter > 0 else 0.
-        grad_magnitude_max = self.master.grad_magnitude_max.value / loss_counter if loss_counter > 0 else 0.
+        grad_magnitude_max = self.master.grad_magnitude_max.value
         self.master._reset_training_logs()
 
         def _log_at_step(eval_at_step):
