@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="WebServers">
+    <option name="servers">
+      <webServer id="7ea1fccf-527e-45f8-b989-db0ed88657eb" name="pearl-rl" url="http://aislogin.informatik.uni-freiburg.de">
+        <fileTransfer host="aislogin.informatik.uni-freiburg.de" port="6000" accessType="SFTP">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" />
+          </advancedOptions>
+          <option name="port" value="6000" />
+        </fileTransfer>
+      </webServer>
+    </option>
+  </component>
+</project>

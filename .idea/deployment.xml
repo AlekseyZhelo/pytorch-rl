@@ -1,11 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="PublishConfigData" serverName="pearl1.informatik.uni-freiburg.de">
+  <component name="PublishConfigData" serverName="pearl-rl">
     <serverData>
-      <paths name="pearl1.informatik.uni-freiburg.de">
+      <paths name="Copy of project-level server 'pearl-rl'">
         <serverdata>
           <mappings>
-            <mapping deploy="/rl/pytorch-rl" local="$PROJECT_DIR$" web="/" />
+            <mapping deploy="/home/zheloo/rl/pytorch-rl" local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="pearl-rl">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/home/zheloo/rl/pytorch-rl" local="$PROJECT_DIR$" web="/" />
           </mappings>
         </serverdata>
       </paths>
