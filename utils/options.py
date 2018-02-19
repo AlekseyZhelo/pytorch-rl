@@ -47,7 +47,7 @@ class Params(object):  # NOTE: shared across all modules
         # training signature
         # TODO: fix action stats for multi-robot!
         self.machine = "aiscpu4"  # "machine_id"
-        self.timestamp = "18021900"  # "yymmdd##"
+        self.timestamp = "18021901"  # "yymmdd##"
         # training configuration
         self.mode = 1  # 1(train) | 2(test model_file)
         self.config = 16
@@ -184,7 +184,7 @@ class ModelParams(Params):  # settings for network architecture
         if self.env_type == "minisim":
             self.num_robots = minisim_num_robots
             self.hist_len = 1
-            self.hidden_dim = 128  # 56; 96; 64; 32
+            self.hidden_dim = 64  # 56; 96; 128; 32
             self.hidden_vb_dim = self.hidden_dim // 4
 
             self.icm_inv_hidden_dim = 128
@@ -306,7 +306,7 @@ class AgentParams(Params):  # hyperparameters for drl agents
                 self.steps = 3000000  # max #iterations; 3
                 self.early_stop = 7000  # max #steps per episode
                 self.gamma = 0.99
-                self.clip_grad = 20.  # 40.
+                self.clip_grad = 40.  # 20.
                 self.lr = 1e-06  # 1e-04; 2e-05; 5e-05 for smaller conv
                 self.icm_inv_lr = 0.0001
                 self.icm_fwd_lr = 0.0001
