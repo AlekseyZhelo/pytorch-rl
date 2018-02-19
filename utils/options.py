@@ -167,6 +167,8 @@ class EnvParams(Params):  # settings for simulation environment
             self.num_robots = minisim_num_robots
             self.curriculum = False  # TODO: ensure start outside of target area when True
             self.randomize_maps = False
+            self.randomize_targets = False
+            self.penalize_staying = False
             pass
         else:
             assert False, "env_type must be: gym | atari-ram | atari | lab | minisim"
