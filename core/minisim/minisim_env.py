@@ -37,7 +37,7 @@ class MinisimEnv(Env):
         self.curriculum = args.curriculum if hasattr(args, "curriculum") else False
         self.randomize_maps = args.randomize_maps if hasattr(args, "randomize_maps") else False
         self.randomize_targets = args.randomize_targets if hasattr(args, "randomize_targets") else False
-        self.penalize_staying = args.randomize_targets if hasattr(args, "penalize_staying") else False
+        self.penalize_staying = args.penalize_staying if hasattr(args, "penalize_staying") else False
         self.mode = args.mode  # 1(train) | 2(test model_file)
 
         if self.mode == 2:
