@@ -61,9 +61,9 @@ class A3CCnvMinisimModel(Model):
         apply_normalization(x, self.mean, self.std)
 
         target_data = x[:, :, self.input_dims[1]:self.input_dims[1]
-                                                 + self.target_data_dim * self.num_robots * self.hist_len]
+                                                 + self.target_data_dim * self.hist_len]
         target_data = target_data.contiguous().view(self.num_robots,
-                                                    self.target_data_dim * self.num_robots * self.hist_len)
+                                                    self.target_data_dim * self.hist_len)
         laser_scans = x[:, :, :self.input_dims[1]]
 
         # TODO: contiguous here will slow everything down a lot?

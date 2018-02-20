@@ -47,7 +47,7 @@ class Params(object):  # NOTE: shared across all modules
         # training signature
         # TODO: fix action stats for multi-robot!
         self.machine = "aiscpu2"  # "machine_id"
-        self.timestamp = "18022002"  # "yymmdd##"
+        self.timestamp = "18022100"  # "yymmdd##"
         # training configuration
         self.mode = 1  # 1(train) | 2(test model_file)
         self.config = 16
@@ -96,9 +96,9 @@ class Params(object):  # NOTE: shared across all modules
                 # self.icm = False  # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                 self.icm_inv_model = ICMInverseModel
                 self.icm_fwd_model = ICMForwardModel
-                self.num_processes = 23  # 6, 23  # 22 seems to be twice faster than 23, why? try other?
+                self.num_processes = 22  # 6, 23  # 22 seems to be twice faster than 23, why? try other?
                 if minisim_num_robots > 1:
-                    self.num_processes = 23  # 4, 23
+                    self.num_processes = 22  # 4, 23
 
             self.use_cuda = False
             self.dtype = torch.FloatTensor
