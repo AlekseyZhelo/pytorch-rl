@@ -448,9 +448,10 @@ class A3CLearner(A3CSingleProcess):
                 self.master.grad_magnitude_avg.value += self.grad_magnitude_avg
                 val = self.master.grad_magnitude_max.value
                 self.master.grad_magnitude_max.value = max(self.grad_magnitude_max, val)
-                self.master.icm_inv_loss_avg.value += self.icm_inv_loss_avg
-                self.master.icm_fwd_loss_avg.value += self.icm_fwd_loss_avg
-                self.master.icm_inv_accuracy_avg.value += self.icm_inv_accuracy_avg
+                if self.master.icm:
+                    self.master.icm_inv_loss_avg.value += self.icm_inv_loss_avg
+                    self.master.icm_fwd_loss_avg.value += self.icm_fwd_loss_avg
+                    self.master.icm_inv_accuracy_avg.value += self.icm_inv_accuracy_avg
                 self._reset_training_loggings()
                 self.last_prog = time.time()
 
@@ -601,9 +602,10 @@ class A3CEvaluator(A3CSingleProcess):
         p_loss_avg = self.master.p_loss_avg.value / loss_counter if loss_counter > 0 else 0.
         v_loss_avg = self.master.v_loss_avg.value / loss_counter if loss_counter > 0 else 0.
         loss_avg = self.master.loss_avg.value / loss_counter if loss_counter > 0 else 0.
-        icm_inv_loss_avg = self.master.icm_inv_loss_avg.value / loss_counter if loss_counter > 0 else 0.
-        icm_fwd_loss_avg = self.master.icm_fwd_loss_avg.value / loss_counter if loss_counter > 0 else 0.
-        icm_inv_accuracy_avg = self.master.icm_inv_accuracy_avg.value / loss_counter if loss_counter > 0 else 0.
+        if self.master.icm:
+            icm_inv_loss_avg = self.master.icm_inv_loss_avg.value / loss_counter if loss_counter > 0 else 0.
+            icm_fwd_loss_avg = self.master.icm_fwd_loss_avg.value / loss_counter if loss_counter > 0 else 0.
+            icm_inv_accuracy_avg = self.master.icm_inv_accuracy_avg.value / loss_counter if loss_counter > 0 else 0.
         grad_magnitude_avg = self.master.grad_magnitude_avg.value / loss_counter if loss_counter > 0 else 0.
         grad_magnitude_max = self.master.grad_magnitude_max.value
         self.master._reset_training_logs()
@@ -612,9 +614,10 @@ class A3CEvaluator(A3CSingleProcess):
             self.p_loss_avg_log.append([eval_at_step, p_loss_avg])
             self.v_loss_avg_log.append([eval_at_step, v_loss_avg])
             self.loss_avg_log.append([eval_at_step, loss_avg])
-            self.icm_inv_loss_avg_log.append([eval_at_step, icm_inv_loss_avg])
-            self.icm_fwd_loss_avg_log.append([eval_at_step, icm_fwd_loss_avg])
-            self.icm_inv_accuracy_avg_log.append([eval_at_step, icm_inv_accuracy_avg])
+            if self.master.icm:
+                self.icm_inv_loss_avg_log.append([eval_at_step, icm_inv_loss_avg])
+                self.icm_fwd_loss_avg_log.append([eval_at_step, icm_fwd_loss_avg])
+                self.icm_inv_accuracy_avg_log.append([eval_at_step, icm_inv_accuracy_avg])
             self.grad_magnitude_avg_log.append([eval_at_step, grad_magnitude_avg])
             self.grad_magnitude_max_log.append([eval_at_step, grad_magnitude_max])
             self.entropy_avg_log.append([eval_at_step, np.mean(np.asarray(eval_entropy_log))])
@@ -635,12 +638,13 @@ class A3CEvaluator(A3CSingleProcess):
             self.master.logger.warning("Iteration: {}; p_loss_avg: {}".format(eval_at_step, self.p_loss_avg_log[-1][1]))
             self.master.logger.warning("Iteration: {}; v_loss_avg: {}".format(eval_at_step, self.v_loss_avg_log[-1][1]))
             self.master.logger.warning("Iteration: {}; loss_avg: {}".format(eval_at_step, self.loss_avg_log[-1][1]))
-            self.master.logger.warning(
-                "Iteration: {}; icm_inv_loss_avg: {}".format(eval_at_step, self.icm_inv_loss_avg_log[-1][1]))
-            self.master.logger.warning(
-                "Iteration: {}; icm_fwd_loss_avg: {}".format(eval_at_step, self.icm_fwd_loss_avg_log[-1][1]))
-            self.master.logger.warning(
-                "Iteration: {}; icm_inv_accuracy_avg: {}".format(eval_at_step, self.icm_inv_accuracy_avg_log[-1][1]))
+            if self.master.icm:
+                self.master.logger.warning(
+                    "Iteration: {}; icm_inv_loss_avg: {}".format(eval_at_step, self.icm_inv_loss_avg_log[-1][1]))
+                self.master.logger.warning(
+                    "Iteration: {}; icm_fwd_loss_avg: {}".format(eval_at_step, self.icm_fwd_loss_avg_log[-1][1]))
+                self.master.logger.warning(
+                    "Iteration: {}; icm_inv_accuracy_avg: {}".format(eval_at_step, self.icm_inv_accuracy_avg_log[-1][1]))
             self.master.logger.warning(
                 "Iteration: {}; grad_magnitude_avg: {}".format(eval_at_step, self.grad_magnitude_avg_log[-1][1]))
             self.master.logger.warning(
@@ -680,18 +684,19 @@ class A3CEvaluator(A3CSingleProcess):
             self.win_loss_avg = self.master.vis.scatter(X=np.array(self.loss_avg_log), env=self.master.refs,
                                                         win=self.win_loss_avg, opts=dict(title="loss_avg"))
 
-            self.win_icm_inv_loss_avg = self.master.vis.scatter(X=np.array(self.icm_inv_loss_avg_log),
-                                                                env=self.master.refs,
-                                                                win=self.win_icm_inv_loss_avg,
-                                                                opts=dict(title="icm_inv_loss_avg"))
-            self.win_icm_fwd_loss_avg = self.master.vis.scatter(X=np.array(self.icm_fwd_loss_avg_log),
-                                                                env=self.master.refs,
-                                                                win=self.win_icm_fwd_loss_avg,
-                                                                opts=dict(title="icm_fwd_loss_avg"))
-            self.win_icm_inv_accuracy_avg = self.master.vis.scatter(X=np.array(self.icm_inv_accuracy_avg_log),
+            if self.master.icm:
+                self.win_icm_inv_loss_avg = self.master.vis.scatter(X=np.array(self.icm_inv_loss_avg_log),
                                                                     env=self.master.refs,
-                                                                    win=self.win_icm_inv_accuracy_avg,
-                                                                    opts=dict(title="icm_inv_accuracy_avg"))
+                                                                    win=self.win_icm_inv_loss_avg,
+                                                                    opts=dict(title="icm_inv_loss_avg"))
+                self.win_icm_fwd_loss_avg = self.master.vis.scatter(X=np.array(self.icm_fwd_loss_avg_log),
+                                                                    env=self.master.refs,
+                                                                    win=self.win_icm_fwd_loss_avg,
+                                                                    opts=dict(title="icm_fwd_loss_avg"))
+                self.win_icm_inv_accuracy_avg = self.master.vis.scatter(X=np.array(self.icm_inv_accuracy_avg_log),
+                                                                        env=self.master.refs,
+                                                                        win=self.win_icm_inv_accuracy_avg,
+                                                                        opts=dict(title="icm_inv_accuracy_avg"))
             self.win_grad_magnitude_avg = self.master.vis.scatter(X=np.array(self.grad_magnitude_avg_log),
                                                                   env=self.master.refs,
                                                                   win=self.win_grad_magnitude_avg,
