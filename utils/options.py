@@ -47,10 +47,10 @@ class Params(object):  # NOTE: shared across all modules
         # training signature
         # TODO: fix action stats for multi-robot!
         self.machine = "aiscpu4"  # "machine_id"
-        self.timestamp = "18022100"  # "yymmdd##"
+        self.timestamp = "18022101"  # "yymmdd##"
         # training configuration
         self.mode = 1  # 1(train) | 2(test model_file)
-        self.config = 9
+        self.config = 16
 
         self.seed = 123
         self.render = False  # whether render the window from the original envs or not
@@ -92,8 +92,8 @@ class Params(object):  # NOTE: shared across all modules
             if self.env_type == "minisim":
                 from core.minisim.models.icm.icm_inverse import ICMInverseModel
                 from core.minisim.models.icm.icm_forward import ICMForwardModel
-                self.icm = True
-                # self.icm = False  # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                # self.icm = True
+                self.icm = False  # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                 self.icm_inv_model = ICMInverseModel
                 self.icm_fwd_model = ICMForwardModel
                 self.num_processes = 22  # 6, 23  # 22 seems to be twice faster than 23, why? try other?
@@ -165,7 +165,7 @@ class EnvParams(Params):  # settings for simulation environment
             self.img_encoding_type = "passthrough"
         elif self.env_type == "minisim":
             self.num_robots = minisim_num_robots
-            self.curriculum = False  # TODO: ensure start outside of target area when True
+            self.curriculum = True  # TODO: ensure start outside of target area when True
             self.randomize_maps = False
             self.randomize_targets = False
             self.penalize_staying = True
@@ -185,7 +185,7 @@ class ModelParams(Params):  # settings for network architecture
             self.num_robots = minisim_num_robots
             self.hist_len = 1
             self.target_data_dim = 3
-            self.hidden_dim = 128  # 56; 96; 64; 32
+            self.hidden_dim = 64  # 56; 96; 128; 32
             self.hidden_vb_dim = self.hidden_dim // 4
 
             self.icm_inv_hidden_dim = 128
@@ -312,7 +312,7 @@ class AgentParams(Params):  # hyperparameters for drl agents
                 self.icm_inv_lr = 0.0001
                 self.icm_fwd_lr = 0.0001
                 self.lr_decay = False
-                self.weight_decay = 1e-4 if self.enable_continuous else 1e-6 # 1e-6  # 1e-05
+                self.weight_decay = 1e-4 if self.enable_continuous else 0 # 1e-6  # 1e-05
                 self.eval_freq = 60  # NOTE: here means every this many seconds
                 self.eval_steps = 15000  # 60000
                 self.prog_freq = self.eval_freq

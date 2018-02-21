@@ -299,20 +299,18 @@ class A3CLearner(A3CSingleProcess):
             advantage_vb = valueT_vb - self.rollout.value0_vb[i]
             value_loss_vb = value_loss_vb + 0.5 * advantage_vb.pow(2)
 
-            policy_loss_vb -= policy_log_vb[i] * advantage_vb + (self.master.beta * entropy_vb[i]).view(
-                self.master.num_robots, -1)
-            # # Generalized Advantage Estimation
-            # tderr_ts = reward_vb.data + self.master.gamma * self.rollout.value0_vb[i + 1].data - self.rollout.value0_vb[
-            #     i].data
-            # gae_ts = self.master.gamma * gae_ts * self.master.tau + tderr_ts
-            # if self.master.enable_continuous:
-            #     _log_prob = self._normal(action_batch_vb[i], policy_vb[i], sigma_vb[i])
-            #     _entropy = 0.5 * ((sigma_vb[i] * 2 * self.pi_vb.expand_as(sigma_vb[i])).log() + 1)
-            #     policy_loss_vb -= (_log_prob * Variable(gae_ts).expand_as(
-            #         _log_prob)).sum() + self.master.beta * _entropy.sum()
-            # else:
-            #     policy_loss_vb -= policy_log_vb[i] * Variable(gae_ts) + (self.master.beta * entropy_vb[i]).view(
-            #         self.master.num_robots, -1)
+            # Generalized Advantage Estimation
+            tderr_ts = reward_vb.data + self.master.gamma * self.rollout.value0_vb[i + 1].data - \
+                       self.rollout.value0_vb[i].data
+            gae_ts = self.master.gamma * gae_ts * self.master.tau + tderr_ts
+            if self.master.enable_continuous:
+                _log_prob = self._normal(action_batch_vb[i], policy_vb[i], sigma_vb[i])
+                _entropy = 0.5 * ((sigma_vb[i] * 2 * self.pi_vb.expand_as(sigma_vb[i])).log() + 1)
+                policy_loss_vb -= (_log_prob * Variable(gae_ts).expand_as(
+                    _log_prob)).sum() + self.master.beta * _entropy.sum()
+            else:
+                policy_loss_vb -= policy_log_vb[i] * Variable(gae_ts) + (self.master.beta * entropy_vb[i]).view(
+                    self.master.num_robots, -1)
 
         loss_vb = policy_loss_vb + 0.5 * value_loss_vb
         loss_vb = loss_vb.mean(dim=0)
@@ -589,7 +587,8 @@ class A3CEvaluator(A3CSingleProcess):
                     eval_entropy_log.append(
                         [0.5 * ((sig_vb * 2 * self.pi_vb.expand_as(sig_vb)).log() + 1).data.numpy()])
                 else:
-                    eval_entropy_log.append([np.mean((-torch.log(p_vb.data.squeeze() + self.epsilon) * p_vb.data.squeeze()).numpy())])
+                    eval_entropy_log.append(
+                        [np.mean((-torch.log(p_vb.data.squeeze() + self.epsilon) * p_vb.data.squeeze()).numpy())])
                 eval_v_log.append([v_vb.data.numpy()])
                 eval_episode_steps_log.append([eval_episode_steps])
                 eval_episode_reward_log.append([eval_episode_reward])
