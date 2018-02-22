@@ -46,7 +46,7 @@ class Params(object):  # NOTE: shared across all modules
 
         # training signature
         # TODO: fix action stats for multi-robot!
-        self.machine = "aiscpu4"  # "machine_id"
+        self.machine = "aiscpu2"  # "machine_id"
         self.timestamp = "18022200"  # "yymmdd##"
         # training configuration
         self.mode = 1  # 1(train) | 2(test model_file)
@@ -308,7 +308,7 @@ class AgentParams(Params):  # hyperparameters for drl agents
                 self.early_stop = 7000  # max #steps per episode
                 self.gamma = 0.99
                 self.clip_grad = 40.  # 20.
-                self.lr = 1e-07  # 1e-04; 2e-05; 5e-05 for smaller conv
+                self.lr = 5e-05  # 1e-04; 2e-05; 5e-05 for smaller conv
                 self.icm_inv_lr = 0.0001
                 self.icm_fwd_lr = 0.0001
                 self.lr_decay = False
