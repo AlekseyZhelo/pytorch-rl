@@ -46,7 +46,7 @@ class Params(object):  # NOTE: shared across all modules
 
         # training signature
         # TODO: fix action stats for multi-robot!
-        self.machine = "aiscpu2"  # "machine_id"
+        self.machine = "aiscpu4"  # "machine_id"
         self.timestamp = "18022300"  # "yymmdd##"
         # training configuration
         self.mode = 1  # 1(train) | 2(test model_file)
@@ -92,8 +92,8 @@ class Params(object):  # NOTE: shared across all modules
             if self.env_type == "minisim":
                 from core.minisim.models.icm.icm_inverse import ICMInverseModel
                 from core.minisim.models.icm.icm_forward import ICMForwardModel
-                # self.icm = True
-                self.icm = False  # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                self.icm = True
+                # self.icm = False  # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                 self.icm_inv_model = ICMInverseModel
                 self.icm_fwd_model = ICMForwardModel
                 self.num_processes = 22  # 6, 23  # 22 seems to be twice faster than 23, why? try other?
