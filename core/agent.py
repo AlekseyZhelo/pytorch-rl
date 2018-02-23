@@ -151,7 +151,9 @@ class Agent(object):
                 torch.save(self.model.state_dict(), self.model_name)
             self.logger.warning("Saved  Model    @ Step: " + str(step) + ": " + self.model_name + ". {Best Step: " + str(self.best_step) + " | Best Reward: " + str(self.best_reward) + "}")
         else:
-            torch.save(self.model.state_dict(), self.model_name)
+            idx = self.model_name.index('.pth')
+            step_name = self.model_name[:idx] + '_step_' + str(step) + '.pth'
+            torch.save(self.model.state_dict(), step_name)
             self.logger.warning("Saved  Model    @ Step: " + str(step) + ": " + self.model_name + ".")
 
     # TODO: used everywhere where needed? (a3c.py)
@@ -195,11 +197,15 @@ class Agent(object):
                 "Saved ICM Forward Model    @ Step: " + str(step) + ": " + self.icm_fwd_model_name + ". {Best Step: " + str(
                     self.best_icm_fwd_step) + " | Best Loss: " + str(self.best_icm_fwd_loss) + "}")
         else:
-            torch.save(self.icm_inv_model.state_dict(), self.icm_inv_model_name)
+            idx = self.icm_inv_model_name.index('.pth')
+            inv_step_name = self.icm_inv_model_name[:idx] + '_step_' + str(step) + '.pth'
+            torch.save(self.icm_inv_model.state_dict(), inv_step_name)
             self.logger.warning("Saved ICM Inverse Model    @ Step: " + str(step) + ": " + self.icm_inv_model_name + ".")
 
             self.logger.warning("Saving ICM Forward Model    @ Step: " + str(step) + ": " + self.icm_fwd_model_name + " ...")
-            torch.save(self.icm_fwd_model.state_dict(), self.icm_fwd_model_name)
+            idx = self.icm_fwd_model_name.index('.pth')
+            fwd_step_name = self.icm_fwd_model_name[:idx] + '_step_' + str(step) + '.pth'
+            torch.save(self.icm_fwd_model.state_dict(), fwd_step_name)
             self.logger.warning("Saved ICM Forward  Model    @ Step: " + str(step) + ": " + self.icm_fwd_model_name + ".")
 
     def _forward(self, observation):

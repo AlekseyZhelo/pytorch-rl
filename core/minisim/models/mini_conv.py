@@ -32,14 +32,15 @@ class A3CCnvMinisimModel(Model):
         self.rl2 = nn.ELU()
         self.fc3 = nn.Linear(self.sz_2 * self.num_filters, self.hidden_dim)
         self.rl3 = nn.ELU()
-        self.fc4 = nn.Linear(self.hidden_dim, self.hidden_dim // 2)
+        final_size = 16  # was self.hidden_dim // 2
+        self.fc4 = nn.Linear(self.hidden_dim, final_size)
         self.rl4 = nn.ELU()
 
         # 1. policy output
-        self.policy_7 = nn.Linear(self.hidden_dim // 2 + self.target_data_dim * self.hist_len, self.output_dims)
+        self.policy_7 = nn.Linear(final_size + self.target_data_dim * self.hist_len, self.output_dims)
         self.policy_8 = nn.Softmax()
         # 2. value output
-        self.value_8 = nn.Linear(self.hidden_dim // 2 + self.target_data_dim * self.hist_len, 1)
+        self.value_8 = nn.Linear(final_size + self.target_data_dim * self.hist_len, 1)
 
         self._reset()
 

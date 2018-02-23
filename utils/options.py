@@ -47,7 +47,7 @@ class Params(object):  # NOTE: shared across all modules
         # training signature
         # TODO: fix action stats for multi-robot!
         self.machine = "aiscpu2"  # "machine_id"
-        self.timestamp = "18022200"  # "yymmdd##"
+        self.timestamp = "18022300"  # "yymmdd##"
         # training configuration
         self.mode = 1  # 1(train) | 2(test model_file)
         self.config = 16
@@ -165,9 +165,9 @@ class EnvParams(Params):  # settings for simulation environment
             self.img_encoding_type = "passthrough"
         elif self.env_type == "minisim":
             self.num_robots = minisim_num_robots
-            self.curriculum = True  # TODO: ensure start outside of target area when True
+            self.curriculum = False  # TODO: ensure start outside of target area when True
             self.randomize_maps = False
-            self.randomize_targets = False
+            self.randomize_targets = True
             self.penalize_staying = True
             pass
         else:
@@ -192,7 +192,7 @@ class ModelParams(Params):  # settings for network architecture
             self.icm_inv_hidden_vb_dim = 128  # unused
             self.icm_fwd_hidden_dim = 128
             self.icm_fwd_hidden_vb_dim = 128  # unused
-            self.icm_feature_dim = 9  # 6 TODO: tweak
+            self.icm_feature_dim = 16
 
 
 class MemoryParams(Params):  # settings for replay memory
