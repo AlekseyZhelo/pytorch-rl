@@ -165,7 +165,7 @@ class EnvParams(Params):  # settings for simulation environment
             self.img_encoding_type = "passthrough"
         elif self.env_type == "minisim":
             self.num_robots = minisim_num_robots
-            self.curriculum = True  # TODO: ensure start outside of target area when True
+            self.curriculum = False  # TODO: ensure start outside of target area when True
             self.randomize_maps = False
             self.randomize_targets = True
             self.penalize_staying = True
