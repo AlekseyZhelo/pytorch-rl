@@ -294,7 +294,7 @@ class A3CLearner(A3CSingleProcess):
             reward_vb = Variable(torch.from_numpy(self.rollout.reward[i])).float().view(-1, 1)
             # -TODO: for comparison; turn back on later!
             if self.master.icm:
-                reward_vb += 0.05 * (icm_inv_loss_detached[i] + icm_fwd_loss_detached[i])
+                reward_vb += 0.01 * (icm_inv_loss_detached[i] + icm_fwd_loss_detached[i])
             valueT_vb = self.master.gamma * valueT_vb + reward_vb
             advantage_vb = valueT_vb - self.rollout.value0_vb[i]
             value_loss_vb = value_loss_vb + 0.5 * advantage_vb.pow(2)
