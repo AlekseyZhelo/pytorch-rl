@@ -46,7 +46,7 @@ class Params(object):  # NOTE: shared across all modules
 
         # training signature
         # TODO: fix action stats for multi-robot!
-        self.machine = "aiscpu4"  # "machine_id"
+        self.machine = "aiscpu2"  # "machine_id"
         self.timestamp = "18022600"  # "yymmdd##"
         self.step = None  # "2776609"
         # training configuration
