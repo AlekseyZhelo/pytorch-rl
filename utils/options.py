@@ -46,10 +46,11 @@ class Params(object):  # NOTE: shared across all modules
 
         # training signature
         # TODO: fix action stats for multi-robot!
-        self.machine = "aiscpu2"  # "machine_id"
-        self.timestamp = "18022501"  # "yymmdd##"
+        self.machine = "aiscpu4"  # "machine_id"
+        self.timestamp = "18022500"  # "yymmdd##"
+        self.step = "2776609"
         # training configuration
-        self.mode = 1  # 1(train) | 2(test model_file)
+        self.mode = 2  # 1(train) | 2(test model_file)
         self.config = 16
 
         self.seed = 123
@@ -114,8 +115,26 @@ class Params(object):  # NOTE: shared across all modules
         self.root_dir = os.getcwd()
 
         # model files
+        if self.mode != 2:
+            self.step = None
+
+        if self.icm:
+            self.icm_inv_model_name = "{0}/models/{1}_icm_inv{2}.pth".format(self.root_dir, self.refs,
+                                                                             ("_step_" + self.step)
+                                                                             if self.step is not None else "")
+            self.icm_fwd_model_name = "{0}/models/{1}_icm_fwd{2}.pth".format(self.root_dir, self.refs,
+                                                                             ("_step_" + self.step)
+                                                                             if self.step is not None else "")
+            self.icm_inv_model_file = None
+            self.icm_fwd_model_file = None
+            if self.mode == 2:  # NOTE: so only need to change self.mode to 2 to test the current training
+                self.icm_inv_model_file = self.icm_inv_model_name
+                self.icm_fwd_model_file = self.icm_fwd_model_name
+
+
         # NOTE: will save the current model to model_name
-        self.model_name = self.root_dir + "/models/" + self.refs + ".pth"
+        self.model_name = "{0}/models/{1}{2}.pth".format(self.root_dir, self.refs,
+                                                         ("_step_" + self.step) if self.step is not None else "")
         # NOTE: will load pretrained model_file if not None
         self.model_file = None
         # self.model_file  = self.root_dir + "/models/aiscpu2_17110500.pth"
@@ -123,15 +142,6 @@ class Params(object):  # NOTE: shared across all modules
             self.model_file = self.model_name  # NOTE: so only need to change self.mode to 2 to test the current training
             assert self.model_file is not None, "Pre-Trained model is None, Testing aborted!!!"
             self.refs = self.refs + "_test"  # NOTE: using this as env for visdom for testing, to avoid accidentally redraw on the training plots
-
-        if self.icm:
-            self.icm_inv_model_name = "{0}/models/{1}_icm_inv.pth".format(self.root_dir, self.refs)
-            self.icm_fwd_model_name = "{0}/models/{1}_icm_fwd.pth".format(self.root_dir, self.refs)
-            self.icm_inv_model_file = None
-            self.icm_fwd_model_file = None
-            if self.mode == 2:  # NOTE: so only need to change self.mode to 2 to test the current training
-                self.icm_inv_model_file = self.icm_inv_model_name
-                self.icm_fwd_model_file = self.icm_fwd_model_name
 
         # logging configs
         self.log_name = self.root_dir + "/logs/" + self.refs + ".log"
@@ -256,7 +266,7 @@ class AgentParams(Params):  # hyperparameters for drl agents
             self.memory_interval = 1
             self.train_interval = 1
         elif self.agent_type == "dqn" and self.env_type == "atari-ram" or \
-                self.agent_type == "dqn" and self.env_type == "atari":
+                                self.agent_type == "dqn" and self.env_type == "atari":
             self.steps = 50000000  # max #iterations
             self.early_stop = None  # max #steps per episode
             self.gamma = 0.99
@@ -312,7 +322,7 @@ class AgentParams(Params):  # hyperparameters for drl agents
                 self.icm_inv_lr = 0.0001
                 self.icm_fwd_lr = 0.0001
                 self.lr_decay = False
-                self.weight_decay = 1e-4 if self.enable_continuous else 0 # 1e-6  # 1e-05
+                self.weight_decay = 1e-4 if self.enable_continuous else 0  # 1e-6  # 1e-05
                 self.eval_freq = 60  # NOTE: here means every this many seconds
                 self.eval_steps = 15000  # 60000
                 self.prog_freq = self.eval_freq

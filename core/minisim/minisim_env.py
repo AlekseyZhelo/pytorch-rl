@@ -39,6 +39,7 @@ class MinisimEnv(Env):
         self.randomize_targets = args.randomize_targets if hasattr(args, "randomize_targets") else False
         self.penalize_staying = args.penalize_staying if hasattr(args, "penalize_staying") else False
         self.mode = args.mode  # 1(train) | 2(test model_file)
+        self.total_reward = 0
 
         if self.mode == 2:
             self.curriculum = False
@@ -159,6 +160,10 @@ class MinisimEnv(Env):
             self.exp_state1, self.exp_reward, self.exp_terminal1, _ = self.client.step_structured(
                 [self.actions[i] for i in action_index.reshape(-1)]
             )
+            if self.mode == 2:
+                # time.sleep(0.33)
+                self.total_reward += self.exp_reward
+                print('total reward: ', self.total_reward)
             # print("actions: ", action_index)
             if self.hist_len > 1:
                 self._append_to_history(self._preprocessState(self.exp_state1))
