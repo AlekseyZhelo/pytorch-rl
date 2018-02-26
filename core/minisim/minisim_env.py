@@ -164,7 +164,7 @@ class MinisimEnv(Env):
                 # time.sleep(0.33)
                 self.total_reward += self.exp_reward
                 print('total reward: ', self.total_reward)
-            # print("actions: ", action_index)
+                # print("actions: ", action_index)
             if self.hist_len > 1:
                 self._append_to_history(self._preprocessState(self.exp_state1))
         return self._get_experience()
