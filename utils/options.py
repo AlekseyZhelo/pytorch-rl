@@ -46,9 +46,9 @@ class Params(object):  # NOTE: shared across all modules
 
         # training signature
         # TODO: fix action stats for multi-robot!
-        self.machine = "aiscpu4"  # "machine_id"
-        self.timestamp = "18022500"  # "yymmdd##"
-        self.step = "2776609"
+        self.machine = "aiscpu2"  # "machine_id"
+        self.timestamp = "18022600"  # "yymmdd##"
+        self.step = None  # "2776609"
         # training configuration
         self.mode = 2  # 1(train) | 2(test model_file)
         self.config = 16
@@ -58,7 +58,7 @@ class Params(object):  # NOTE: shared across all modules
         self.visualize = True  # whether do online plotting and stuff or not
         self.save_best = False  # save model w/ highest reward if True, otherwise always save the latest model
         self.icm_save_best = False
-        self.plot_icm_test = True
+        self.plot_icm_test = False
 
         self.agent_type, self.env_type, self.game, self.model_type, self.memory_type = CONFIGS[self.config]
 
