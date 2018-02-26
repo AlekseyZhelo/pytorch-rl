@@ -88,6 +88,7 @@ class A3CAgent(Agent):
         self.jobs = []
         for process_id in range(self.num_processes):
             self.jobs.append(A3CLearner(self, process_id))
+        self.jobs.append(A3CEvaluator(self, self.num_processes))
         # print ("Warning: NOT STARTING THE EVALUATOR")
         # self.logger.warning("<===================================> Warning: NOT STARTING THE EVALUATOR ...")
         # TODO: figure out why the logs stop printing to console
