@@ -46,8 +46,8 @@ class Params(object):  # NOTE: shared across all modules
 
         # training signature
         # TODO: fix action stats for multi-robot!
-        self.machine = "aiscpu4"  # "machine_id"
-        self.timestamp = "18022500"  # "yymmdd##"
+        self.machine = "aiscpu2"  # "machine_id"
+        self.timestamp = "18022700"  # "yymmdd##"
         self.step = None  # "1108025"
         # training configuration
         self.mode = 1  # 1(train) | 2(test model_file)
@@ -200,7 +200,7 @@ class ModelParams(Params):  # settings for network architecture
 
             self.icm_inv_hidden_dim = 128
             self.icm_inv_hidden_vb_dim = 128  # unused
-            self.icm_fwd_hidden_dim = 128
+            self.icm_fwd_hidden_dim = 64
             self.icm_fwd_hidden_vb_dim = 128  # unused
             self.icm_feature_dim = 16
 
@@ -331,6 +331,7 @@ class AgentParams(Params):  # hyperparameters for drl agents
                 self.rollout_steps = 50  # max look-ahead steps in a single rollout
                 self.tau = 1.
                 self.beta = 0.01  # coefficient for entropy penalty
+                self.icm_beta = 0.2  # ICM forward model reward contribution coefficient
             else:
                 self.steps = 20000000  # max #iterations
                 self.early_stop = None  # max #steps per episode

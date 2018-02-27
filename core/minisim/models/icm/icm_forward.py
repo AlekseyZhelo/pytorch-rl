@@ -34,12 +34,11 @@ class ICMForwardModel(Model):
         self._reset()
 
     def _init_weights(self):
-        self.apply(init_weights)
-        self.fc1.weight.data = normalized_columns_initializer(self.fc1.weight.data, 0.01)
+        nn.init.xavier_uniform(self.fc1.weight.data, gain=nn.init.calculate_gain('relu'))
+        nn.init.xavier_uniform(self.fc2.weight.data, gain=nn.init.calculate_gain('relu'))
+        nn.init.xavier_uniform(self.fc3.weight.data, gain=nn.init.calculate_gain('relu'))
         self.fc1.bias.data.fill_(0)
-        self.fc2.weight.data = normalized_columns_initializer(self.fc2.weight.data, 0.01)
         self.fc2.bias.data.fill_(0)
-        self.fc3.weight.data = normalized_columns_initializer(self.fc3.weight.data, 0.01)
         self.fc3.bias.data.fill_(0)
 
     def forward(self, input_):

@@ -75,7 +75,7 @@ class A3CCnvMinisimModel(Model):
         x = self.rl2(self.cnv2(x))
         x = x.view(self.num_robots, self.sz_2 * self.num_filters)
         x = self.rl3(self.fc3(x))
-        x = self.rl4(self.fc4(x))
+        x = self.rl4(self.fc4(x))  # the features
 
         x_aug = torch.cat((x, target_data), 1)
         p = self.policy_7(x_aug)

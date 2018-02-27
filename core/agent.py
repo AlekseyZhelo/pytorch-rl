@@ -103,6 +103,7 @@ class Agent(object):
             self.rollout_steps = args.rollout_steps
             self.tau = args.tau
             self.beta = args.beta
+            self.icm_beta = args.icm_beta
         elif args.agent_type == "acer":
             self.enable_bias_correction = args.enable_bias_correction
             self.enable_1st_order_trpo = args.enable_1st_order_trpo

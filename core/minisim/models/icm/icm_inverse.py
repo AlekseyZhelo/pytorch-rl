@@ -30,22 +30,25 @@ class ICMInverseModel(Model):
         self.fc3 = nn.Linear(self.hidden_dim // 2, self.feature_dim)
         self.rl3 = nn.ELU()
 
-        # 1. action output  # TODO: more layers here?
-        self.action_4 = nn.Linear(2 * self.feature_dim, self.output_dims)
-        self.action_5 = nn.Softmax()
+        self.fc4 = nn.Linear(2 * self.feature_dim, 2 * self.feature_dim)
+        self.rl4 = nn.ELU()
+        # 1. action output
+        self.action_5 = nn.Linear(2 * self.feature_dim, self.output_dims)
+        self.action_6 = nn.Softmax()
 
         self._reset()
 
     def _init_weights(self):
-        self.apply(init_weights)
-        self.fc1.weight.data = normalized_columns_initializer(self.fc1.weight.data, 0.01)
+        nn.init.xavier_uniform(self.fc1.weight.data, gain=nn.init.calculate_gain('relu'))
+        nn.init.xavier_uniform(self.fc2.weight.data, gain=nn.init.calculate_gain('relu'))
+        nn.init.xavier_uniform(self.fc3.weight.data, gain=nn.init.calculate_gain('relu'))
+        nn.init.xavier_uniform(self.fc4.weight.data, gain=nn.init.calculate_gain('relu'))
+        nn.init.xavier_uniform(self.action_5.weight.data, gain=nn.init.calculate_gain('relu'))
         self.fc1.bias.data.fill_(0)
-        self.fc2.weight.data = normalized_columns_initializer(self.fc2.weight.data, 0.01)
         self.fc2.bias.data.fill_(0)
-        self.fc3.weight.data = normalized_columns_initializer(self.fc3.weight.data, 0.01)
         self.fc3.bias.data.fill_(0)
-        self.action_4.weight.data = normalized_columns_initializer(self.action_4.weight.data, 0.01)
-        self.action_4.bias.data.fill_(0)
+        self.fc4.bias.data.fill_(0)
+        self.action_5.bias.data.fill_(0)
 
     def forward(self, input_):
         state, state_next = input_
@@ -63,7 +66,9 @@ class ICMInverseModel(Model):
             1
         )
 
-        p_lin = self.action_4(x)
-        p = self.action_5(p_lin)
+        x = self.rl4(self.fc4(x))
+
+        p_lin = self.action_5(x)
+        p = self.action_6(p_lin)
 
         return x_1, x_2, p_lin, p
