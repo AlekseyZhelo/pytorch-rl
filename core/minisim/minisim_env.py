@@ -10,6 +10,7 @@ import numpy as np
 import roslaunch
 import rosparam
 import subprocess
+import imageio
 
 from core.env import Env
 from core.minisim.minisim_client import MinisimClient
@@ -20,6 +21,7 @@ from utils.options import EnvParams
 # TODO: figure out logging
 class MinisimEnv(Env):
     initialized = False
+    minisim_path = None
     roslaunch_map_server = None
     roslaunch_node_starter = None
     roscore = None
@@ -32,6 +34,8 @@ class MinisimEnv(Env):
         self._reset_experience = tmp
 
         assert self.env_type == "minisim"
+
+        self.extras = None
 
         self.num_robots = args.num_robots
         self.curriculum = args.curriculum if hasattr(args, "curriculum") else False
@@ -97,6 +101,7 @@ class MinisimEnv(Env):
 
     def _reset_experience(self):
         super(MinisimEnv, self)._reset_experience()
+        self.extras = None
         if self.hist_len > 1:
             self.state_buffer[:] = 0
 
@@ -124,17 +129,23 @@ class MinisimEnv(Env):
 
     def _get_experience(self):
         if self.hist_len == 1:
-            return super(MinisimEnv, self)._get_experience()
+            return Experience(state0=self.exp_state0,  # NOTE: here state0 is always None
+                              action=self.exp_action,
+                              reward=self.exp_reward,
+                              state1=self._preprocessState(self.exp_state1),
+                              terminal1=self.exp_terminal1,
+                              extras=self.extras)
         else:
             return Experience(state0=self.exp_state0,  # NOTE: here state0 is always None
                               action=self.exp_action,
                               reward=self.exp_reward,
                               state1=self.state_buffer,
-                              terminal1=self.exp_terminal1)
+                              terminal1=self.exp_terminal1,
+                              extras=self.extras)
 
     def reset(self):
         self._reset_experience()
-        self.exp_state1 = self.client.reset()
+        self.exp_state1, self.extras = self.client.reset()
         if self.hist_len > 1:
             self._append_to_history(self._preprocessState(self.exp_state1))
         return self._get_experience()
@@ -157,7 +168,7 @@ class MinisimEnv(Env):
             # )
 
             # structured reward
-            self.exp_state1, self.exp_reward, self.exp_terminal1, _ = self.client.step_structured(
+            self.exp_state1, self.exp_reward, self.exp_terminal1, self.extras, _ = self.client.step_structured(
                 [self.actions[i] for i in action_index.reshape(-1)]
             )
             if self.mode == 2:
@@ -168,6 +179,11 @@ class MinisimEnv(Env):
             if self.hist_len > 1:
                 self._append_to_history(self._preprocessState(self.exp_state1))
         return self._get_experience()
+
+    def read_static_map_image(self):
+        # return imageio.imread(os.path.join(MinisimEnv.minisim_path, 'map', 'medium_rooms.pgm'))
+        return imageio.imread(os.path.join(MinisimEnv.minisim_path,
+                                           'map', 'random', 'simple_gen_small_002.pgm'))
 
     # was supposed to be useful for a large network with a single action index output, which would
     # be expanded into individual robot actions
@@ -186,6 +202,7 @@ class MinisimEnv(Env):
         rospack = roslaunch.rospkg.RosPack()
         try:
             minisim_path = rospack.get_path('minisim')
+            MinisimEnv.minisim_path = minisim_path
         except roslaunch.rospkg.ResourceNotFound:
             self.logger.warning("WARNING: minisim not found")
             sys.exit(-1)
@@ -194,8 +211,8 @@ class MinisimEnv(Env):
             # map_server_rlaunch_path = os.path.join(minisim_path, 'launch', 'map_server_small.launch')
             # map_server_rlaunch_path = os.path.join(minisim_path, 'launch', 'map_server_small_simple.launch')
             # map_server_rlaunch_path = os.path.join(minisim_path, 'launch', 'map_server_empty_small.launch')
-            # map_server_rlaunch_path = os.path.join(minisim_path, 'launch', 'map_server_simple_gen_small_002.launch')
-            map_server_rlaunch_path = os.path.join(minisim_path, 'launch', 'map_server_medium_rooms.launch')
+            map_server_rlaunch_path = os.path.join(minisim_path, 'launch', 'map_server_simple_gen_small_002.launch')
+            # map_server_rlaunch_path = os.path.join(minisim_path, 'launch', 'map_server_medium_rooms.launch')
             uuid = roslaunch.rlutil.get_or_generate_uuid(None, False)
             roslaunch.configure_logging(uuid)
             MinisimEnv.roslaunch_map_server = roslaunch.parent.ROSLaunchParent(uuid, [map_server_rlaunch_path])

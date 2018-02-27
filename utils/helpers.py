@@ -4,6 +4,17 @@ from __future__ import print_function
 import logging
 import numpy as np
 from collections import namedtuple
+from collections import Mapping
+
+def namedtuple_with_defaults(typename, field_names, default_values=()):
+    T = namedtuple(typename, field_names)
+    T.__new__.__defaults__ = (None,) * len(T._fields)
+    if isinstance(default_values, Mapping):
+        prototype = T(**default_values)
+    else:
+        prototype = T(*default_values)
+    T.__new__.__defaults__ = tuple(prototype)
+    return T
 
 def loggerConfig(log_file, verbose=2):
    logger      = logging.getLogger('pytorch-rl-logger')
@@ -24,7 +35,8 @@ def loggerConfig(log_file, verbose=2):
 # yields `reward` and results in `state1`, which might be `terminal`.
 # NOTE: used as the return format for Env(), and as the format to push into replay memory for off-policy methods (DQN)
 # NOTE: when return from Env(), state0 is always None
-Experience                 = namedtuple('Experience',                 'state0, action, reward, state1, terminal1')
+# Experience                 = namedtuple('Experience',                 'state0, action, reward, state1, terminal1')
+Experience                 = namedtuple_with_defaults('Experience', 'state0 action reward state1 terminal1 extras', {'extras':None})
 # NOTE: used for on-policy methods for collect experiences over a rollout of an episode
 # NOTE: policy_vb & value0_vb for storing output Variables along a rollout # NOTE: they should not be detached from the graph!
 A3C_Experience             = namedtuple('A3C_Experience',             'state0, action, reward, state1, terminal1, policy_vb, sigmoid_vb, value0_vb')

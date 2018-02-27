@@ -98,7 +98,9 @@ class MinisimClient(object):
             else:
                 # return np.array(resp.state), resp.reward, resp.terminal, resp.message
                 return np.array(resp.state).reshape(self.num_robots, -1), np.array(
-                    resp.reward), resp.terminal, resp.message
+                    resp.reward), resp.terminal, dict(robot_map_x=resp.robot_map_x,
+                                                      robot_map_y=resp.robot_map_y,
+                                                      robot_theta=resp.robot_theta), resp.message
         except rospy.ServiceException, e:
             print("SimulationStepStructured service call failed: %s" % e)
 
@@ -110,7 +112,12 @@ class MinisimClient(object):
                     "WARNING: ResetSimulation service improperly called, message: {0}".format(resp.message))
                 return None
             else:
-                return np.array(resp.state).reshape(self.num_robots, -1)
+                return np.array(resp.state).reshape(self.num_robots, -1), \
+                       dict(
+                           target_map_x=resp.target_map_x,
+                           target_map_y=resp.target_map_y,
+                           target_radius=resp.target_radius
+                       )
         except rospy.ServiceException, e:
             print("ResetSimulation service call failed: %s" % e)
 

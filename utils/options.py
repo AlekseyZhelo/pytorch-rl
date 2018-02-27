@@ -46,9 +46,9 @@ class Params(object):  # NOTE: shared across all modules
 
         # training signature
         # TODO: fix action stats for multi-robot!
-        self.machine = "aiscpu2"  # "machine_id"
-        self.timestamp = "18022600"  # "yymmdd##"
-        self.step = None  # "2776609"
+        self.machine = "aiscpu4"  # "machine_id"
+        self.timestamp = "18022500"  # "yymmdd##"
+        self.step = None  # "1108025"
         # training configuration
         self.mode = 1  # 1(train) | 2(test model_file)
         self.config = 16
@@ -58,7 +58,7 @@ class Params(object):  # NOTE: shared across all modules
         self.visualize = True  # whether do online plotting and stuff or not
         self.save_best = False  # save model w/ highest reward if True, otherwise always save the latest model
         self.icm_save_best = False
-        self.plot_icm_test = False
+        self.plot_icm_test = True
 
         self.agent_type, self.env_type, self.game, self.model_type, self.memory_type = CONFIGS[self.config]
 
@@ -131,7 +131,6 @@ class Params(object):  # NOTE: shared across all modules
             if self.mode == 2:  # NOTE: so only need to change self.mode to 2 to test the current training
                 self.icm_inv_model_file = self.icm_inv_model_name
                 self.icm_fwd_model_file = self.icm_fwd_model_name
-
 
         # NOTE: will save the current model to model_name
         self.model_name = "{0}/models/{1}{2}.pth".format(self.root_dir, self.refs,
@@ -267,7 +266,7 @@ class AgentParams(Params):  # hyperparameters for drl agents
             self.memory_interval = 1
             self.train_interval = 1
         elif self.agent_type == "dqn" and self.env_type == "atari-ram" or \
-                                self.agent_type == "dqn" and self.env_type == "atari":
+                self.agent_type == "dqn" and self.env_type == "atari":
             self.steps = 50000000  # max #iterations
             self.early_stop = None  # max #steps per episode
             self.gamma = 0.99
@@ -327,7 +326,7 @@ class AgentParams(Params):  # hyperparameters for drl agents
                 self.eval_freq = 60  # NOTE: here means every this many seconds
                 self.eval_steps = 15000  # 60000
                 self.prog_freq = self.eval_freq
-                self.test_nepisodes = 10
+                self.test_nepisodes = 10 if not self.plot_icm_test else 1
 
                 self.rollout_steps = 50  # max look-ahead steps in a single rollout
                 self.tau = 1.

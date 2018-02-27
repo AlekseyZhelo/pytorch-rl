@@ -4,10 +4,15 @@ from __future__ import print_function
 
 import math
 import time
+import os
 
 import numpy as np
+import matplotlib.pyplot as plt
 import torch
 from torch.autograd import Variable
+from matplotlib.patches import Rectangle
+from matplotlib.patches import Circle
+from matplotlib.transforms import Affine2D
 
 from core.agent_single_process import AgentSingleProcess
 from utils.helpers import A3C_Experience
@@ -236,7 +241,7 @@ class A3CLearner(A3CSingleProcess):
                          :self.master.state_shape]
             state_start = Variable(torch.from_numpy(state_start).type(self.master.dtype))
             state_next = Variable(torch.from_numpy(state_next).type(self.master.dtype))
-            actions = np.array(self.rollout.action).reshape(-1)
+            actions = np.array(self.rollout.action).reshape(-1)  # TODO: is this right for several robots?
             actions = Variable(torch.from_numpy(actions).long(), requires_grad=False)
 
             features, features_next, action_logits, action_probs = \
@@ -644,7 +649,8 @@ class A3CEvaluator(A3CSingleProcess):
                 self.master.logger.warning(
                     "Iteration: {}; icm_fwd_loss_avg: {}".format(eval_at_step, self.icm_fwd_loss_avg_log[-1][1]))
                 self.master.logger.warning(
-                    "Iteration: {}; icm_inv_accuracy_avg: {}".format(eval_at_step, self.icm_inv_accuracy_avg_log[-1][1]))
+                    "Iteration: {}; icm_inv_accuracy_avg: {}".format(eval_at_step,
+                                                                     self.icm_inv_accuracy_avg_log[-1][1]))
             self.master.logger.warning(
                 "Iteration: {}; grad_magnitude_avg: {}".format(eval_at_step, self.grad_magnitude_avg_log[-1][1]))
             self.master.logger.warning(
@@ -753,6 +759,12 @@ class A3CTester(A3CSingleProcess):
         master.logger.warning("<===================================> A3C-Tester {Env & Model}")
         super(A3CTester, self).__init__(master, process_id)
 
+        self.episode_history = []
+        self.action_history = []
+        if self.master.plot_icm_test:
+            assert self.master.icm, 'Asked to plot icm features when ICM is off'
+            self.map_image = self.env.read_static_map_image()
+
         self.training = False  # choose actions w/ max probability
         # self.training = True  # choose actions by polynomial (?)
         self.model.train(self.training)
@@ -806,6 +818,7 @@ class A3CTester(A3CSingleProcess):
                 # Obtain the initial observation by resetting the environment
                 self._reset_experience()
                 self.experience = self.env.reset()
+                self.episode_history.append(self.experience)
                 assert self.experience.state1 is not None
                 if not self.training:
                     if self.master.visualize: self.env.visual()
@@ -822,9 +835,13 @@ class A3CTester(A3CSingleProcess):
             else:
                 test_action, p_vb, v_vb = self._forward(self._preprocessState(self.experience.state1, True))
             self.experience = self.env.step(test_action)
+            self.episode_history.append(self.experience)
+            self.action_history.append(test_action)
             if not self.training:
                 if self.master.visualize: self.env.visual()
                 if self.master.render: self.env.render()
+                if self.master.plot_icm_test and test_episode_steps < 150:
+                    self.plot_icm_test(p_vb, test_nepisodes)
             if self.experience.terminal1 or \
                     self.master.early_stop and (test_episode_steps + 1) == self.master.early_stop:
                 test_should_start_new = True
@@ -842,6 +859,8 @@ class A3CTester(A3CSingleProcess):
                 test_episode_steps_log.append([test_episode_steps])
                 test_episode_reward_log.append([test_episode_reward])
                 self._reset_experience()
+                self.episode_history = []
+                self.action_history = []
                 test_episode_steps = None
                 test_episode_reward = None
 
@@ -880,3 +899,88 @@ class A3CTester(A3CSingleProcess):
         self.master.logger.warning("Testing: nepisodes: {}".format(self.nepisodes_log[-1][1]))
         self.master.logger.warning("Testing: nepisodes_solved: {}".format(self.nepisodes_solved_log[-1][1]))
         self.master.logger.warning("Testing: repisodes_solved: {}".format(self.repisodes_solved_log[-1][1]))
+
+    def plot_icm_test(self, p_vb, test_nepisodes):
+        state_start = self.episode_history[-2].state1.reshape(-1, self.master.state_shape + 3)[:,
+                      :self.master.state_shape]
+        state_next = self.episode_history[-1].state1.reshape(-1, self.master.state_shape + 3)[:,
+                     :self.master.state_shape]
+        state_start = Variable(torch.from_numpy(state_start).type(self.master.dtype))
+        state_next = Variable(torch.from_numpy(state_next).type(self.master.dtype))
+        actions = np.array(self.action_history[-1]).reshape(-1)
+        actions = Variable(torch.from_numpy(actions).long(), requires_grad=False)
+
+        features, features_next, action_logits, action_probs = \
+            self.icm_inv_model.forward((state_start, state_next))
+
+        features_next_pred = self.icm_fwd_model.forward((Variable(features.data), actions))
+
+        ax1 = plt.subplot2grid((6, 6), (0, 0), colspan=4, rowspan=4)
+        ax2 = plt.subplot2grid((6, 6), (0, 4), colspan=2, rowspan=4)
+        ax3 = plt.subplot2grid((6, 6), (4, 0), colspan=6, rowspan=2)
+
+        target_extras = self.episode_history[0].extras
+        extras = self.episode_history[-1].extras
+
+        ax1.imshow(self.map_image, cmap='gray')
+        ax1.add_patch(
+            Circle(
+                (target_extras['target_map_x'][0], target_extras['target_map_y'][0]),
+                radius=target_extras['target_radius'] * 100
+            )
+        )
+        # ax1.scatter(target_extras['target_map_x'], target_extras['target_map_y'])
+        robot_pos = [extras['robot_map_x'][0], extras['robot_map_y'][0]]
+        rad = extras['robot_theta'][0]
+        angle = rad * 180 / np.pi
+        robot_rect = Rectangle(
+            (robot_pos[0] - 10, robot_pos[1] - 10),
+            20,  # width
+            20,  # height
+            fill=False,
+            color='green'
+        )
+        t_start = ax1.transData
+        t = Affine2D().rotate_deg_around(robot_pos[0], robot_pos[1], angle)
+        t_end = t + t_start
+        robot_rect.set_transform(t_end)
+        ax1.add_patch(
+            robot_rect
+        )
+        # ax1.scatter(extras['robot_map_x'], extras['robot_map_y'], marker='s', color='green')
+
+        end = [robot_pos[0] + 13 * math.cos(rad), robot_pos[1] + 13 * math.sin(rad)]
+        ax1.plot([robot_pos[0], end[0]], [robot_pos[1], end[1]], color='red')
+        ax1.set_axis_off()
+
+        actions = ('Fwd', 'Right', 'Left')  # TODO: check left and right
+        y_pos = np.arange(len(actions))
+        prob = p_vb.data.numpy().reshape(-1)
+
+        ax2.barh(y_pos, prob, align='center')
+        ax2.set_yticks(y_pos)
+        ax2.set_yticklabels(actions)
+        ax2.set_xlim([0, 1])
+        ax2.yaxis.tick_right()
+        ax2.xaxis.tick_top()
+
+        x_pos = np.arange(16)
+        val_f_hat = features_next_pred.data.numpy().reshape(-1)
+        val_f = features_next.data.numpy().reshape(-1)
+
+        ax3.bar(x_pos, val_f_hat, width=0.2, label=r'$\^f$')
+        ax3.bar(x_pos + 0.2, val_f, width=0.2, label=r'$f$')
+        ax3.set_xticks(np.arange(16))
+        ax3.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+
+        plt.tight_layout()
+        plot_dir = os.path.join('imgs', 'icm_test_plots', os.path.basename(self.master.model_file)[:-4])
+        if not os.path.exists(plot_dir):
+            os.makedirs(plot_dir)
+        plt.savefig(
+            os.path.join(plot_dir, 'episode{0:03}_step{1:03}'.format(
+                test_nepisodes + 1,
+                len(self.action_history)
+            )),
+            dpi=200, bbox_inches='tight', pad_inches=0
+        )
