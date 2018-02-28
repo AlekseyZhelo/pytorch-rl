@@ -47,7 +47,7 @@ class Params(object):  # NOTE: shared across all modules
         # training signature
         # TODO: fix action stats for multi-robot!
         self.machine = "aiscpu2"  # "machine_id"
-        self.timestamp = "18022801"  # "yymmdd##"
+        self.timestamp = "18022802"  # "yymmdd##"
         self.step = None  # "1108025"
         # training configuration
         self.mode = 1  # 1(train) | 2(test model_file)
@@ -180,7 +180,7 @@ class EnvParams(Params):  # settings for simulation environment
             self.curriculum = False  # TODO: ensure start outside of target area when True
             self.randomize_maps = False
             self.randomize_targets = True
-            self.penalize_staying = False
+            self.penalize_staying = True
             pass
         else:
             assert False, "env_type must be: gym | atari-ram | atari | lab | minisim"
