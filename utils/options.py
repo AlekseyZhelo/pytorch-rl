@@ -46,8 +46,8 @@ class Params(object):  # NOTE: shared across all modules
 
         # training signature
         # TODO: fix action stats for multi-robot!
-        self.machine = "aiscpu4"  # "machine_id"
-        self.timestamp = "18022800"  # "yymmdd##"
+        self.machine = "aiscpu2"  # "machine_id"
+        self.timestamp = "18022801"  # "yymmdd##"
         self.step = None  # "1108025"
         # training configuration
         self.mode = 1  # 1(train) | 2(test model_file)
@@ -180,7 +180,7 @@ class EnvParams(Params):  # settings for simulation environment
             self.curriculum = False  # TODO: ensure start outside of target area when True
             self.randomize_maps = False
             self.randomize_targets = True
-            self.penalize_staying = True
+            self.penalize_staying = False
             pass
         else:
             assert False, "env_type must be: gym | atari-ram | atari | lab | minisim"
@@ -320,7 +320,7 @@ class AgentParams(Params):  # hyperparameters for drl agents
                 self.early_stop = 7000  # max #steps per episode
                 self.gamma = 0.99
                 self.clip_grad = 40.
-                self.lr = 5e-05  # 1e-04; 2e-05; 5e-05 for smaller conv
+                self.lr = 1e-04  # 1e-04; 2e-05; 5e-05 for smaller conv
                 self.icm_inv_lr = 0.0001
                 self.icm_fwd_lr = 0.0001
                 self.lr_decay = False
@@ -332,8 +332,8 @@ class AgentParams(Params):  # hyperparameters for drl agents
 
                 self.rollout_steps = 50  # max look-ahead steps in a single rollout
                 self.tau = 1.
-                self.beta = 0.01  # coefficient for entropy penalty
-                self.icm_beta = 0.01  # ICM reward bonus coefficient
+                self.beta = 0.005  # coefficient for entropy penalty
+                self.icm_beta = 1   # 0.01  # ICM reward bonus coefficient
                 self.icm_fwd_wt = 0.2  # ICM forward model reward contribution coefficient
             else:
                 self.steps = 20000000  # max #iterations
