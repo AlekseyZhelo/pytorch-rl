@@ -100,10 +100,9 @@ class Params(object):  # NOTE: shared across all modules
                 self.icm_inv_model = ICMInverseModel
                 # self.icm_inv_model = ICMInverseModelSameFeatures
                 self.icm_fwd_model = ICMForwardModel
-                # TODO: try 32
-                self.num_processes = 32  # 6, 23  # 22 seems to be twice faster than 23, why? try other?
+                self.num_processes = 22  # 6, 23  # 22 seems to be twice faster than 23, why? try other?
                 if minisim_num_robots > 1:
-                    self.num_processes = 32  # 4, 23
+                    self.num_processes = 22  # 4, 23
 
             self.use_cuda = False
             self.dtype = torch.FloatTensor
