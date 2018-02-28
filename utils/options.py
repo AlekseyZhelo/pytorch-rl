@@ -46,8 +46,8 @@ class Params(object):  # NOTE: shared across all modules
 
         # training signature
         # TODO: fix action stats for multi-robot!
-        self.machine = "aiscpu4"  # "machine_id"
-        self.timestamp = "18022700"  # "yymmdd##"
+        self.machine = "aiscpu2"  # "machine_id"
+        self.timestamp = "18022800"  # "yymmdd##"
         self.step = None  # "1108025"
         # training configuration
         self.mode = 1  # 1(train) | 2(test model_file)
@@ -58,7 +58,7 @@ class Params(object):  # NOTE: shared across all modules
         self.visualize = True  # whether do online plotting and stuff or not
         self.save_best = False  # save model w/ highest reward if True, otherwise always save the latest model
         self.icm_save_best = False
-        self.plot_icm_test = True
+        self.plot_icm_test = False
 
         self.agent_type, self.env_type, self.game, self.model_type, self.memory_type = CONFIGS[self.config]
 
@@ -93,14 +93,17 @@ class Params(object):  # NOTE: shared across all modules
 
             if self.env_type == "minisim":
                 from core.minisim.models.icm.icm_inverse import ICMInverseModel
+                # from core.minisim.models.icm.icm_inverse_same_features import ICMInverseModelSameFeatures
                 from core.minisim.models.icm.icm_forward import ICMForwardModel
                 self.icm = True
                 # self.icm = False  # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                 self.icm_inv_model = ICMInverseModel
+                # self.icm_inv_model = ICMInverseModelSameFeatures
                 self.icm_fwd_model = ICMForwardModel
-                self.num_processes = 22  # 6, 23  # 22 seems to be twice faster than 23, why? try other?
+                # TODO: try 32
+                self.num_processes = 32  # 6, 23  # 22 seems to be twice faster than 23, why? try other?
                 if minisim_num_robots > 1:
-                    self.num_processes = 22  # 4, 23
+                    self.num_processes = 32  # 4, 23
 
             self.use_cuda = False
             self.dtype = torch.FloatTensor
@@ -317,21 +320,22 @@ class AgentParams(Params):  # hyperparameters for drl agents
                 self.steps = 3000000  # max #iterations; 3
                 self.early_stop = 7000  # max #steps per episode
                 self.gamma = 0.99
-                self.clip_grad = 40.  # 20.
+                self.clip_grad = 40.
                 self.lr = 5e-05  # 1e-04; 2e-05; 5e-05 for smaller conv
                 self.icm_inv_lr = 0.0001
                 self.icm_fwd_lr = 0.0001
                 self.lr_decay = False
                 self.weight_decay = 1e-4 if self.enable_continuous else 0  # 1e-6  # 1e-05
                 self.eval_freq = 60  # NOTE: here means every this many seconds
-                self.eval_steps = 15000  # 60000
+                self.eval_steps = 7500  # 15000
                 self.prog_freq = self.eval_freq
                 self.test_nepisodes = 10 if not self.plot_icm_test else 1
 
                 self.rollout_steps = 50  # max look-ahead steps in a single rollout
                 self.tau = 1.
                 self.beta = 0.01  # coefficient for entropy penalty
-                self.icm_beta = 0.2  # ICM forward model reward contribution coefficient
+                self.icm_beta = 0.01  # ICM reward bonus coefficient
+                self.icm_fwd_wt = 0.2  # ICM forward model reward contribution coefficient
             else:
                 self.steps = 20000000  # max #iterations
                 self.early_stop = None  # max #steps per episode

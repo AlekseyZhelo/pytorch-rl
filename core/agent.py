@@ -104,6 +104,7 @@ class Agent(object):
             self.tau = args.tau
             self.beta = args.beta
             self.icm_beta = args.icm_beta
+            self.icm_fwd_wt = args.icm_fwd_wt
         elif args.agent_type == "acer":
             self.enable_bias_correction = args.enable_bias_correction
             self.enable_1st_order_trpo = args.enable_1st_order_trpo

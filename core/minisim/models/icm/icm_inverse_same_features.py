@@ -8,10 +8,9 @@ from core.model import Model
 from utils.init_weights import init_weights, normalized_columns_initializer
 
 
-# TODO: try LSTM?
-class ICMInverseModel(Model):
+class ICMInverseModelSameFeatures(Model):
     def __init__(self, args):
-        super(ICMInverseModel, self).__init__(args)
+        super(ICMInverseModelSameFeatures, self).__init__(args)
 
         self.lstm_layer_count = 0
         self.num_robots = args.num_robots
@@ -23,7 +22,7 @@ class ICMInverseModel(Model):
 
         # build model
         # 0. feature layers
-        self.fc1 = nn.Linear(self.input_dims[1], self.hidden_dim)
+        self.fc1 = nn.Linear(self.feature_dim, self.hidden_dim)
         self.rl1 = nn.ELU()
         self.fc2 = nn.Linear(self.hidden_dim, self.hidden_dim // 2)
         self.rl2 = nn.ELU()
@@ -51,13 +50,13 @@ class ICMInverseModel(Model):
         self.action_5.bias.data.fill_(0)
 
     def forward(self, input_):
-        state, state_next = input_
+        a3c_features, a3c_features_next = input_
 
-        x_1 = self.rl1(self.fc1(state))
+        x_1 = self.rl1(self.fc1(a3c_features))
         x_1 = self.rl2(self.fc2(x_1))
         x_1 = self.rl3(self.fc3(x_1))
 
-        x_2 = self.rl1(self.fc1(state_next))
+        x_2 = self.rl1(self.fc1(a3c_features_next))
         x_2 = self.rl2(self.fc2(x_2))
         x_2 = self.rl3(self.fc3(x_2))
 
@@ -75,4 +74,4 @@ class ICMInverseModel(Model):
 
     @staticmethod
     def same_features():
-        return False
+        return True

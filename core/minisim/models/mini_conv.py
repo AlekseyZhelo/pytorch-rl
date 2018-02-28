@@ -81,4 +81,4 @@ class A3CCnvMinisimModel(Model):
         p = self.policy_7(x_aug)
         p = self.policy_8(p)
         v = self.value_8(x_aug)
-        return p, v
+        return p, v, {'features': x}

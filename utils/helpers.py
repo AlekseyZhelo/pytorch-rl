@@ -39,7 +39,7 @@ def loggerConfig(log_file, verbose=2):
 Experience                 = namedtuple_with_defaults('Experience', 'state0 action reward state1 terminal1 extras', {'extras':None})
 # NOTE: used for on-policy methods for collect experiences over a rollout of an episode
 # NOTE: policy_vb & value0_vb for storing output Variables along a rollout # NOTE: they should not be detached from the graph!
-A3C_Experience             = namedtuple('A3C_Experience',             'state0, action, reward, state1, terminal1, policy_vb, sigmoid_vb, value0_vb')
+A3C_Experience             = namedtuple('A3C_Experience',             'state0, action, reward, state1, terminal1, policy_vb, sigmoid_vb, value0_vb, features0, features1')
 ACER_On_Policy_Experience  = namedtuple('ACER_On_Policy_Experience',  'state0, action, reward, state1, terminal1, policy_vb, q0_vb,      value0_vb, detached_avg_policy_vb, detached_old_policy_vb')
 # # NOTE: used as the format to push into the replay memory for ACER; when sampled, used to get ACER_On_Policy_Experience
 ACER_Off_Policy_Experience = namedtuple('ACER_Off_Policy_Experience', 'state0, action, reward,                                                                              detached_old_policy_vb')

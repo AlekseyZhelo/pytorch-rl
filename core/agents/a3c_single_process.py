@@ -104,15 +104,21 @@ class A3CSingleProcess(AgentSingleProcess):
             state_vb = Variable(torch.from_numpy(state).unsqueeze(0).type(self.master.dtype), volatile=is_valotile)
         return state_vb
 
-    def _forward(self, state_vb):
+    def _forward(self, state_vb, off_record=False):
         if self.master.enable_continuous:  # NOTE continuous control p_vb here is the mu_vb of continuous action dist
             if self.master.enable_lstm:
                 if self.lstm_layer_count == 1:
-                    p_vb, sig_vb, v_vb, self.lstm_hidden_vb = self.model(state_vb, self.lstm_hidden_vb)
+                    if off_record:
+                        p_vb, sig_vb, v_vb, _ = self.model(state_vb, self.lstm_hidden_vb)
+                    else:
+                        p_vb, sig_vb, v_vb, self.lstm_hidden_vb = self.model(state_vb, self.lstm_hidden_vb)
                 elif self.lstm_layer_count == 2:
-                    p_vb, sig_vb, v_vb, self.lstm_hidden_vb, self.lstm_hidden_vb2 = self.model(state_vb,
-                                                                                               self.lstm_hidden_vb,
-                                                                                               self.lstm_hidden_vb2)
+                    if off_record:
+                        p_vb, sig_vb, v_vb, _, _ = self.model(state_vb, self.lstm_hidden_vb, self.lstm_hidden_vb2)
+                    else:
+                        p_vb, sig_vb, v_vb, self.lstm_hidden_vb, self.lstm_hidden_vb2 = self.model(state_vb,
+                                                                                                   self.lstm_hidden_vb,
+                                                                                                   self.lstm_hidden_vb2)
             else:
                 p_vb, sig_vb, v_vb = self.model(state_vb)
             if self.training:
@@ -124,17 +130,24 @@ class A3CSingleProcess(AgentSingleProcess):
         else:
             if self.master.enable_lstm:
                 if self.lstm_layer_count == 1:
-                    p_vb, v_vb, self.lstm_hidden_vb = self.model(state_vb, self.lstm_hidden_vb)
+                    if off_record:
+                        p_vb, v_vb, _ = self.model(state_vb, self.lstm_hidden_vb)
+                    else:
+                        p_vb, v_vb, self.lstm_hidden_vb = self.model(state_vb, self.lstm_hidden_vb)
                 elif self.lstm_layer_count == 2:
-                    p_vb, v_vb, self.lstm_hidden_vb, self.lstm_hidden_vb2 = self.model(state_vb, self.lstm_hidden_vb,
-                                                                                       self.lstm_hidden_vb2)
+                    if off_record:
+                        p_vb, v_vb, _, _ = self.model(state_vb, self.lstm_hidden_vb, self.lstm_hidden_vb2)
+                    else:
+                        p_vb, v_vb, self.lstm_hidden_vb, self.lstm_hidden_vb2 = self.model(state_vb,
+                                                                                           self.lstm_hidden_vb,
+                                                                                           self.lstm_hidden_vb2)
             else:
-                p_vb, v_vb = self.model(state_vb)
+                p_vb, v_vb, extras = self.model(state_vb)
             if self.training:
                 action = p_vb.multinomial().data.squeeze().numpy()
             else:
                 action = p_vb.max(1)[1].data.squeeze().numpy()
-            return action, p_vb, v_vb
+            return action, p_vb, v_vb, extras
 
     def _normal(self, x, mu, sigma_sq):
         a = (-1 * (x - mu).pow(2) / (2 * sigma_sq)).exp()
@@ -194,7 +207,9 @@ class A3CLearner(A3CSingleProcess):
                                       terminal1=[],
                                       policy_vb=[],
                                       sigmoid_vb=[],
-                                      value0_vb=[])
+                                      value0_vb=[],
+                                      features0=[],
+                                      features1=[])
 
     def _get_valueT_vb(self):
         if self.rollout.terminal1[-1]:  # for terminal sT
@@ -231,40 +246,43 @@ class A3CLearner(A3CSingleProcess):
 
         # ICM first if enabled
         if self.master.icm:
-            # if rollout_steps > 1:
-            #     pass
+            if self.icm_inv_model.same_features():
+                action, p_vb, v_vb, extras = self._forward(self._preprocessState(self.experience.state1))
+                self.rollout.features1.append(Variable(extras['features'].data))
+                state_start = torch.cat(self.rollout.features0, dim=0)
+                state_next = torch.cat(self.rollout.features1, dim=0)
+            else:
+                state_start = np.array(self.rollout.state0).reshape(-1, self.master.state_shape + 3)[:,
+                              :self.master.state_shape]
+                state_next = np.array(self.rollout.state1).reshape(-1, self.master.state_shape + 3)[:,
+                             :self.master.state_shape]
+                state_start = Variable(torch.from_numpy(state_start).type(self.master.dtype))
+                state_next = Variable(torch.from_numpy(state_next).type(self.master.dtype))
 
-            # TODO: also use target data in the state?
-            state_start = np.array(self.rollout.state0).reshape(-1, self.master.state_shape + 3)[:,
-                          :self.master.state_shape]
-            state_next = np.array(self.rollout.state1).reshape(-1, self.master.state_shape + 3)[:,
-                         :self.master.state_shape]
-            state_start = Variable(torch.from_numpy(state_start).type(self.master.dtype))
-            state_next = Variable(torch.from_numpy(state_next).type(self.master.dtype))
             actions = np.array(self.rollout.action).reshape(-1)  # TODO: is this right for several robots?
             actions = Variable(torch.from_numpy(actions).long(), requires_grad=False)
 
             features, features_next, action_logits, action_probs = \
                 self.icm_inv_model.forward((state_start, state_next))
-            features_next = features_next.detach()
+
             icm_inv_loss = self.icm_inv_loss_criterion(action_logits, actions)
             icm_inv_loss_mean = icm_inv_loss.mean()
-            icm_inv_loss_mean.backward()
 
-            # TODO: right to create new Variable here?
-            # otherwise RuntimeError: Trying to backward through the graph a second time
-            features_next_pred = self.icm_fwd_model.forward((Variable(features.data), actions))
-            icm_fwd_loss = self.icm_fwd_loss_criterion(features_next_pred, features_next).mean(dim=1)
+            features_next_pred = self.icm_fwd_model.forward((features, actions))
+
+            # icm_fwd_loss = 0.5 * self.icm_fwd_loss_criterion(features_next_pred, features_next).mean(dim=1)
+            icm_fwd_loss = 0.5 * torch.pow(features_next_pred - features_next, 2).mean(dim=1)
             icm_fwd_loss_mean = icm_fwd_loss.mean()
-            # TODO: does this backpropagate through the inverse model too?
-            icm_fwd_loss_mean.backward()
+
+            icm_loss_mean = (1 - self.master.icm_fwd_wt) * icm_inv_loss_mean \
+                            + self.master.icm_fwd_wt * icm_fwd_loss_mean
+            icm_loss_mean.backward()
 
             self.icm_inv_loss_avg += icm_inv_loss_mean.data.numpy()
             self.icm_fwd_loss_avg += icm_fwd_loss_mean.data.numpy()
             self.icm_inv_accuracy_avg += actions.eq(action_probs.max(1)[1]).sum().data.numpy()[0] / float(
                 actions.size()[0])
 
-            icm_inv_loss_detached = Variable(icm_inv_loss.data)
             icm_fwd_loss_detached = Variable(icm_fwd_loss.data)
 
         # preparation
@@ -297,10 +315,9 @@ class A3CLearner(A3CSingleProcess):
         value_loss_vb = 0.
         for i in reversed(range(rollout_steps)):
             reward_vb = Variable(torch.from_numpy(self.rollout.reward[i])).float().view(-1, 1)
-            # TODO: for comparison; turn back on later!
-            # if self.master.icm:
-            #     beta = self.master.icm_beta
-            #     reward_vb += 0.005 * ((1 - beta) * icm_inv_loss_detached[i] + beta * icm_fwd_loss_detached[i])
+            # -TODO: for comparison; turn back on later!
+            if self.master.icm:
+                reward_vb += self.master.icm_beta * icm_fwd_loss_detached[i]
             valueT_vb = self.master.gamma * valueT_vb + reward_vb
             advantage_vb = valueT_vb - self.rollout.value0_vb[i]
             value_loss_vb = value_loss_vb + 0.5 * advantage_vb.pow(2)
@@ -371,7 +388,7 @@ class A3CLearner(A3CSingleProcess):
                 action, p_vb, sig_vb, v_vb = self._forward(self._preprocessState(self.experience.state1))
                 self.rollout.sigmoid_vb.append(sig_vb)
             else:
-                action, p_vb, v_vb = self._forward(self._preprocessState(self.experience.state1))
+                action, p_vb, v_vb, extras = self._forward(self._preprocessState(self.experience.state1))
             # then execute action in env to get a new experience.state1 -> rollout.state1
             self.experience = self.env.step(action)
             # push experience into rollout
@@ -381,6 +398,11 @@ class A3CLearner(A3CSingleProcess):
             self.rollout.terminal1.append(self.experience.terminal1)
             self.rollout.policy_vb.append(p_vb)
             self.rollout.value0_vb.append(v_vb)
+
+            if self.master.icm and extras is not None and 'features' in extras:
+                self.rollout.features0.append(Variable(extras['features'].data))
+                if len(self.rollout.features0) > 1:
+                    self.rollout.features1.append(Variable(self.rollout.features0[-1].data))
 
             episode_steps += 1
             episode_reward += self.experience.reward
@@ -568,7 +590,7 @@ class A3CEvaluator(A3CSingleProcess):
             if self.master.enable_continuous:
                 eval_action, p_vb, sig_vb, v_vb = self._forward(self._preprocessState(self.experience.state1, True))
             else:
-                eval_action, p_vb, v_vb = self._forward(self._preprocessState(self.experience.state1, True))
+                eval_action, p_vb, v_vb, extras = self._forward(self._preprocessState(self.experience.state1, True))
             self.experience = self.env.step(eval_action)
             self.action_counts[eval_action] += 1
             if not self.training:
@@ -834,7 +856,7 @@ class A3CTester(A3CSingleProcess):
             if self.master.enable_continuous:
                 test_action, p_vb, sig_vb, v_vb = self._forward(self._preprocessState(self.experience.state1, True))
             else:
-                test_action, p_vb, v_vb = self._forward(self._preprocessState(self.experience.state1, True))
+                test_action, p_vb, v_vb, extras = self._forward(self._preprocessState(self.experience.state1, True))
             self.experience = self.env.step(test_action)
             self.episode_history.append(self.experience)
             self.action_history.append(test_action)
@@ -901,6 +923,7 @@ class A3CTester(A3CSingleProcess):
         self.master.logger.warning("Testing: nepisodes_solved: {}".format(self.nepisodes_solved_log[-1][1]))
         self.master.logger.warning("Testing: repisodes_solved: {}".format(self.repisodes_solved_log[-1][1]))
 
+    # TODO: adapt to work for same-features ICM too
     def plot_icm_test(self, p_vb, test_nepisodes):
         state_start = self.episode_history[-2].state1.reshape(-1, self.master.state_shape + 3)[:,
                       :self.master.state_shape]
@@ -914,7 +937,7 @@ class A3CTester(A3CSingleProcess):
         features, features_next, action_logits, action_probs = \
             self.icm_inv_model.forward((state_start, state_next))
 
-        features_next_pred = self.icm_fwd_model.forward((Variable(features.data), actions))
+        features_next_pred = self.icm_fwd_model.forward((features, actions))
 
         ax1 = plt.subplot2grid((6, 6), (0, 0), colspan=4, rowspan=4)
         ax2 = plt.subplot2grid((6, 6), (0, 4), colspan=2, rowspan=4)
@@ -971,6 +994,7 @@ class A3CTester(A3CSingleProcess):
 
         ax3.bar(x_pos, val_f_hat, width=0.2, label=r'$\^f$')
         ax3.bar(x_pos + 0.2, val_f, width=0.2, label=r'$f$')
+        ax2.set_ylim([-1, 1])
         ax3.set_xticks(np.arange(16))
         ax3.legend(loc='center left', bbox_to_anchor=(1, 0.5))
 
