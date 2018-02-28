@@ -233,7 +233,7 @@ class A3CLearner(A3CSingleProcess):
                         _, valueT_vb, _, _ = self.model(sT_vb, self.lstm_hidden_vb,
                                                         self.lstm_hidden_vb2)  # NOTE: only doing inference here
                 else:
-                    _, valueT_vb = self.model(sT_vb)  # NOTE: only doing inference here
+                    _, valueT_vb, _ = self.model(sT_vb)  # NOTE: only doing inference here
             # NOTE: here valueT_vb.volatile=True since sT_vb.volatile=True
             # NOTE: if we use detach() here, it would remain volatile
             # NOTE: then all the follow-up computations would only give volatile loss variables
