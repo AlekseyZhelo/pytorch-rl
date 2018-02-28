@@ -103,6 +103,7 @@ class Agent(object):
             self.rollout_steps = args.rollout_steps
             self.tau = args.tau
             self.beta = args.beta
+            self.icm_plus_reward = args.icm_plus_reward
             self.icm_beta = args.icm_beta
             self.icm_fwd_wt = args.icm_fwd_wt
         elif args.agent_type == "acer":
