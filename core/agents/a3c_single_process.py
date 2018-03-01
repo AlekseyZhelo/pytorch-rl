@@ -247,7 +247,8 @@ class A3CLearner(A3CSingleProcess):
         # ICM first if enabled
         if self.master.icm:
             if self.icm_inv_model.same_features():
-                action, p_vb, v_vb, extras = self._forward(self._preprocessState(self.experience.state1))
+                action, p_vb, v_vb, extras = self._forward(self._preprocessState(self.experience.state1),
+                                                           off_record=True)
                 self.rollout.features1.append(Variable(extras['features'].data))
                 state_start = torch.cat(self.rollout.features0, dim=0)
                 state_next = torch.cat(self.rollout.features1, dim=0)
@@ -456,7 +457,7 @@ class A3CLearner(A3CSingleProcess):
             episode_steps, episode_reward = self._rollout(episode_steps, episode_reward)
 
             if self.experience.terminal1 or \
-                    self.master.early_stop and episode_steps >= self.master.early_stop:
+                            self.master.early_stop and episode_steps >= self.master.early_stop:
                 nepisodes += 1
                 should_start_new = True
                 if self.experience.terminal1:
@@ -596,8 +597,8 @@ class A3CEvaluator(A3CSingleProcess):
                 if self.master.visualize: self.env.visual()
                 if self.master.render: self.env.render()
             if self.experience.terminal1 or \
-                    self.master.early_stop and (eval_episode_steps + 1) == self.master.early_stop or \
-                    (eval_step + 1) == self.master.eval_steps:
+                            self.master.early_stop and (eval_episode_steps + 1) == self.master.early_stop or \
+                            (eval_step + 1) == self.master.eval_steps:
                 eval_should_start_new = True
 
             eval_episode_steps += 1
@@ -781,7 +782,8 @@ class A3CTester(A3CSingleProcess):
         master.logger.warning("<===================================> A3C-Tester {Env & Model}")
         super(A3CTester, self).__init__(master, process_id)
 
-        self.episode_history = []
+        self.episode_state_history = []
+        self.episode_features_history = []
         self.action_history = []
         if self.master.plot_icm_test:
             assert self.master.icm, 'Asked to plot icm features when ICM is off'
@@ -840,7 +842,7 @@ class A3CTester(A3CSingleProcess):
                 # Obtain the initial observation by resetting the environment
                 self._reset_experience()
                 self.experience = self.env.reset()
-                self.episode_history.append(self.experience)
+                self.episode_state_history.append(self.experience)
                 assert self.experience.state1 is not None
                 if not self.training:
                     if self.master.visualize: self.env.visual()
@@ -857,15 +859,19 @@ class A3CTester(A3CSingleProcess):
             else:
                 test_action, p_vb, v_vb, extras = self._forward(self._preprocessState(self.experience.state1, True))
             self.experience = self.env.step(test_action)
-            self.episode_history.append(self.experience)
+
+            self.episode_state_history.append(self.experience)
+            if self.master.icm and extras is not None and 'features' in extras:
+                self.episode_features_history.append(Variable(extras['features'].data))
             self.action_history.append(test_action)
+
             if not self.training:
                 if self.master.visualize: self.env.visual()
                 if self.master.render: self.env.render()
                 if self.master.plot_icm_test and test_episode_steps < 150:
                     self.plot_icm_test(p_vb, test_nepisodes)
             if self.experience.terminal1 or \
-                    self.master.early_stop and (test_episode_steps + 1) == self.master.early_stop:
+                            self.master.early_stop and (test_episode_steps + 1) == self.master.early_stop:
                 test_should_start_new = True
 
             test_episode_steps += 1
@@ -881,7 +887,8 @@ class A3CTester(A3CSingleProcess):
                 test_episode_steps_log.append([test_episode_steps])
                 test_episode_reward_log.append([test_episode_reward])
                 self._reset_experience()
-                self.episode_history = []
+                self.episode_state_history = []
+                self.episode_features_history = []
                 self.action_history = []
                 test_episode_steps = None
                 test_episode_reward = None
@@ -922,14 +929,24 @@ class A3CTester(A3CSingleProcess):
         self.master.logger.warning("Testing: nepisodes_solved: {}".format(self.nepisodes_solved_log[-1][1]))
         self.master.logger.warning("Testing: repisodes_solved: {}".format(self.repisodes_solved_log[-1][1]))
 
-    # TODO: adapt to work for same-features ICM too
     def plot_icm_test(self, p_vb, test_nepisodes):
-        state_start = self.episode_history[-2].state1.reshape(-1, self.master.state_shape + 3)[:,
-                      :self.master.state_shape]
-        state_next = self.episode_history[-1].state1.reshape(-1, self.master.state_shape + 3)[:,
-                     :self.master.state_shape]
-        state_start = Variable(torch.from_numpy(state_start).type(self.master.dtype))
-        state_next = Variable(torch.from_numpy(state_next).type(self.master.dtype))
+        if self.icm_inv_model.same_features():
+            state_start = self.episode_features_history[-1]
+            # TODO: correct?
+            action, p_vb, v_vb, extras = self._forward(self._preprocessState(self.episode_state_history[-1].state1),
+                                                       off_record=True)
+            if extras is not None and 'features' in extras:
+                state_next = Variable(extras['features'].data)
+            else:
+                raise Exception('ICM running with A3C features, but the A3C model does not provide them as output')
+        else:
+            state_start = self.episode_state_history[-2].state1.reshape(-1, self.master.state_shape + 3)[:,
+                          :self.master.state_shape]
+            state_next = self.episode_state_history[-1].state1.reshape(-1, self.master.state_shape + 3)[:,
+                         :self.master.state_shape]
+            state_start = Variable(torch.from_numpy(state_start).type(self.master.dtype))
+            state_next = Variable(torch.from_numpy(state_next).type(self.master.dtype))
+
         actions = np.array(self.action_history[-1]).reshape(-1)
         actions = Variable(torch.from_numpy(actions).long(), requires_grad=False)
 
@@ -938,24 +955,26 @@ class A3CTester(A3CSingleProcess):
 
         features_next_pred = self.icm_fwd_model.forward((features, actions))
 
+        fig = plt.figure(figsize=(9, 6))
         ax1 = plt.subplot2grid((6, 6), (0, 0), colspan=4, rowspan=4)
         ax2 = plt.subplot2grid((6, 6), (0, 4), colspan=2, rowspan=4)
         ax3 = plt.subplot2grid((6, 6), (4, 0), colspan=6, rowspan=2)
 
-        target_extras = self.episode_history[0].extras
-        extras = self.episode_history[-1].extras
+        y_max = self.map_image.shape[0]  # the y coordinate needs to be flipped because of display (TODO) differences
+        target_extras = self.episode_state_history[0].extras
+        extras = self.episode_state_history[-1].extras
 
         ax1.imshow(self.map_image, cmap='gray')
         ax1.add_patch(
             Circle(
-                (target_extras['target_map_x'][0], target_extras['target_map_y'][0]),
+                (target_extras['target_map_x'][0], y_max - target_extras['target_map_y'][0]),
                 radius=target_extras['target_radius'] * 100
             )
         )
         # ax1.scatter(target_extras['target_map_x'], target_extras['target_map_y'])
-        robot_pos = [extras['robot_map_x'][0], extras['robot_map_y'][0]]
+        robot_pos = [extras['robot_map_x'][0], y_max - extras['robot_map_y'][0]]
         rad = extras['robot_theta'][0]
-        angle = rad * 180 / np.pi
+        angle = -rad * 180 / np.pi
         robot_rect = Rectangle(
             (robot_pos[0] - 10, robot_pos[1] - 10),
             20,  # width
@@ -972,18 +991,18 @@ class A3CTester(A3CSingleProcess):
         )
         # ax1.scatter(extras['robot_map_x'], extras['robot_map_y'], marker='s', color='green')
 
-        end = [robot_pos[0] + 13 * math.cos(rad), robot_pos[1] + 13 * math.sin(rad)]
+        end = [robot_pos[0] + 13 * math.cos(rad), robot_pos[1] - 13 * math.sin(rad)]
         ax1.plot([robot_pos[0], end[0]], [robot_pos[1], end[1]], color='red')
         ax1.set_axis_off()
 
-        actions = ('Fwd', 'Right', 'Left')  # TODO: check left and right
+        actions = ('Fwd', 'Left', 'Right')  # TODO: check left and right
         y_pos = np.arange(len(actions))
         prob = p_vb.data.numpy().reshape(-1)
 
-        ax2.barh(y_pos, prob, align='center')
+        ax2.barh(y_pos, prob, align='center', height=0.4)
         ax2.set_yticks(y_pos)
         ax2.set_yticklabels(actions)
-        ax2.set_xlim([0, 1])
+        ax2.set_xlim([0.0, 1.0])
         ax2.yaxis.tick_right()
         ax2.xaxis.tick_top()
 
@@ -993,7 +1012,7 @@ class A3CTester(A3CSingleProcess):
 
         ax3.bar(x_pos, val_f_hat, width=0.2, label=r'$\^f$')
         ax3.bar(x_pos + 0.2, val_f, width=0.2, label=r'$f$')
-        ax2.set_ylim([-1, 1])
+        ax3.set_ylim([-1, 1])
         ax3.set_xticks(np.arange(16))
         ax3.legend(loc='center left', bbox_to_anchor=(1, 0.5))
 
@@ -1008,3 +1027,4 @@ class A3CTester(A3CSingleProcess):
             )),
             dpi=200, bbox_inches='tight', pad_inches=0
         )
+        plt.close(fig)
