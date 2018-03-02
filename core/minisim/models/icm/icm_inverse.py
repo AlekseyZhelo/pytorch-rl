@@ -28,7 +28,7 @@ class ICMInverseModel(Model):
         self.fc2 = nn.Linear(self.hidden_dim, self.hidden_dim // 2)
         self.rl2 = nn.ELU()
         self.fc3 = nn.Linear(self.hidden_dim // 2, self.feature_dim)
-        self.rl3 = nn.Tanh()
+        self.rl3 = nn.ELU()  # nn.Tanh()
 
         self.fc4 = nn.Linear(2 * self.feature_dim, 2 * self.feature_dim)
         self.rl4 = nn.ELU()
@@ -41,7 +41,7 @@ class ICMInverseModel(Model):
     def _init_weights(self):
         nn.init.xavier_uniform(self.fc1.weight.data, gain=nn.init.calculate_gain('relu'))
         nn.init.xavier_uniform(self.fc2.weight.data, gain=nn.init.calculate_gain('relu'))
-        nn.init.xavier_uniform(self.fc3.weight.data, gain=nn.init.calculate_gain('tanh'))
+        nn.init.xavier_uniform(self.fc3.weight.data, gain=nn.init.calculate_gain('relu'))
         nn.init.xavier_uniform(self.fc4.weight.data, gain=nn.init.calculate_gain('relu'))
         nn.init.xavier_uniform(self.action_5.weight.data, gain=nn.init.calculate_gain('linear'))
         self.fc1.bias.data.fill_(0)
