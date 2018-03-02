@@ -182,10 +182,10 @@ class MinisimEnv(Env):
 
     def read_static_map_image(self):
         # return imageio.imread(os.path.join(MinisimEnv.minisim_path, 'map', 'medium_rooms.pgm'))
-        return imageio.imread(os.path.join(MinisimEnv.minisim_path,
-                                           'map', 'random', 'simple_gen_small_002.pgm'))
         # return imageio.imread(os.path.join(MinisimEnv.minisim_path,
-        #                                    'map', 'medium_rooms_simpler.pgm'))
+        #                                    'map', 'random', 'simple_gen_small_002.pgm'))
+        return imageio.imread(os.path.join(MinisimEnv.minisim_path,
+                                           'map', 'medium_rooms_simpler.pgm'))
 
     # was supposed to be useful for a large network with a single action index output, which would
     # be expanded into individual robot actions
@@ -214,9 +214,9 @@ class MinisimEnv(Env):
             # map_server_rlaunch_path = os.path.join(minisim_path, 'launch', 'map_server_small.launch')
             # map_server_rlaunch_path = os.path.join(minisim_path, 'launch', 'map_server_small_simple.launch')
             # map_server_rlaunch_path = os.path.join(minisim_path, 'launch', 'map_server_empty_small.launch')
-            map_server_rlaunch_path = os.path.join(minisim_path, 'launch', 'map_server_simple_gen_small_002.launch')
+            # map_server_rlaunch_path = os.path.join(minisim_path, 'launch', 'map_server_simple_gen_small_002.launch')
             # map_server_rlaunch_path = os.path.join(minisim_path, 'launch', 'map_server_medium_rooms.launch')
-            # map_server_rlaunch_path = os.path.join(minisim_path, 'launch', 'map_server_medium_rooms_simpler.launch')
+            map_server_rlaunch_path = os.path.join(minisim_path, 'launch', 'map_server_medium_rooms_simpler.launch')
             uuid = roslaunch.rlutil.get_or_generate_uuid(None, False)
             roslaunch.configure_logging(uuid)
             MinisimEnv.roslaunch_map_server = roslaunch.parent.ROSLaunchParent(uuid, [map_server_rlaunch_path])
