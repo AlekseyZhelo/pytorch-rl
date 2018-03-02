@@ -31,6 +31,7 @@ class ICMForwardModel(Model):
         self.fc3 = nn.Linear(self.hidden_dim // 2, self.feature_dim)
         # self.rl3 = nn.Tanh()  # no activation here for regression!
         # keep tanh for intrinsic reward calculation, train forward on raw before tanh
+        # the above not done for now, fwd loss seems to be small enough with proper regression
 
         self._reset()
 
