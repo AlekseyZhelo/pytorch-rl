@@ -335,7 +335,7 @@ class AgentParams(Params):  # hyperparameters for drl agents
                 self.beta = 0.005  # coefficient for entropy penalty
                 self.icm_plus_reward = False
                 self.icm_beta = 1.0  # 0.25   # 0.01  # ICM reward bonus coefficient
-                self.icm_fwd_wt = 0.2  # ICM forward model reward contribution coefficient
+                self.icm_fwd_wt = 0.2  # ICM forward model loss contribution coefficient
             else:
                 self.steps = 20000000  # max #iterations
                 self.early_stop = None  # max #steps per episode
