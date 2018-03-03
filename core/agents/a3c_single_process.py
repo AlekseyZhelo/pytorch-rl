@@ -843,7 +843,8 @@ class A3CEvaluator(A3CSingleProcess):
         features_next_pred = self.icm_fwd_model.forward((features, actions))
         icm_fwd_loss = 0.5 * torch.pow(features_next_pred - features_next, 2).mean(dim=1)
 
-        return icm_fwd_loss.sum().data.numpy()[0]
+        # TODO: ICM code has too many repetitions, bad design, error prone
+        return torch.clamp(self.master.icm_beta * icm_fwd_loss, max=0.045).sum().data.numpy()[0]
 
     def run(self):
         while self.master.train_step.value < self.master.steps:
