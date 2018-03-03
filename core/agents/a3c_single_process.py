@@ -39,6 +39,7 @@ class A3CSingleProcess(AgentSingleProcess):
                 self.env.seed) + ").")
 
     # NOTE: to be called at the beginning of each new episode, clear up the hidden state
+    # TODO: also reset for ICM if it uses LSTM!
     def _reset_lstm_hidden_vb_episode(self, training=True):  # seq_len, batch_size, hidden_vb_dim
         not_training = not training
 
@@ -457,7 +458,7 @@ class A3CLearner(A3CSingleProcess):
             episode_steps, episode_reward = self._rollout(episode_steps, episode_reward)
 
             if self.experience.terminal1 or \
-                            self.master.early_stop and episode_steps >= self.master.early_stop:
+                    self.master.early_stop and episode_steps >= self.master.early_stop:
                 nepisodes += 1
                 should_start_new = True
                 if self.experience.terminal1:
@@ -517,6 +518,8 @@ class A3CEvaluator(A3CSingleProcess):
         self.steps_std_log = []
         self.reward_avg_log = []
         self.reward_std_log = []
+        self.icm_reward_avg_log = []
+        self.icm_reward_std_log = []
         self.nepisodes_log = []
         self.nepisodes_solved_log = []
         self.repisodes_solved_log = []
@@ -540,6 +543,8 @@ class A3CEvaluator(A3CSingleProcess):
             self.win_steps_std = "win_steps_std"
             self.win_reward_avg = "win_reward_avg"
             self.win_reward_std = "win_reward_std"
+            self.win_icm_reward_avg = "win_icm_reward_avg"
+            self.win_icm_reward_std = "win_icm_reward_std"
             self.win_nepisodes = "win_nepisodes"
             self.win_nepisodes_solved = "win_nepisodes_solved"
             self.win_repisodes_solved = "win_repisodes_solved"
@@ -564,11 +569,17 @@ class A3CEvaluator(A3CSingleProcess):
         eval_episode_steps_log = []
         eval_episode_reward = None
         eval_episode_reward_log = []
+        eval_episode_icm_reward = None
+        eval_episode_icm_reward_log = []
         eval_should_start_new = True
+        eval_episode_state_history = []
+        eval_episode_features_history = []
+        eval_episode_action_history = []
         while eval_step < self.master.eval_steps:
             if eval_should_start_new:  # start of a new episode
                 eval_episode_steps = 0
                 eval_episode_reward = 0.
+                eval_episode_icm_reward = 0.
                 # reset lstm_hidden_vb for new episode
                 if self.master.enable_lstm:
                     # NOTE: clear hidden state at the beginning of each episode
@@ -576,6 +587,7 @@ class A3CEvaluator(A3CSingleProcess):
                 # Obtain the initial observation by resetting the environment
                 self._reset_experience()
                 self.experience = self.env.reset()
+                eval_episode_state_history.append(self.experience.state1)
                 assert self.experience.state1 is not None
                 if not self.training:
                     if self.master.visualize: self.env.visual()
@@ -583,9 +595,11 @@ class A3CEvaluator(A3CSingleProcess):
                 # reset flag
                 eval_should_start_new = False
             if self.master.enable_lstm:
+                # TODO: why is it here at each step?
                 # NOTE: detach the previous hidden variable from the graph at the beginning of each step
                 # NOTE: not necessary here in evaluation but we do it anyways
                 self._reset_lstm_hidden_vb_rollout()
+
             # Run a single step
             if self.master.enable_continuous:
                 eval_action, p_vb, sig_vb, v_vb = self._forward(self._preprocessState(self.experience.state1, True))
@@ -593,12 +607,18 @@ class A3CEvaluator(A3CSingleProcess):
                 eval_action, p_vb, v_vb, extras = self._forward(self._preprocessState(self.experience.state1, True))
             self.experience = self.env.step(eval_action)
             self.action_counts[eval_action] += 1
+
+            eval_episode_state_history.append(self.experience.state1)
+            if self.master.icm and extras is not None and 'features' in extras:
+                eval_episode_features_history.append(Variable(extras['features'].data))
+            eval_episode_action_history.append(eval_action)
+
             if not self.training:
                 if self.master.visualize: self.env.visual()
                 if self.master.render: self.env.render()
             if self.experience.terminal1 or \
-                            self.master.early_stop and (eval_episode_steps + 1) == self.master.early_stop or \
-                            (eval_step + 1) == self.master.eval_steps:
+                    self.master.early_stop and (eval_episode_steps + 1) == self.master.early_stop or \
+                    (eval_step + 1) == self.master.eval_steps:
                 eval_should_start_new = True
 
             eval_episode_steps += 1
@@ -609,6 +629,11 @@ class A3CEvaluator(A3CSingleProcess):
                 eval_nepisodes += 1
                 if self.experience.terminal1:
                     eval_nepisodes_solved += 1
+
+                if self.master.icm:
+                    eval_episode_icm_reward += self.calculate_episode_icm_reward(eval_episode_action_history,
+                                                                                 eval_episode_features_history,
+                                                                                 eval_episode_state_history)
 
                 # This episode is finished, report and reset
                 # NOTE make no sense for continuous
@@ -621,7 +646,11 @@ class A3CEvaluator(A3CSingleProcess):
                 eval_v_log.append([v_vb.data.numpy()])
                 eval_episode_steps_log.append([eval_episode_steps])
                 eval_episode_reward_log.append([eval_episode_reward])
+                eval_episode_icm_reward_log.append([eval_episode_icm_reward])
                 self._reset_experience()
+                eval_episode_state_history = []
+                eval_episode_features_history = []
+                eval_episode_action_history = []
                 eval_episode_steps = None
                 eval_episode_reward = None
 
@@ -654,6 +683,9 @@ class A3CEvaluator(A3CSingleProcess):
             self.steps_std_log.append([eval_at_step, np.std(np.asarray(eval_episode_steps_log))])
             self.reward_avg_log.append([eval_at_step, np.mean(np.asarray(eval_episode_reward_log))])
             self.reward_std_log.append([eval_at_step, np.std(np.asarray(eval_episode_reward_log))])
+            if self.master.icm:
+                self.icm_reward_avg_log.append([eval_at_step, np.mean(np.asarray(eval_episode_icm_reward_log))])
+                self.icm_reward_std_log.append([eval_at_step, np.std(np.asarray(eval_episode_icm_reward_log))])
             self.nepisodes_log.append([eval_at_step, eval_nepisodes])
             self.nepisodes_solved_log.append([eval_at_step, eval_nepisodes_solved])
             self.repisodes_solved_log.append(
@@ -689,6 +721,11 @@ class A3CEvaluator(A3CSingleProcess):
             self.master.logger.warning("Iteration: {}; steps_std: {}".format(eval_at_step, self.steps_std_log[-1][1]))
             self.master.logger.warning("Iteration: {}; reward_avg: {}".format(eval_at_step, self.reward_avg_log[-1][1]))
             self.master.logger.warning("Iteration: {}; reward_std: {}".format(eval_at_step, self.reward_std_log[-1][1]))
+            if self.master.icm:
+                self.master.logger.warning(
+                    "Iteration: {}; icm_reward_avg: {}".format(eval_at_step, self.icm_reward_avg_log[-1][1]))
+                self.master.logger.warning(
+                    "Iteration: {}; icm_reward_std: {}".format(eval_at_step, self.icm_reward_std_log[-1][1]))
             self.master.logger.warning("Iteration: {}; nepisodes: {}".format(eval_at_step, self.nepisodes_log[-1][1]))
             self.master.logger.warning(
                 "Iteration: {}; nepisodes_solved: {}".format(eval_at_step, self.nepisodes_solved_log[-1][1]))
@@ -730,7 +767,6 @@ class A3CEvaluator(A3CSingleProcess):
                                                                   env=self.master.refs,
                                                                   win=self.win_grad_magnitude_avg,
                                                                   opts=dict(title="grad_magnitude_avg"))
-            # TODO: add avg to name
             self.win_grad_magnitude_max = self.master.vis.scatter(X=np.array(self.grad_magnitude_max_log),
                                                                   env=self.master.refs,
                                                                   win=self.win_grad_magnitude_max,
@@ -742,10 +778,21 @@ class A3CEvaluator(A3CSingleProcess):
                                                      win=self.win_v_avg, opts=dict(title="v_avg"))
             self.win_steps_avg = self.master.vis.scatter(X=np.array(self.steps_avg_log), env=self.master.refs,
                                                          win=self.win_steps_avg, opts=dict(title="steps_avg"))
-            # self.win_steps_std = self.master.vis.scatter(X=np.array(self.steps_std_log), env=self.master.refs, win=self.win_steps_std, opts=dict(title="steps_std"))
+            # self.win_steps_std = self.master.vis.scatter(X=np.array(self.steps_std_log), env=self.master.refs,
+            #                                              win=self.win_steps_std, opts=dict(title="steps_std"))
             self.win_reward_avg = self.master.vis.scatter(X=np.array(self.reward_avg_log), env=self.master.refs,
                                                           win=self.win_reward_avg, opts=dict(title="reward_avg"))
-            # self.win_reward_std = self.master.vis.scatter(X=np.array(self.reward_std_log), env=self.master.refs, win=self.win_reward_std, opts=dict(title="reward_std"))
+            # self.win_reward_std = self.master.vis.scatter(X=np.array(self.reward_std_log), env=self.master.refs,
+            #                                               win=self.win_reward_std, opts=dict(title="reward_std"))
+            if self.master.icm:
+                self.win_icm_reward_avg = self.master.vis.scatter(X=np.array(self.icm_reward_avg_log),
+                                                                  env=self.master.refs,
+                                                                  win=self.win_icm_reward_avg,
+                                                                  opts=dict(title="icm_reward_avg"))
+                # self.win_icm_reward_std = self.master.vis.scatter(X=np.array(self.icm_reward_std_log),
+                #                                                   env=self.master.refs, win=self.win_icm_reward_std,
+                #                                                   opts=dict(title="icm_reward_std"))
+
             self.win_nepisodes = self.master.vis.scatter(X=np.array(self.nepisodes_log), env=self.master.refs,
                                                          win=self.win_nepisodes, opts=dict(title="nepisodes"))
             self.win_nepisodes_solved = self.master.vis.scatter(X=np.array(self.nepisodes_solved_log),
@@ -769,6 +816,35 @@ class A3CEvaluator(A3CSingleProcess):
             self.master._save_icm_models(eval_at_train_step,
                                          self.icm_inv_loss_avg_log[-1][1], self.icm_fwd_loss_avg_log[-1][1])
 
+    def calculate_episode_icm_reward(self, eval_episode_action_history, eval_episode_features_history,
+                                     eval_episode_state_history):
+        if self.icm_inv_model.same_features():
+            action, p_vb, v_vb, extras = self._forward(self._preprocessState(self.experience.state1),
+                                                       off_record=True)
+            eval_episode_features_history.append(Variable(extras['features'].data))
+            state_start = torch.cat(eval_episode_features_history[0:-1], dim=0)
+            state_next = torch.cat(eval_episode_features_history[1:], dim=0)
+        else:
+            state_start = np.array(eval_episode_state_history[0:-1]).reshape(-1,
+                                                                             self.master.state_shape + 3)[:,
+                          :self.master.state_shape]
+            state_next = np.array(eval_episode_state_history[1:]).reshape(-1, self.master.state_shape + 3)[
+                         :,
+                         :self.master.state_shape]
+            state_start = Variable(torch.from_numpy(state_start).type(self.master.dtype))
+            state_next = Variable(torch.from_numpy(state_next).type(self.master.dtype))
+        # TODO: is this right for several robots?
+        actions = np.array(eval_episode_action_history).reshape(-1)
+        actions = Variable(torch.from_numpy(actions).long(), requires_grad=False)
+
+        features, features_next, action_logits, action_probs = \
+            self.icm_inv_model.forward((state_start, state_next))
+
+        features_next_pred = self.icm_fwd_model.forward((features, actions))
+        icm_fwd_loss = 0.5 * torch.pow(features_next_pred - features_next, 2).mean(dim=1)
+
+        return icm_fwd_loss.sum().data.numpy()[0]
+
     def run(self):
         while self.master.train_step.value < self.master.steps:
             if time.time() - self.last_eval > self.master.eval_freq:
@@ -782,7 +858,7 @@ class A3CTester(A3CSingleProcess):
         master.logger.warning("<===================================> A3C-Tester {Env & Model}")
         super(A3CTester, self).__init__(master, process_id)
 
-        self.episode_state_history = []
+        self.episode_experience_history = []
         self.episode_features_history = []
         self.action_history = []
         if self.master.plot_icm_test:
@@ -842,7 +918,7 @@ class A3CTester(A3CSingleProcess):
                 # Obtain the initial observation by resetting the environment
                 self._reset_experience()
                 self.experience = self.env.reset()
-                self.episode_state_history.append(self.experience)
+                self.episode_experience_history.append(self.experience)
                 assert self.experience.state1 is not None
                 if not self.training:
                     if self.master.visualize: self.env.visual()
@@ -850,9 +926,11 @@ class A3CTester(A3CSingleProcess):
                 # reset flag
                 test_should_start_new = False
             if self.master.enable_lstm:
+                # TODO: why is it here at each step?
                 # NOTE: detach the previous hidden variable from the graph at the beginning of each step
                 # NOTE: not necessary here in testing but we do it anyways
                 self._reset_lstm_hidden_vb_rollout()
+
             # Run a single step
             if self.master.enable_continuous:
                 test_action, p_vb, sig_vb, v_vb = self._forward(self._preprocessState(self.experience.state1, True))
@@ -860,7 +938,7 @@ class A3CTester(A3CSingleProcess):
                 test_action, p_vb, v_vb, extras = self._forward(self._preprocessState(self.experience.state1, True))
             self.experience = self.env.step(test_action)
 
-            self.episode_state_history.append(self.experience)
+            self.episode_experience_history.append(self.experience)
             if self.master.icm and extras is not None and 'features' in extras:
                 self.episode_features_history.append(Variable(extras['features'].data))
             self.action_history.append(test_action)
@@ -871,7 +949,7 @@ class A3CTester(A3CSingleProcess):
                 if self.master.plot_icm_test and test_episode_steps < 150:
                     self.plot_icm_test(p_vb, test_nepisodes)
             if self.experience.terminal1 or \
-                            self.master.early_stop and (test_episode_steps + 1) == self.master.early_stop:
+                    self.master.early_stop and (test_episode_steps + 1) == self.master.early_stop:
                 test_should_start_new = True
 
             test_episode_steps += 1
@@ -887,7 +965,7 @@ class A3CTester(A3CSingleProcess):
                 test_episode_steps_log.append([test_episode_steps])
                 test_episode_reward_log.append([test_episode_reward])
                 self._reset_experience()
-                self.episode_state_history = []
+                self.episode_experience_history = []
                 self.episode_features_history = []
                 self.action_history = []
                 test_episode_steps = None
@@ -933,16 +1011,16 @@ class A3CTester(A3CSingleProcess):
         if self.icm_inv_model.same_features():
             state_start = self.episode_features_history[-1]
             # TODO: correct?
-            action, p_vb, v_vb, extras = self._forward(self._preprocessState(self.episode_state_history[-1].state1),
+            action, p_vb, v_vb, extras = self._forward(self._preprocessState(self.episode_experience_history[-1].state1),
                                                        off_record=True)
             if extras is not None and 'features' in extras:
                 state_next = Variable(extras['features'].data)
             else:
                 raise Exception('ICM running with A3C features, but the A3C model does not provide them as output')
         else:
-            state_start = self.episode_state_history[-2].state1.reshape(-1, self.master.state_shape + 3)[:,
+            state_start = self.episode_experience_history[-2].state1.reshape(-1, self.master.state_shape + 3)[:,
                           :self.master.state_shape]
-            state_next = self.episode_state_history[-1].state1.reshape(-1, self.master.state_shape + 3)[:,
+            state_next = self.episode_experience_history[-1].state1.reshape(-1, self.master.state_shape + 3)[:,
                          :self.master.state_shape]
             state_start = Variable(torch.from_numpy(state_start).type(self.master.dtype))
             state_next = Variable(torch.from_numpy(state_next).type(self.master.dtype))
@@ -961,8 +1039,8 @@ class A3CTester(A3CSingleProcess):
         ax3 = plt.subplot2grid((6, 6), (4, 0), colspan=6, rowspan=2)
 
         y_max = self.map_image.shape[0]  # the y coordinate needs to be flipped because of display (TODO) differences
-        target_extras = self.episode_state_history[0].extras
-        extras = self.episode_state_history[-1].extras
+        target_extras = self.episode_experience_history[0].extras
+        extras = self.episode_experience_history[-1].extras
 
         ax1.imshow(self.map_image, cmap='gray')
         ax1.add_patch(

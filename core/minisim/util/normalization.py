@@ -29,3 +29,9 @@ def apply_normalization(x, mean, std):
     for i in range(x.size()[1]):
         x[0, i, :].data -= mean
         x[0, i, :].data /= std
+
+
+def apply_normalization_icm(x, mean, std):
+    for i in range(x.size()[0]):
+        x[i, :].data -= mean
+        x[i, :].data /= std

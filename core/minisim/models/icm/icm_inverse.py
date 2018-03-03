@@ -4,6 +4,7 @@ from __future__ import division
 import torch
 import torch.nn as nn
 
+from core.minisim.util.normalization import get_state_statistics, apply_normalization_icm
 from core.model import Model
 from utils.init_weights import init_weights, normalized_columns_initializer
 
@@ -20,6 +21,10 @@ class ICMInverseModel(Model):
         self.hidden_vb_dim = args.icm_inv_hidden_vb_dim
         self.feature_dim = args.icm_feature_dim
         self.output_dims = args.action_dim  # same as the superclass, repeated for clarity
+
+        self.mean, self.std = get_state_statistics()
+        self.mean = self.mean[:self.input_dims[1]]
+        self.std = self.std[:self.input_dims[1]]
 
         # build model
         # 0. feature layers
@@ -52,6 +57,10 @@ class ICMInverseModel(Model):
 
     def forward(self, input_):
         state, state_next = input_
+
+        # TODO: should apply normalization here?
+        apply_normalization_icm(state, self.mean, self.std)
+        apply_normalization_icm(state_next, self.mean, self.std)
 
         x_1 = self.rl1(self.fc1(state))
         x_1 = self.rl2(self.fc2(x_1))
