@@ -47,7 +47,7 @@ class Params(object):  # NOTE: shared across all modules
         # training signature
         # TODO: fix action stats for multi-robot!
         self.machine = "aiscpu4"  # "machine_id"
-        self.timestamp = "18030200"  # "yymmdd##"
+        self.timestamp = "18030300"  # "yymmdd##"
         self.step = None  # "1108025"
         # training configuration
         self.mode = 1  # 1(train) | 2(test model_file)
@@ -92,13 +92,13 @@ class Params(object):  # NOTE: shared across all modules
             self.hist_len = 1
 
             if self.env_type == "minisim":
-                # from core.minisim.models.icm.icm_inverse import ICMInverseModel
-                from core.minisim.models.icm.icm_inverse_same_features import ICMInverseModelSameFeatures
+                from core.minisim.models.icm.icm_inverse import ICMInverseModel
+                # from core.minisim.models.icm.icm_inverse_same_features import ICMInverseModelSameFeatures
                 from core.minisim.models.icm.icm_forward import ICMForwardModel
                 self.icm = True
                 # self.icm = False  # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-                # self.icm_inv_model = ICMInverseModel
-                self.icm_inv_model = ICMInverseModelSameFeatures
+                self.icm_inv_model = ICMInverseModel
+                # self.icm_inv_model = ICMInverseModelSameFeatures
                 self.icm_fwd_model = ICMForwardModel
                 self.num_processes = 22  # 6, 23  # 22 seems to be twice faster than 23, why? try other?
                 if minisim_num_robots > 1:
@@ -177,7 +177,7 @@ class EnvParams(Params):  # settings for simulation environment
             self.img_encoding_type = "passthrough"
         elif self.env_type == "minisim":
             self.num_robots = minisim_num_robots
-            self.curriculum = True  # TODO: ensure start outside of target area when True
+            self.curriculum = False  # TODO: ensure start outside of target area when True
             self.randomize_maps = False
             self.randomize_targets = True
             self.penalize_staying = True
