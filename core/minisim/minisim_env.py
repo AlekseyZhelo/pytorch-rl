@@ -42,6 +42,8 @@ class MinisimEnv(Env):
         self.randomize_maps = args.randomize_maps if hasattr(args, "randomize_maps") else False
         self.randomize_targets = args.randomize_targets if hasattr(args, "randomize_targets") else False
         self.penalize_staying = args.penalize_staying if hasattr(args, "penalize_staying") else False
+        self.penalize_angle_to_target = args.penalize_angle_to_target if hasattr(args,
+                                                                                 "penalize_angle_to_target") else False
         self.mode = args.mode  # 1(train) | 2(test model_file)
         self.total_reward = 0
 
@@ -54,8 +56,11 @@ class MinisimEnv(Env):
             self._init_roslaunch()
 
         self.node = self._launch_node()
-        self.client = MinisimClient(self.num_robots, self.seed, self.curriculum, self.mode,
-                                    self.randomize_targets, self.penalize_staying, '/' + self.sim_name, self.logger)
+        self.client = MinisimClient(
+            self.num_robots, self.seed, self.curriculum, self.mode,
+            self.randomize_targets, self.penalize_staying,
+            self.penalize_angle_to_target, '/' + self.sim_name, self.logger
+        )
         self.client.setup()  # TODO: move to client's init?
 
         # action space setup  # [linear velocity, angular velocity]

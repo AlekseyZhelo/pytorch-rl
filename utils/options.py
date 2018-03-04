@@ -181,6 +181,7 @@ class EnvParams(Params):  # settings for simulation environment
             self.randomize_maps = False
             self.randomize_targets = True
             self.penalize_staying = True
+            self.penalize_angle_to_target = True
             pass
         else:
             assert False, "env_type must be: gym | atari-ram | atari | lab | minisim"
