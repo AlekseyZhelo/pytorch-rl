@@ -14,7 +14,7 @@ class MinisimClient(object):
     message_ok = "ok"
 
     def __init__(self, num_robots, seed, curriculum, mode, randomize_targets, penalize_staying,
-                 penalize_angle_to_target, sim_prefix, logger):
+                 penalize_angle_to_target, collision_is_terminal, sim_prefix, logger):
         self.num_robots = num_robots
         self.seed = seed
         self.curriculum = curriculum
@@ -22,6 +22,7 @@ class MinisimClient(object):
         self.randomize_targets = randomize_targets
         self.penalize_staying = penalize_staying
         self.penalize_angle_to_target = penalize_angle_to_target
+        self.collision_is_terminal = collision_is_terminal
         self.sim_prefix = sim_prefix
         self.logger = logger
         self.twists = [geometry_msgs.msg.Twist() for _ in xrange(self.num_robots)]
@@ -50,7 +51,8 @@ class MinisimClient(object):
         try:
             resp = self.setup_robots(
                 self.num_robots, self.seed, self.curriculum, self.mode,
-                self.randomize_targets, self.penalize_staying, self.penalize_angle_to_target
+                self.randomize_targets, self.penalize_staying, self.penalize_angle_to_target,
+                self.collision_is_terminal
             )
             if resp.message != MinisimClient.message_ok:
                 self.logger.warning("WARNING: SetupRobots service improperly called, message: {0}".format(resp.message))

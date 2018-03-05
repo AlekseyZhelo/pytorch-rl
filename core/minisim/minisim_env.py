@@ -44,6 +44,8 @@ class MinisimEnv(Env):
         self.penalize_staying = args.penalize_staying if hasattr(args, "penalize_staying") else False
         self.penalize_angle_to_target = args.penalize_angle_to_target if hasattr(args,
                                                                                  "penalize_angle_to_target") else False
+        self.collision_is_terminal = args.collision_is_terminal if hasattr(args, "collision_is_terminal") else False
+
         self.mode = args.mode  # 1(train) | 2(test model_file)
         self.total_reward = 0
 
@@ -59,7 +61,8 @@ class MinisimEnv(Env):
         self.client = MinisimClient(
             self.num_robots, self.seed, self.curriculum, self.mode,
             self.randomize_targets, self.penalize_staying,
-            self.penalize_angle_to_target, '/' + self.sim_name, self.logger
+            self.penalize_angle_to_target, self.collision_is_terminal,
+            '/' + self.sim_name, self.logger
         )
         self.client.setup()  # TODO: move to client's init?
 

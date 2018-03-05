@@ -461,7 +461,7 @@ class A3CLearner(A3CSingleProcess):
                             self.master.early_stop and episode_steps >= self.master.early_stop:
                 nepisodes += 1
                 should_start_new = True
-                if self.experience.terminal1:
+                if self.experience.terminal1 and self.experience.reward >= 0:
                     nepisodes_solved += 1
                     self.master.terminations_count.value += 1
 
@@ -627,7 +627,7 @@ class A3CEvaluator(A3CSingleProcess):
 
             if eval_should_start_new:
                 eval_nepisodes += 1
-                if self.experience.terminal1:
+                if self.experience.terminal1 and self.experience.reward >= 0:
                     eval_nepisodes_solved += 1
 
                 if self.master.icm:
@@ -968,7 +968,7 @@ class A3CTester(A3CSingleProcess):
 
             if test_should_start_new:
                 test_nepisodes += 1
-                if self.experience.terminal1:
+                if self.experience.terminal1 and self.experience.reward >= 0:
                     test_nepisodes_solved += 1
 
                 # This episode is finished, report and reset
