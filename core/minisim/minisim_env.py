@@ -153,6 +153,7 @@ class MinisimEnv(Env):
         self.exp_state1, self.extras = self.client.reset()
         if self.hist_len > 1:
             self._append_to_history(self._preprocessState(self.exp_state1))
+        self.total_reward = 0
         return self._get_experience()
 
     def step(self, action_index):

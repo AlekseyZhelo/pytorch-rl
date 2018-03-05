@@ -248,8 +248,8 @@ class A3CLearner(A3CSingleProcess):
         # ICM first if enabled
         if self.master.icm:
             if self.icm_inv_model.same_features():
-                action, p_vb, v_vb, extras = self._forward(self._preprocessState(self.experience.state1),
-                                                           off_record=True)
+                _, _, _, extras = self._forward(self._preprocessState(self.experience.state1),
+                                                off_record=True)
                 self.rollout.features1.append(Variable(extras['features'].data))
                 state_start = torch.cat(self.rollout.features0, dim=0)
                 state_next = torch.cat(self.rollout.features1, dim=0)
@@ -458,7 +458,7 @@ class A3CLearner(A3CSingleProcess):
             episode_steps, episode_reward = self._rollout(episode_steps, episode_reward)
 
             if self.experience.terminal1 or \
-                    self.master.early_stop and episode_steps >= self.master.early_stop:
+                            self.master.early_stop and episode_steps >= self.master.early_stop:
                 nepisodes += 1
                 should_start_new = True
                 if self.experience.terminal1:
@@ -617,8 +617,8 @@ class A3CEvaluator(A3CSingleProcess):
                 if self.master.visualize: self.env.visual()
                 if self.master.render: self.env.render()
             if self.experience.terminal1 or \
-                    self.master.early_stop and (eval_episode_steps + 1) == self.master.early_stop or \
-                    (eval_step + 1) == self.master.eval_steps:
+                            self.master.early_stop and (eval_episode_steps + 1) == self.master.early_stop or \
+                            (eval_step + 1) == self.master.eval_steps:
                 eval_should_start_new = True
 
             eval_episode_steps += 1
@@ -819,8 +819,8 @@ class A3CEvaluator(A3CSingleProcess):
     def calculate_episode_icm_reward(self, eval_episode_action_history, eval_episode_features_history,
                                      eval_episode_state_history):
         if self.icm_inv_model.same_features():
-            action, p_vb, v_vb, extras = self._forward(self._preprocessState(self.experience.state1),
-                                                       off_record=True)
+            _, _, _, extras = self._forward(self._preprocessState(self.experience.state1),
+                                            off_record=True)
             eval_episode_features_history.append(Variable(extras['features'].data))
             state_start = torch.cat(eval_episode_features_history[0:-1], dim=0)
             state_next = torch.cat(eval_episode_features_history[1:], dim=0)
@@ -862,6 +862,7 @@ class A3CTester(A3CSingleProcess):
         self.episode_experience_history = []
         self.episode_features_history = []
         self.action_history = []
+        self.episode_icm_reward = 0.
         if self.master.plot_icm_test:
             assert self.master.icm, 'Asked to plot icm features when ICM is off'
             self.map_image = self.env.read_static_map_image()
@@ -944,13 +945,21 @@ class A3CTester(A3CSingleProcess):
                 self.episode_features_history.append(Variable(extras['features'].data))
             self.action_history.append(test_action)
 
+            if self.master.icm:
+                features_next, features_next_pred = self.calculate_icm()
+                icm_fwd_loss = 0.5 * torch.pow(features_next_pred - features_next, 2).mean(dim=1)
+
+                self.episode_icm_reward += \
+                    torch.clamp(self.master.icm_beta * icm_fwd_loss, max=0.045).sum().data.numpy()[0]
+                print('total ICM reward: ', self.episode_icm_reward)
+
             if not self.training:
                 if self.master.visualize: self.env.visual()
                 if self.master.render: self.env.render()
                 if self.master.plot_icm_test and test_episode_steps < 150:
                     self.plot_icm_test(p_vb, test_nepisodes)
             if self.experience.terminal1 or \
-                    self.master.early_stop and (test_episode_steps + 1) == self.master.early_stop:
+                            self.master.early_stop and (test_episode_steps + 1) == self.master.early_stop:
                 test_should_start_new = True
 
             test_episode_steps += 1
@@ -969,6 +978,7 @@ class A3CTester(A3CSingleProcess):
                 self.episode_experience_history = []
                 self.episode_features_history = []
                 self.action_history = []
+                self.episode_icm_reward = 0.
                 test_episode_steps = None
                 test_episode_reward = None
 
@@ -1009,30 +1019,7 @@ class A3CTester(A3CSingleProcess):
         self.master.logger.warning("Testing: repisodes_solved: {}".format(self.repisodes_solved_log[-1][1]))
 
     def plot_icm_test(self, p_vb, test_nepisodes):
-        if self.icm_inv_model.same_features():
-            state_start = self.episode_features_history[-1]
-            # TODO: correct?
-            action, p_vb, v_vb, extras = self._forward(self._preprocessState(self.episode_experience_history[-1].state1),
-                                                       off_record=True)
-            if extras is not None and 'features' in extras:
-                state_next = Variable(extras['features'].data)
-            else:
-                raise Exception('ICM running with A3C features, but the A3C model does not provide them as output')
-        else:
-            state_start = self.episode_experience_history[-2].state1.reshape(-1, self.master.state_shape + 3)[:,
-                          :self.master.state_shape]
-            state_next = self.episode_experience_history[-1].state1.reshape(-1, self.master.state_shape + 3)[:,
-                         :self.master.state_shape]
-            state_start = Variable(torch.from_numpy(state_start).type(self.master.dtype))
-            state_next = Variable(torch.from_numpy(state_next).type(self.master.dtype))
-
-        actions = np.array(self.action_history[-1]).reshape(-1)
-        actions = Variable(torch.from_numpy(actions).long(), requires_grad=False)
-
-        features, features_next, action_logits, action_probs = \
-            self.icm_inv_model.forward((state_start, state_next))
-
-        features_next_pred = self.icm_fwd_model.forward((features, actions))
+        features_next, features_next_pred = self.calculate_icm()
 
         fig = plt.figure(figsize=(9, 6))
         ax1 = plt.subplot2grid((6, 6), (0, 0), colspan=4, rowspan=4)
@@ -1091,7 +1078,7 @@ class A3CTester(A3CSingleProcess):
 
         ax3.bar(x_pos, val_f_hat, width=0.2, label=r'$\^f$')
         ax3.bar(x_pos + 0.2, val_f, width=0.2, label=r'$f$')
-        ax3.set_ylim([-1, 1])
+        # ax3.set_ylim([-1, 1])
         ax3.set_xticks(np.arange(16))
         ax3.legend(loc='center left', bbox_to_anchor=(1, 0.5))
 
@@ -1107,3 +1094,32 @@ class A3CTester(A3CSingleProcess):
             dpi=200, bbox_inches='tight', pad_inches=0
         )
         plt.close(fig)
+
+    # TODO: use elsewhere, better name
+    def calculate_icm(self):
+        if self.icm_inv_model.same_features():
+            state_start = self.episode_features_history[-1]
+            # TODO: correct?
+            _, _, _, extras = self._forward(self._preprocessState(self.episode_experience_history[-1].state1),
+                                            off_record=True)
+            if extras is not None and 'features' in extras:
+                state_next = Variable(extras['features'].data)
+            else:
+                raise Exception('ICM running with A3C features, but the A3C model does not provide them as output')
+        else:
+            state_start = self.episode_experience_history[-2].state1.reshape(-1, self.master.state_shape + 3)[:,
+                          :self.master.state_shape]
+            state_next = self.episode_experience_history[-1].state1.reshape(-1, self.master.state_shape + 3)[:,
+                         :self.master.state_shape]
+            state_start = Variable(torch.from_numpy(state_start).type(self.master.dtype))
+            state_next = Variable(torch.from_numpy(state_next).type(self.master.dtype))
+
+        actions = np.array(self.action_history[-1]).reshape(-1)
+        actions = Variable(torch.from_numpy(actions).long(), requires_grad=False)
+
+        features, features_next, action_logits, action_probs = \
+            self.icm_inv_model.forward((state_start, state_next))
+
+        features_next_pred = self.icm_fwd_model.forward((features, actions))
+
+        return features_next, features_next_pred
