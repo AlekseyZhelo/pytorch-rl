@@ -34,7 +34,8 @@ CONFIGS = [
     ["dqn", "minisim", "minisim", "mlp", "sequential"],  # 14
     ["a3c", "minisim", "minisim", "a3c-mlp-deeper-sep-hid-two", "none"],  # 15
     ["a3c", "minisim", "minisim", "a3c-cnv", "none"],  # 16
-    ["a3c", "minisim", "minisim", "a3c-target-only", "none"]  # 17
+    ["a3c", "minisim", "minisim", "a3c-target-only", "none"],  # 17
+    ["a3c", "minisim", "minisim", "a3c-cnv-lstm", "none"]  # 18
 ]
 
 minisim_num_robots = 1  # 3
@@ -46,12 +47,12 @@ class Params(object):  # NOTE: shared across all modules
 
         # training signature
         # TODO: fix action stats for multi-robot!
-        self.machine = "aiscpu4"  # "machine_id"
+        self.machine = "aiscpu2"  # "machine_id"
         self.timestamp = "18030500"  # "yymmdd##"
         self.step = None  # "1108025"
         # training configuration
         self.mode = 1  # 1(train) | 2(test model_file)
-        self.config = 16
+        self.config = 18
 
         self.seed = 123
         self.render = False  # whether render the window from the original envs or not
@@ -95,7 +96,7 @@ class Params(object):  # NOTE: shared across all modules
                 from core.minisim.models.icm.icm_inverse import ICMInverseModel
                 # from core.minisim.models.icm.icm_inverse_same_features import ICMInverseModelSameFeatures
                 from core.minisim.models.icm.icm_forward import ICMForwardModel
-                self.icm = True
+                self.icm = False
                 # self.icm = False  # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                 self.icm_inv_model = ICMInverseModel
                 # self.icm_inv_model = ICMInverseModelSameFeatures
