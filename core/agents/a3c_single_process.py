@@ -142,6 +142,7 @@ class A3CSingleProcess(AgentSingleProcess):
                         p_vb, v_vb, self.lstm_hidden_vb, self.lstm_hidden_vb2 = self.model(state_vb,
                                                                                            self.lstm_hidden_vb,
                                                                                            self.lstm_hidden_vb2)
+                extras = None
             else:
                 p_vb, v_vb, extras = self.model(state_vb)
             if self.training:
