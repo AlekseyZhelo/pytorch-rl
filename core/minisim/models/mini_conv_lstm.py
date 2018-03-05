@@ -18,6 +18,7 @@ class A3CCnvLSTMMinisimModel(Model):
         self.hist_len = args.hist_len
         self.target_data_dim = args.target_data_dim
         self.num_filters = 8  # 16; 4
+        self.hidden_vb_dim = args.hidden_vb_dim
 
         self.mean, self.std = get_state_statistics()
 
