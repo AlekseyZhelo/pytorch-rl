@@ -48,7 +48,7 @@ class Params(object):  # NOTE: shared across all modules
         # training signature
         # TODO: fix action stats for multi-robot!
         self.machine = "aiscpu2"  # "machine_id"
-        self.timestamp = "18030500"  # "yymmdd##"
+        self.timestamp = "18030600"  # "yymmdd##"
         self.step = None  # "1108025"
         # training configuration
         self.mode = 1  # 1(train) | 2(test model_file)
@@ -96,7 +96,7 @@ class Params(object):  # NOTE: shared across all modules
                 from core.minisim.models.icm.icm_inverse import ICMInverseModel
                 # from core.minisim.models.icm.icm_inverse_same_features import ICMInverseModelSameFeatures
                 from core.minisim.models.icm.icm_forward import ICMForwardModel
-                self.icm = False
+                self.icm = True
                 # self.icm = False  # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                 self.icm_inv_model = ICMInverseModel
                 # self.icm_inv_model = ICMInverseModelSameFeatures
@@ -337,7 +337,7 @@ class AgentParams(Params):  # hyperparameters for drl agents
                 self.rollout_steps = 50  # max look-ahead steps in a single rollout
                 self.tau = 1.
                 self.beta = 0.005  # coefficient for entropy penalty
-                self.icm_plus_reward = False
+                self.icm_plus_reward = True
                 self.icm_beta = 1.0  # 0.25   # 0.01  # ICM reward bonus coefficient
                 self.icm_fwd_wt = 0.2  # ICM forward model loss contribution coefficient
             else:
