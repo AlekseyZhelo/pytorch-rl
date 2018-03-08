@@ -47,8 +47,8 @@ class Params(object):  # NOTE: shared across all modules
 
         # training signature
         # TODO: fix action stats for multi-robot!
-        self.machine = "aiscpu2"  # "machine_id"
-        self.timestamp = "18030701"  # "yymmdd##"
+        self.machine = "aiscpu4"  # "machine_id"
+        self.timestamp = "18030800"  # "yymmdd##"
         self.step = None  # "1108025"
         # training configuration
         self.mode = 1  # 1(train) | 2(test model_file)
@@ -178,7 +178,7 @@ class EnvParams(Params):  # settings for simulation environment
             self.img_encoding_type = "passthrough"
         elif self.env_type == "minisim":
             self.num_robots = minisim_num_robots
-            self.curriculum = False  # TODO: ensure start outside of target area when True
+            self.curriculum = True  # TODO: ensure start outside of target area when True
             self.randomize_maps = False
             self.randomize_targets = True
             self.penalize_staying = True
