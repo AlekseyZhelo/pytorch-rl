@@ -24,6 +24,7 @@ class A3CCnvMinisimModel(Model):
         # build model
         # 0. feature layers
         # self.bn0 = nn.BatchNorm1d(self.input_dims[1] + 2 * self.hist_len)
+        # TODO: stride=1, add padding to not wash away the edges?
         self.cnv1 = nn.Conv1d(1, self.num_filters, 5, 2)
         self.sz_1 = (self.input_dims[0] * self.input_dims[1] - 5) // 2 + 1
         self.rl1 = nn.ELU()
