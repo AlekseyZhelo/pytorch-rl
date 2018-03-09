@@ -51,6 +51,7 @@ class MinisimEnv(Env):
 
         if self.mode == 2:
             self.curriculum = False
+            self.collision_is_terminal = False
 
         self.sim_name = 'sim' + str(self.ind)
 
