@@ -6,7 +6,7 @@ f8d5dc5 aiscpu2_18031700, office, no curr, ICM full, LSTM, -5.0 for colliding, b
 step 2556792
 
 b9fb48d aiscpu4_18031600, office, no curr, ICM full, LSTM, -5.0 for colliding, beta 0.01, 3rd time proper
-step 2976216
+step 2976216; 1187472
 
 5c6dc03 aiscpu4_18031300, office, no curr, ICM no + reward, no LSTM, -5.0 for colliding, beta 0.01, 2nd time proper
 step 2760065

@@ -921,6 +921,8 @@ class A3CTester(A3CSingleProcess):
                 # Obtain the initial observation by resetting the environment
                 self._reset_experience()
                 self.experience = self.env.reset()
+                while self.experience.terminal1:
+                    self.experience = self.env.reset()
                 self.episode_experience_history.append(self.experience)
                 assert self.experience.state1 is not None
                 if not self.training:
@@ -952,7 +954,8 @@ class A3CTester(A3CSingleProcess):
 
                 self.episode_icm_reward += \
                     torch.clamp(self.master.icm_beta * icm_fwd_loss, max=0.045).sum().data.numpy()[0]
-                print('total ICM reward: ', self.episode_icm_reward)
+                if self.master.verbose_test:
+                    print('total ICM reward: ', self.episode_icm_reward)
 
             if not self.training:
                 if self.master.visualize: self.env.visual()

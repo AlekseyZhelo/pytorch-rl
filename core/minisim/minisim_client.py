@@ -7,6 +7,7 @@ import numpy as np
 import rospy
 import time
 from minisim.srv import *
+from datetime import datetime
 
 
 class MinisimClient(object):
@@ -41,6 +42,9 @@ class MinisimClient(object):
         self.simulation_step_structured = rospy.ServiceProxy(self.simulation_step_structured_name,
                                                              SimulationStepStructured, persistent=True)
         self.reset_simulation = rospy.ServiceProxy(self.reset_simulation_name, ResetSimulation, persistent=True)
+
+        # self.debug_start_time = datetime.now()
+        # self.debug_episode_log = open('episode_log_{0}.txt'.format(self.debug_start_time.strftime('%Y-%m-%d_%H_%M_%S')), 'w')
 
     @property
     def state_shape(self):
@@ -117,6 +121,8 @@ class MinisimClient(object):
                     "WARNING: ResetSimulation service improperly called, message: {0}".format(resp.message))
                 return None
             else:
+                # print(resp.robot_map_x, resp.robot_map_y, resp.robot_theta, resp.target_map_x, resp.target_map_y,
+                #       file=self.debug_episode_log)
                 return np.array(resp.state).reshape(self.num_robots, -1), \
                        dict(
                            target_map_x=resp.target_map_x,
@@ -130,10 +136,13 @@ class MinisimClient(object):
 if __name__ == '__main__':
     class DummyLogger(object):
         def warning(self, *args, **kwargs):
-            print(args, kwargs)
+            print(*args, file=sys.stderr, **kwargs)
 
 
-    client = MinisimClient(1, 213, False, 1, "", DummyLogger())
+    client = MinisimClient(num_robots=1, seed=213, curriculum=False, mode=1,
+                           randomize_targets=True, penalize_staying=True,
+                           penalize_angle_to_target=True, collision_is_terminal=True,
+                           sim_prefix="", logger=DummyLogger())
     client.setup()
     # print(client.reset())
     actions = [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]]

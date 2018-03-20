@@ -16,6 +16,7 @@ class A3CAgent(Agent):
             self.num_robots = args.num_robots
 
         self.plot_icm_test = args.plot_icm_test if hasattr(args, "plot_icm_test") else False
+        self.verbose_test = args.verbose_test if hasattr(args, "verbose_test") else False
 
         # dummy_env just to get state_shape & action_dim
         self.dummy_env = self.env_prototype(self.env_params, self.num_processes + 1)
