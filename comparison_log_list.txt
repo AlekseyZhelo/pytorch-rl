@@ -1,25 +1,24 @@
 
-b9fb48d aiscpu4_18031600, office, no curr, ICM full, LSTM, -5.0 for colliding, beta 0.01, 3rd time proper
-3081c2e aiscpu2_18031600, office, no curr, ICM full, LSTM, -5.0 for colliding, beta 0.01, 2nd time proper
-6fc327c aiscpu2_18031100, office, no curr, ICM full, LSTM, -5.0 for colliding, beta 0.01
-
-3af7d80 aiscpu4_18031500, office, no curr, ICM full, no LSTM, -5.0 for colliding, beta 0.01, 3rd time proper
-fd8e192 aiscpu2_18031500, office, no curr, ICM full, no LSTM, -5.0 for colliding, beta 0.01, 2nd time proper
-d1ded61 aiscpu4_18031000, office, no curr, ICM full, no LSTM, -5.0 for colliding, beta 0.01
-
 af4b5f3 aiscpu4_18031601, office, no curr, ICM no + reward, LSTM, -5.0 for colliding, beta 0.01, 3rd time proper
 e71f24c aiscpu2_18031601, office, no curr, ICM no + reward, LSTM, -5.0 for colliding, beta 0.01, 2nd time proper
 2b21446 aiscpu4_18031100, office, no curr, ICM no + reward, LSTM, -5.0 for colliding, beta 0.01
-
-eab581f aiscpu4_18031400, office, no curr, ICM no + reward, no LSTM, -5.0 for colliding, beta 0.01, 3rd time proper
-5c6dc03 aiscpu4_18031300, office, no curr, ICM no + reward, no LSTM, -5.0 for colliding, beta 0.01, 2nd time proper
-6e6e3e6 aiscpu4_18030901, office, no curr, ICM no + reward, no LSTM, -5.0 for colliding, beta 0.01
 
 e4f9d17 aiscpu4_18031700, office, no curr, ICM full, LSTM, -5.0 for colliding, beta 0.00, 3rd time proper
 f8d5dc5 aiscpu2_18031700, office, no curr, ICM full, LSTM, -5.0 for colliding, beta 0.00, 2nd time proper
 7a65484 aiscpu2_18031000, office, no curr, ICM full, LSTM, -5.0 for colliding, beta 0.00
 
+b9fb48d aiscpu4_18031600, office, no curr, ICM full, LSTM, -5.0 for colliding, beta 0.01, 3rd time proper
+3081c2e aiscpu2_18031600, office, no curr, ICM full, LSTM, -5.0 for colliding, beta 0.01, 2nd time proper
+6fc327c aiscpu2_18031100, office, no curr, ICM full, LSTM, -5.0 for colliding, beta 0.01
+
+eab581f aiscpu4_18031400, office, no curr, ICM no + reward, no LSTM, -5.0 for colliding, beta 0.01, 3rd time proper
+5c6dc03 aiscpu4_18031300, office, no curr, ICM no + reward, no LSTM, -5.0 for colliding, beta 0.01, 2nd time proper
+6e6e3e6 aiscpu4_18030901, office, no curr, ICM no + reward, no LSTM, -5.0 for colliding, beta 0.01
+
 94e17d4 aiscpu2_18031400, office, no curr, ICM full, no LSTM, -5.0 for colliding, beta 0.00, 3rd time proper
 05ac5a1 aiscpu2_18031300, office, no curr, ICM full, no LSTM, -5.0 for colliding, beta 0.00, 2nd time proper
 7b3ea02 aiscpu2_18030900, office, no curr, ICM on, no LSTM, -5.0 for colliding, beta 0.0
 
+3af7d80 aiscpu4_18031500, office, no curr, ICM full, no LSTM, -5.0 for colliding, beta 0.01, 3rd time proper
+fd8e192 aiscpu2_18031500, office, no curr, ICM full, no LSTM, -5.0 for colliding, beta 0.01, 2nd time proper
+d1ded61 aiscpu4_18031000, office, no curr, ICM full, no LSTM, -5.0 for colliding, beta 0.01
