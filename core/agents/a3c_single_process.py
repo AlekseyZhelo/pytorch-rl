@@ -7,6 +7,7 @@ import time
 import os
 
 import numpy as np
+import matplotlib
 import matplotlib.pyplot as plt
 import torch
 from torch.autograd import Variable
@@ -869,6 +870,7 @@ class A3CTester(A3CSingleProcess):
             assert self.master.icm, 'Asked to plot icm features when ICM is off'
             self.map_image = self.env.read_static_map_image()
             plt.rc('font', family='Times New Roman')
+            matplotlib.rcParams.update({'font.size': 16})
         if self.master.plot_env_picture:
             self.map_image = self.env.read_static_map_image()
             plt.rc('font', family='Times New Roman')
@@ -1038,7 +1040,9 @@ class A3CTester(A3CSingleProcess):
         ax2 = plt.subplot2grid((6, 6), (0, 4), colspan=2, rowspan=4)
         ax3 = plt.subplot2grid((6, 6), (4, 0), colspan=6, rowspan=2)
 
-        self.plot_current_step(ax1, draw_path=False, draw_rays=False, show_legend=False)
+        ax1.set_anchor('W')
+        self.plot_current_step(ax1, draw_path=True, draw_rays=True, show_legend=False)
+        # ax1.set_title('Top view')
 
         actions = ('Fwd', 'Left', 'Right')  # TODO: check left and right
         y_pos = np.arange(len(actions))
@@ -1047,21 +1051,38 @@ class A3CTester(A3CSingleProcess):
         ax2.barh(y_pos, prob, align='center', height=0.4)
         ax2.set_yticks(y_pos)
         ax2.set_yticklabels(actions)
-        ax2.set_xlim([0.0, 1.0])
+        ax2.set_xlim([-0.05, 1.05])
         ax2.yaxis.tick_right()
         ax2.xaxis.tick_top()
+        # ax2.tick_params(axis='x', pad=-25)
+        ax2.tick_params(axis='x', labelbottom='off', labeltop='off')
+        ax2.tick_params(direction='in')
+        # ax2.set_title('Action', y=1.10)
 
         x_pos = np.arange(16)
         val_f_hat = features_next_pred.data.numpy().reshape(-1)
         val_f = features_next.data.numpy().reshape(-1)
 
-        ax3.bar(x_pos, val_f_hat, width=0.2, label=r'$\^f$')
-        ax3.bar(x_pos + 0.2, val_f, width=0.2, label=r'$f$')
-        # ax3.set_ylim([-1, 1])
+        val_f_hat = np.tanh(val_f_hat)
+        val_f = np.tanh(val_f)
+
+        ax3.bar(x_pos, val_f_hat, width=0.2, label=r'$\^\phi$')
+        ax3.bar(x_pos + 0.2, val_f, width=0.2, label=r'$\phi$')
+        ax3.set_ylim([-1, 1])
         ax3.set_xticks(np.arange(16))
         ax3.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+        ax3.tick_params(direction='in')
+        ax3.tick_params(labelbottom='off', labeltop='off', labelleft='off')
+        # ax3.set_title('ICM features')
 
-        plt.tight_layout()
+        # plt.tight_layout()
+        left = 0  # 0.125  # the left side of the subplots of the figure
+        right = 1  # 0.9  # the right side of the subplots of the figure
+        bottom = 0  # 0.1  # the bottom of the subplots of the figure
+        top = 1  # 0.9  # the top of the subplots of the figure
+        wspace = 0.1  # 0.2  # the amount of width reserved for blank space between subplots
+        hspace = 0.1  # 0.2  # the amount of height reserved for white space between subplots
+        # plt.subplots_adjust(left=left, bottom=bottom, right=right, top=top, wspace=wspace, hspace=hspace)
         plot_dir = os.path.join('imgs', 'icm_test_plots', os.path.basename(self.master.model_file)[:-4])
         if not os.path.exists(plot_dir):
             os.makedirs(plot_dir)
@@ -1070,7 +1091,7 @@ class A3CTester(A3CSingleProcess):
                 test_nepisodes + 1,
                 len(self.action_history)
             )),
-            dpi=200, bbox_inches='tight', pad_inches=0
+            dpi=200, bbox_inches='tight', pad_inches=0.05
         )
         plt.close(fig)
 
@@ -1171,8 +1192,8 @@ class A3CTester(A3CSingleProcess):
             import matplotlib.lines as mlines
             path_line = mlines.Line2D([], [], color='xkcd:water blue')
             laser_line = mlines.Line2D([], [], color='xkcd:strawberry')
-            ax.legend([target_circle, robot_rect, start, path_line, laser_line],
-                      ['target', 'robot', 'start', 'path', 'laser'],
+            ax.legend([start, target_circle, robot_rect, laser_line, path_line],
+                      ['start', 'target', 'robot', 'laser', 'path'],
                       handler_map={Circle: HandlerCircle(),
                                    Rectangle: HandlerRectangle()})
 

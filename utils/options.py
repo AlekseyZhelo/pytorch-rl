@@ -87,8 +87,8 @@ class Params(object):  # NOTE: shared across all modules
         self.visualize = True  # whether do online plotting and stuff or not
         self.save_best = False  # save model w/ highest reward if True, otherwise always save the latest model
         self.icm_save_best = False
-        self.plot_icm_test = False
-        self.plot_env_picture = True
+        self.plot_icm_test = True
+        self.plot_env_picture = False
         self.verbose_test = False
 
         self.agent_type, self.env_type, self.game, self.model_type, self.memory_type = CONFIGS[self.config]
