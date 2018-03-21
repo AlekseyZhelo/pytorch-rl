@@ -47,25 +47,30 @@ class Params(object):  # NOTE: shared across all modules
 
         # training signature
         # TODO: fix action stats for multi-robot!
-        # self.machine = "aiscpu4"  # "machine_id"
-        # self.timestamp = "18031601"  # "yymmdd##"
-        # self.step = "2844054"  # "1108025"
-        # self.machine = "aiscpu2"  # "machine_id"
-        # self.timestamp = "18031700"  # "yymmdd##"
-        # self.step = "2556792"  # "1108025"
-        # self.machine = "aiscpu4"  # "machine_id"
-        # self.timestamp = "18031600"  # "yymmdd##"
-        # self.step = "2976216"  # "1108025"
+        self.machine = "aiscpu2"  # "machine_id"
+        self.timestamp = "18032100"  # "yymmdd##"
+        self.step = ""
 
-        # self.machine = "aiscpu4"  # "machine_id"
-        # self.timestamp = "18031300"  # "yymmdd##"
-        # self.step = "2760065"  # "1108025"
-        # self.machine = "aiscpu2"  # "machine_id"
-        # self.timestamp = "18031300"  # "yymmdd##"
-        # self.step = "1585315"  # "1108025"
-        self.machine = "aiscpu4"  # "machine_id"
-        self.timestamp = "18031000"  # "yymmdd##"
-        self.step = "1299783"  # "1108025"
+        # signatures of the best models
+        # self.machine = "aiscpu4"
+        # self.timestamp = "18031601"
+        # self.step = "2844054"
+        # self.machine = "aiscpu2"
+        # self.timestamp = "18031700"
+        # self.step = "2556792"
+        # self.machine = "aiscpu4"
+        # self.timestamp = "18031600"
+        # self.step = "2976216"
+
+        # self.machine = "aiscpu4"
+        # self.timestamp = "18031300"
+        # self.step = "2760065"
+        # self.machine = "aiscpu2"
+        # self.timestamp = "18031300"
+        # self.step = "1585315"
+        # self.machine = "aiscpu4"
+        # self.timestamp = "18031000"
+        # self.step = "1299783"
 
         self.test_ref_postfix = '_' + self.step + "_test"
         # self.test_ref_postfix = '_' + self.step + "_test_gen"
@@ -73,8 +78,8 @@ class Params(object):  # NOTE: shared across all modules
         # self.test_ref_postfix = '_' + self.step + "_test_gen3"
         # self.test_ref_postfix = '_' + self.step + "_test_gen_hard"
         # training configuration
-        self.mode = 2  # 1(train) | 2(test model_file)
-        self.config = 16
+        self.mode = 1  # 1(train) | 2(test model_file)
+        self.config = 18
 
         self.seed = 123
         self.render = False  # whether render the window from the original envs or not
@@ -87,6 +92,9 @@ class Params(object):  # NOTE: shared across all modules
         self.agent_type, self.env_type, self.game, self.model_type, self.memory_type = CONFIGS[self.config]
 
         self.icm = False
+
+        if self.mode != 2:
+            self.step = None
 
         if self.agent_type == "dqn":
             self.enable_double_dqn = False
@@ -142,9 +150,6 @@ class Params(object):  # NOTE: shared across all modules
         self.root_dir = os.getcwd()
 
         # model files
-        if self.mode != 2:
-            self.step = None
-
         if self.icm:
             self.icm_inv_model_name = "{0}/models/{1}_icm_inv{2}.pth".format(self.root_dir, self.refs,
                                                                              ("_step_" + self.step)
