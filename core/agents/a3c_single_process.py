@@ -16,6 +16,7 @@ from matplotlib.transforms import Affine2D
 
 from core.agent_single_process import AgentSingleProcess
 from utils.helpers import A3C_Experience
+from utils.legend_handlers import HandlerCircle, HandlerRectangle
 
 
 class A3CSingleProcess(AgentSingleProcess):
@@ -867,6 +868,10 @@ class A3CTester(A3CSingleProcess):
         if self.master.plot_icm_test:
             assert self.master.icm, 'Asked to plot icm features when ICM is off'
             self.map_image = self.env.read_static_map_image()
+            plt.rc('font', family='Times New Roman')
+        if self.master.plot_env_picture:
+            self.map_image = self.env.read_static_map_image()
+            plt.rc('font', family='Times New Roman')
 
         self.training = False  # choose actions w/ max probability
         # self.training = True  # choose actions by polynomial (?)
@@ -962,6 +967,9 @@ class A3CTester(A3CSingleProcess):
                 if self.master.render: self.env.render()
                 if self.master.plot_icm_test and test_episode_steps < 150:
                     self.plot_icm_test(p_vb, test_nepisodes)
+                if self.master.plot_env_picture and test_episode_steps >= 96:
+                    self.plot_env_picture(test_nepisodes)
+
             if self.experience.terminal1 or \
                             self.master.early_stop and (test_episode_steps + 1) == self.master.early_stop:
                 test_should_start_new = True
@@ -1030,40 +1038,7 @@ class A3CTester(A3CSingleProcess):
         ax2 = plt.subplot2grid((6, 6), (0, 4), colspan=2, rowspan=4)
         ax3 = plt.subplot2grid((6, 6), (4, 0), colspan=6, rowspan=2)
 
-        y_max = self.map_image.shape[0]  # the y coordinate needs to be flipped because of display (TODO) differences
-        target_extras = self.episode_experience_history[0].extras
-        extras = self.episode_experience_history[-1].extras
-
-        ax1.imshow(self.map_image, cmap='gray')
-        ax1.add_patch(
-            Circle(
-                (target_extras['target_map_x'][0], y_max - target_extras['target_map_y'][0]),
-                radius=target_extras['target_radius'] * 100
-            )
-        )
-        # ax1.scatter(target_extras['target_map_x'], target_extras['target_map_y'])
-        robot_pos = [extras['robot_map_x'][0], y_max - extras['robot_map_y'][0]]
-        rad = extras['robot_theta'][0]
-        angle = -rad * 180 / np.pi
-        robot_rect = Rectangle(
-            (robot_pos[0] - 10, robot_pos[1] - 10),
-            20,  # width
-            20,  # height
-            fill=False,
-            color='green'
-        )
-        t_start = ax1.transData
-        t = Affine2D().rotate_deg_around(robot_pos[0], robot_pos[1], angle)
-        t_end = t + t_start
-        robot_rect.set_transform(t_end)
-        ax1.add_patch(
-            robot_rect
-        )
-        # ax1.scatter(extras['robot_map_x'], extras['robot_map_y'], marker='s', color='green')
-
-        end = [robot_pos[0] + 13 * math.cos(rad), robot_pos[1] - 13 * math.sin(rad)]
-        ax1.plot([robot_pos[0], end[0]], [robot_pos[1], end[1]], color='red')
-        ax1.set_axis_off()
+        self.plot_current_step(ax1, draw_path=False, draw_rays=False, show_legend=False)
 
         actions = ('Fwd', 'Left', 'Right')  # TODO: check left and right
         y_pos = np.arange(len(actions))
@@ -1098,6 +1073,108 @@ class A3CTester(A3CSingleProcess):
             dpi=200, bbox_inches='tight', pad_inches=0
         )
         plt.close(fig)
+
+    def plot_env_picture(self, test_nepisodes):
+        fig = plt.figure(figsize=(self.map_image.shape[1] / 100.0, self.map_image.shape[0] / 100.0))
+        ax = fig.add_subplot(111)
+
+        plt.axis('off')
+        self.plot_current_step(ax, draw_path=True, draw_rays=True, show_legend=True)
+
+        plt.tight_layout()
+        plot_dir = os.path.join('imgs', 'env_pictures', os.path.basename(self.master.model_file)[:-4])
+        if not os.path.exists(plot_dir):
+            os.makedirs(plot_dir)
+        plt.axis('off')
+        plt.gcf().set_size_inches(self.map_image.shape[1] / 100.0, self.map_image.shape[0] / 100.0)
+        plt.savefig(
+            os.path.join(plot_dir, 'episode{0:03}_step{1:03}.eps'.format(
+                test_nepisodes + 1,
+                len(self.action_history)
+            )),
+            dpi=300, bbox_inches='tight', pad_inches=0
+        )
+        plt.close(fig)
+
+    def plot_current_step(self, ax, draw_path=False, draw_rays=False, show_legend=False):
+        y_max = self.map_image.shape[0]  # the y coordinate needs to be flipped because of display (TODO) differences
+        target_extras = self.episode_experience_history[0].extras
+        extras = self.episode_experience_history[-1].extras
+        ax.imshow(self.map_image, cmap='gray')
+
+        target_circle = Circle(
+            (target_extras['target_map_x'][0], y_max - target_extras['target_map_y'][0]),
+            radius=target_extras['target_radius'] * 100, label='target'
+        )
+        ax.add_patch(target_circle)
+
+        robot_pos = [extras['robot_map_x'][0], y_max - extras['robot_map_y'][0]]
+        rad = extras['robot_theta'][0]
+        angle = -rad * 180 / np.pi
+        robot_rect = Rectangle(
+            (robot_pos[0] - 10, robot_pos[1] - 10),
+            20,  # width
+            20,  # height
+            fill=False,
+            color='green',
+            label='robot'
+        )
+        t_start = ax.transData
+        t = Affine2D().rotate_deg_around(robot_pos[0], robot_pos[1], angle)
+        t_end = t + t_start
+        robot_rect.set_transform(t_end)
+        ax.add_patch(
+            robot_rect
+        )
+
+        end = [robot_pos[0] + 13 * math.cos(rad), robot_pos[1] - 13 * math.sin(rad)]
+        ax.plot([robot_pos[0], end[0]], [robot_pos[1], end[1]], color='red')
+        ax.set_axis_off()
+
+        if draw_path:
+            path = ax.plot(
+                [state.extras['robot_map_x'][0] for state in self.episode_experience_history],
+                [y_max - state.extras['robot_map_y'][0] for state in self.episode_experience_history],
+                color='xkcd:water blue', linewidth=1, label='path', alpha=0.5, zorder=1
+            )
+            start = ax.scatter(
+                [self.episode_experience_history[0].extras['robot_map_x'][0]],
+                [y_max - self.episode_experience_history[0].extras['robot_map_y'][0]],
+                color='green', s=4, label='start', zorder=2
+            )
+
+        if draw_rays:
+            def update_angle(angle_, increment):
+                angle_ += increment
+
+                if angle_ > np.pi * 2:
+                    angle_ -= np.pi * 2
+                return angle_
+
+            current_angle = self.episode_experience_history[-1].extras['robot_theta'][0]
+            current_angle = update_angle(current_angle, -np.pi / 2.0)
+            ranges = self.episode_experience_history[-1].state1[0, :self.master.state_shape]
+            for i in range(0, self.master.state_shape, 2):
+                laser = ax.plot(
+                    [robot_pos[0], robot_pos[0] + ranges[i] * 100 * math.cos(current_angle)],
+                    [robot_pos[1], robot_pos[1] - ranges[i] * 100 * math.sin(current_angle)],
+                    color='xkcd:strawberry', linewidth=0.4, label='laser' if i == 0 else None
+                )
+                ax.scatter(
+                    [robot_pos[0] + ranges[i] * 100 * math.cos(current_angle)],
+                    [robot_pos[1] - ranges[i] * 100 * math.sin(current_angle)],
+                    marker='*', s=0.4, color='xkcd:strawberry'
+                )
+                current_angle = update_angle(current_angle, np.pi / (self.master.state_shape - 1) * 2)
+
+        if show_legend:
+            import matplotlib.lines as mlines
+            path_line = mlines.Line2D([], [], color='xkcd:water blue')
+            laser_line = mlines.Line2D([], [], color='xkcd:strawberry')
+            ax.legend([target_circle, robot_rect, start, path_line, laser_line],
+                      ['target', 'robot', 'start', 'path', 'laser'],
+                      handler_map={Circle: HandlerCircle(),
+                                   Rectangle: HandlerRectangle()})
 
     # TODO: use elsewhere, better name
     def calculate_icm(self):

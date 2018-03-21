@@ -47,9 +47,9 @@ class Params(object):  # NOTE: shared across all modules
 
         # training signature
         # TODO: fix action stats for multi-robot!
-        self.machine = "aiscpu4"  # "machine_id"
-        self.timestamp = "18032100"  # "yymmdd##"
-        self.step = ""
+        # self.machine = "aiscpu4"  # "machine_id"
+        # self.timestamp = "18032100"  # "yymmdd##"
+        # self.step = ""
 
         # signatures of the best models
         # self.machine = "aiscpu4"
@@ -58,9 +58,9 @@ class Params(object):  # NOTE: shared across all modules
         # self.machine = "aiscpu2"
         # self.timestamp = "18031700"
         # self.step = "2556792"
-        # self.machine = "aiscpu4"
-        # self.timestamp = "18031600"
-        # self.step = "2976216"
+        self.machine = "aiscpu4"
+        self.timestamp = "18031600"
+        self.step = "2976216"
 
         # self.machine = "aiscpu4"
         # self.timestamp = "18031300"
@@ -72,13 +72,14 @@ class Params(object):  # NOTE: shared across all modules
         # self.timestamp = "18031000"
         # self.step = "1299783"
 
-        self.test_ref_postfix = '_' + self.step + "_test"
+        self.test_ref_postfix = '_' + self.step + "_title"
+        # self.test_ref_postfix = '_' + self.step + "_test"
         # self.test_ref_postfix = '_' + self.step + "_test_gen"
         # self.test_ref_postfix = '_' + self.step + "_test_gen2"
         # self.test_ref_postfix = '_' + self.step + "_test_gen3"
         # self.test_ref_postfix = '_' + self.step + "_test_gen_hard"
         # training configuration
-        self.mode = 1  # 1(train) | 2(test model_file)
+        self.mode = 2  # 1(train) | 2(test model_file)
         self.config = 18
 
         self.seed = 123
@@ -87,6 +88,7 @@ class Params(object):  # NOTE: shared across all modules
         self.save_best = False  # save model w/ highest reward if True, otherwise always save the latest model
         self.icm_save_best = False
         self.plot_icm_test = False
+        self.plot_env_picture = True
         self.verbose_test = False
 
         self.agent_type, self.env_type, self.game, self.model_type, self.memory_type = CONFIGS[self.config]
@@ -361,7 +363,7 @@ class AgentParams(Params):  # hyperparameters for drl agents
                 self.eval_steps = 7500  # 15000
                 self.prog_freq = self.eval_freq
                 # self.test_nepisodes = 50 if not self.plot_icm_test else 1
-                self.test_nepisodes = 300 if not self.plot_icm_test else 1
+                self.test_nepisodes = 300 if (not self.plot_icm_test and not self.plot_env_picture) else 3
 
                 self.rollout_steps = 50  # max look-ahead steps in a single rollout
                 self.tau = 1.

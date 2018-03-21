@@ -125,6 +125,9 @@ class MinisimClient(object):
                 #       file=self.debug_episode_log)
                 return np.array(resp.state).reshape(self.num_robots, -1), \
                        dict(
+                           robot_map_x=resp.robot_map_x,
+                           robot_map_y=resp.robot_map_y,
+                           robot_theta=resp.robot_theta,
                            target_map_x=resp.target_map_x,
                            target_map_y=resp.target_map_y,
                            target_radius=resp.target_radius
