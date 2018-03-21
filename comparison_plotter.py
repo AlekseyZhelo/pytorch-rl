@@ -39,7 +39,7 @@ def plot_mean_and_confidence_interval(ax, x, mean, lb, ub, label=None, alpha=0.5
     # plot the shaded range of the confidence intervals
     # ax.fill_between(x, ub, lb,
     #                 color=color_shading, alpha=.5)
-    # ax.fill_between(x, ub, lb, alpha=alpha, edgecolor='gray')
+    ax.fill_between(x, ub, lb, alpha=alpha, edgecolor='gray')
     # plot the mean on top
     # mean = savgol_filter(mean, 15, 4)
     ax.plot(x, mean, label=label)
@@ -176,13 +176,27 @@ def plot_group(ax, group_res: List[LogData], group_entries: List[LogEntry],
 
     lower_bound, upper_bound = st.t.interval(0.95, n - 1, loc=mean, scale=std / np.sqrt(n))
     # lower_bound, upper_bound = mean - std, mean + std
+
+    label = r'{0}{1}, $\beta={2}$'.format(
+        ('LSTM, ' if group_entries[0].lstm else 'No LSTM, ') if lstm_in_label else '',
+        'ICM' if group_entries[0].icm else 'No ICM',
+        group_entries[0].beta
+    )
+
+    def exploration_desc(entry):
+        if entry.beta > 0:
+            return 'ICM+Entropy' if entry.icm else 'Entropy'
+        else:
+            return 'ICM' if entry.icm else 'None'
+
+    label = '{0}{1}'.format(
+        ('LSTM+' if group_entries[0].lstm else 'No LSTM+') if lstm_in_label else '',
+        exploration_desc(group_entries[0])
+    )
+
     plot_mean_and_confidence_interval(
         ax, group_res[0].timesteps, mean, lower_bound, upper_bound,
-        label=r'{0}{1}, $\beta={2}$'.format(
-            ('LSTM, ' if group_entries[0].lstm else 'No LSTM, ') if lstm_in_label else '',
-            'ICM' if group_entries[0].icm else 'No ICM',
-            group_entries[0].beta
-        ),
+        label=label,
         alpha=alpha, color_mean='b', color_shading='b'
     )
 
@@ -197,8 +211,8 @@ def plot_statistic(data_groups, to_plot, y_label, y_lim, legend_loc,
         linewidth=[1.5, 1.5, 2.5]
     )
     fill_alpha = [0.25, 0.25, 0.5]
-    ax.set_ylabel(y_label, fontsize='large')
-    ax.set_xlabel('Training steps', fontsize='large')
+    ax.set_ylabel(y_label, fontsize=18)
+    ax.set_xlabel('Training steps', fontsize=18)
     ax.ticklabel_format(style='sci', axis='x', scilimits=(0, 0))
 
     for i, group in enumerate(data_groups):
@@ -208,13 +222,19 @@ def plot_statistic(data_groups, to_plot, y_label, y_lim, legend_loc,
                 os.path.join('logs', '{0}_{1}.log'.format(entry.machine, entry.timestamp))
             ))
         plot_group(ax, group_res, group, to_plot, fill_alpha[i % len(fill_alpha)])
-    plt.legend(loc=legend_loc, handlelength=3, fontsize='large')
+    plt.legend(loc=legend_loc, handlelength=3, fontsize=18)
     ax.set_ylim(y_lim)
     ax.set_xlim([0, 3000000])
+    for tick in ax.xaxis.get_major_ticks():
+        tick.label.set_fontsize(14)
+    for tick in ax.yaxis.get_major_ticks():
+        tick.label.set_fontsize(14)
+    ax.xaxis.offsetText.set_fontsize(14)
+    ax.yaxis.offsetText.set_fontsize(14)
     if not os.path.exists(save_path):
         os.makedirs(save_path)
-    plt.savefig(os.path.join(save_path, '{0}.png'.format(to_plot)),
-                bbox_inches='tight', pad_inches=0.05)
+    plt.savefig(os.path.join(save_path, '{0}.pdf'.format(to_plot)),
+                bbox_inches='tight', pad_inches=0.05, dpi=300)
     plt.clf()
 
 
@@ -236,12 +256,14 @@ if __name__ == '__main__':
     lstm_groups = list(filter(lambda x: x[0].lstm, log_groups))
     no_lstm_groups = list(filter(lambda x: not x[0].lstm, log_groups))
 
+    plt.rc('font', family='Times New Roman')
+
     plot_statistic(lstm_groups, to_plot='reward', y_label='Average reward',
                    y_lim=[-50, 5], legend_loc=4, save_path='figs/lstm')
     plot_statistic(lstm_groups, to_plot='steps', y_label='Average steps',
-                   y_lim=[-15, 1000], legend_loc=1, save_path='figs/lstm')
+                   y_lim=[0, 1000], legend_loc=1, save_path='figs/lstm')
 
     plot_statistic(no_lstm_groups, to_plot='reward', y_label='Average reward',
                    y_lim=[-50, 5], legend_loc=4, save_path='figs/no lstm')
     plot_statistic(no_lstm_groups, to_plot='steps', y_label='Average steps',
-                   y_lim=[-15, 3000], legend_loc=1, save_path='figs/no lstm')
+                   y_lim=[0, 3000], legend_loc=1, save_path='figs/no lstm')

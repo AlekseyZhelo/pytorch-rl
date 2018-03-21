@@ -33,7 +33,7 @@ class ICMInverseModel(Model):
         self.fc2 = nn.Linear(self.hidden_dim, self.hidden_dim // 2)
         self.rl2 = nn.ELU()
         self.fc3 = nn.Linear(self.hidden_dim // 2, self.feature_dim)
-        self.rl3 = nn.ELU()  # nn.Tanh()
+        self.rl3 = nn.ELU()
 
         self.fc4 = nn.Linear(2 * self.feature_dim, 2 * self.feature_dim)
         self.rl4 = nn.ELU()
