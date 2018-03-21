@@ -183,7 +183,7 @@ class MinisimEnv(Env):
                 [self.actions[i] for i in action_index.reshape(-1)]
             )
             if self.mode == 2:
-                time.sleep(0.05)
+                # time.sleep(0.05)
                 self.total_reward += self.exp_reward
                 if self.verbose_test:
                     print('total reward: ', self.total_reward)
@@ -196,10 +196,14 @@ class MinisimEnv(Env):
         # return imageio.imread(os.path.join(MinisimEnv.minisim_path, 'map', 'medium_rooms.pgm'))
         # return imageio.imread(os.path.join(MinisimEnv.minisim_path,
         #                                    'map', 'random', 'simple_gen_small_002.pgm'))
-        # return imageio.imread(os.path.join(MinisimEnv.minisim_path,
-        #                                    'map', 'medium_rooms_simpler.pgm'))
         return imageio.imread(os.path.join(MinisimEnv.minisim_path,
-                                           'map', 'medium_rooms_new.pgm'))
+                                           'map', 'medium_rooms_simpler.pgm'))
+        # return imageio.imread(os.path.join(MinisimEnv.minisim_path,
+        #                                    'map', 'medium_rooms_new.pgm'))
+        # return imageio.imread(os.path.join(MinisimEnv.minisim_path,
+        #                                    'map', 'medium_rooms_new2.pgm'))
+        # return imageio.imread(os.path.join(MinisimEnv.minisim_path,
+        #                                    'map', 'medium_rooms_new3.pgm'))
 
     # was supposed to be useful for a large network with a single action index output, which would
     # be expanded into individual robot actions
@@ -230,8 +234,10 @@ class MinisimEnv(Env):
             # map_server_rlaunch_path = os.path.join(minisim_path, 'launch', 'map_server_empty_small.launch')
             # map_server_rlaunch_path = os.path.join(minisim_path, 'launch', 'map_server_simple_gen_small_002.launch')
             # map_server_rlaunch_path = os.path.join(minisim_path, 'launch', 'map_server_medium_rooms.launch')
-            # map_server_rlaunch_path = os.path.join(minisim_path, 'launch', 'map_server_medium_rooms_simpler.launch')
-            map_server_rlaunch_path = os.path.join(minisim_path, 'launch', 'map_server_medium_rooms_new.launch')
+            map_server_rlaunch_path = os.path.join(minisim_path, 'launch', 'map_server_medium_rooms_simpler.launch')
+            # map_server_rlaunch_path = os.path.join(minisim_path, 'launch', 'map_server_medium_rooms_new.launch')
+            # map_server_rlaunch_path = os.path.join(minisim_path, 'launch', 'map_server_medium_rooms_new2.launch')
+            # map_server_rlaunch_path = os.path.join(minisim_path, 'launch', 'map_server_medium_rooms_new3.launch')
             uuid = roslaunch.rlutil.get_or_generate_uuid(None, False)
             roslaunch.configure_logging(uuid)
             MinisimEnv.roslaunch_map_server = roslaunch.parent.ROSLaunchParent(uuid, [map_server_rlaunch_path])
@@ -270,6 +276,6 @@ if __name__ == '__main__':
     for i in range(50):
         env_0.reset()
         for j in xrange(np.random.randint(10, 100)):
-            env_0.step(np.random.randint(0, 3, size=(1,1)))
+            env_0.step(np.random.randint(0, 3, size=(1, 1)))
     # env_1 = MinisimEnv(params, 1)
     # time.sleep(10000)

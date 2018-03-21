@@ -14,6 +14,8 @@ from collections import namedtuple
 
 from typing import List
 
+from scipy.signal import savgol_filter
+
 LogEntry = namedtuple('LogEntry', 'machine, timestamp, icm, lstm, beta, number')
 LogData = namedtuple('LogData', 'timesteps, reward_avg, reward_std, steps_avg, '
                                 'steps_std, n_episodes, action_counts')
@@ -37,8 +39,9 @@ def plot_mean_and_confidence_interval(ax, x, mean, lb, ub, label=None, alpha=0.5
     # plot the shaded range of the confidence intervals
     # ax.fill_between(x, ub, lb,
     #                 color=color_shading, alpha=.5)
-    ax.fill_between(x, ub, lb, alpha=alpha, edgecolor='gray')
+    # ax.fill_between(x, ub, lb, alpha=alpha, edgecolor='gray')
     # plot the mean on top
+    # mean = savgol_filter(mean, 15, 4)
     ax.plot(x, mean, label=label)
 
 
@@ -241,4 +244,4 @@ if __name__ == '__main__':
     plot_statistic(no_lstm_groups, to_plot='reward', y_label='Average reward',
                    y_lim=[-50, 5], legend_loc=4, save_path='figs/no lstm')
     plot_statistic(no_lstm_groups, to_plot='steps', y_label='Average steps',
-                   y_lim=[-15, 1000], legend_loc=1, save_path='figs/no lstm')
+                   y_lim=[-15, 3000], legend_loc=1, save_path='figs/no lstm')

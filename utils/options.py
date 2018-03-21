@@ -47,14 +47,34 @@ class Params(object):  # NOTE: shared across all modules
 
         # training signature
         # TODO: fix action stats for multi-robot!
+        # self.machine = "aiscpu4"  # "machine_id"
+        # self.timestamp = "18031601"  # "yymmdd##"
+        # self.step = "2844054"  # "1108025"
+        # self.machine = "aiscpu2"  # "machine_id"
+        # self.timestamp = "18031700"  # "yymmdd##"
+        # self.step = "2556792"  # "1108025"
+        # self.machine = "aiscpu4"  # "machine_id"
+        # self.timestamp = "18031600"  # "yymmdd##"
+        # self.step = "2976216"  # "1108025"
+
+        # self.machine = "aiscpu4"  # "machine_id"
+        # self.timestamp = "18031300"  # "yymmdd##"
+        # self.step = "2760065"  # "1108025"
+        # self.machine = "aiscpu2"  # "machine_id"
+        # self.timestamp = "18031300"  # "yymmdd##"
+        # self.step = "1585315"  # "1108025"
         self.machine = "aiscpu4"  # "machine_id"
-        self.timestamp = "18031601"  # "yymmdd##"
-        self.step = "2844054"  # "1108025"
-        # self.test_ref_postfix = '_' + self.step + "_test"
-        self.test_ref_postfix = '_' + self.step + "_test_gen"
+        self.timestamp = "18031000"  # "yymmdd##"
+        self.step = "1299783"  # "1108025"
+
+        self.test_ref_postfix = '_' + self.step + "_test"
+        # self.test_ref_postfix = '_' + self.step + "_test_gen"
+        # self.test_ref_postfix = '_' + self.step + "_test_gen2"
+        # self.test_ref_postfix = '_' + self.step + "_test_gen3"
+        # self.test_ref_postfix = '_' + self.step + "_test_gen_hard"
         # training configuration
         self.mode = 2  # 1(train) | 2(test model_file)
-        self.config = 18
+        self.config = 16
 
         self.seed = 123
         self.render = False  # whether render the window from the original envs or not
@@ -335,7 +355,8 @@ class AgentParams(Params):  # hyperparameters for drl agents
                 self.eval_freq = 60  # NOTE: here means every this many seconds
                 self.eval_steps = 7500  # 15000
                 self.prog_freq = self.eval_freq
-                self.test_nepisodes = 50 if not self.plot_icm_test else 1
+                # self.test_nepisodes = 50 if not self.plot_icm_test else 1
+                self.test_nepisodes = 300 if not self.plot_icm_test else 1
 
                 self.rollout_steps = 50  # max look-ahead steps in a single rollout
                 self.tau = 1.
