@@ -162,17 +162,28 @@ def plot_group(ax, group_res: List[LogData], group_entries: List[LogEntry],
     group_res = fix_logs_timesteps(group_res)
 
     n = np.sum([res.n_episodes for res in group_res], axis=0)
-    mean, std = combine_3_means_stds(
-        getattr(group_res[0], to_plot + '_avg'),
-        getattr(group_res[1], to_plot + '_avg'),
-        getattr(group_res[2], to_plot + '_avg'),
-        getattr(group_res[0], to_plot + '_std'),
-        getattr(group_res[1], to_plot + '_std'),
-        getattr(group_res[2], to_plot + '_std'),
-        group_res[0].n_episodes,
-        group_res[1].n_episodes,
-        group_res[2].n_episodes
-    )
+
+    if len(group_res) == 3:
+        mean, std = combine_3_means_stds(
+            getattr(group_res[0], to_plot + '_avg'),
+            getattr(group_res[1], to_plot + '_avg'),
+            getattr(group_res[2], to_plot + '_avg'),
+            getattr(group_res[0], to_plot + '_std'),
+            getattr(group_res[1], to_plot + '_std'),
+            getattr(group_res[2], to_plot + '_std'),
+            group_res[0].n_episodes,
+            group_res[1].n_episodes,
+            group_res[2].n_episodes
+        )
+    else:
+        mean, std = combine_2_means_stds(
+            getattr(group_res[0], to_plot + '_avg'),
+            getattr(group_res[1], to_plot + '_avg'),
+            getattr(group_res[0], to_plot + '_std'),
+            getattr(group_res[1], to_plot + '_std'),
+            group_res[0].n_episodes,
+            group_res[1].n_episodes,
+        )
 
     lower_bound, upper_bound = st.t.interval(0.95, n - 1, loc=mean, scale=std / np.sqrt(n))
     # lower_bound, upper_bound = mean - std, mean + std
@@ -187,7 +198,7 @@ def plot_group(ax, group_res: List[LogData], group_entries: List[LogEntry],
         if entry.beta > 0:
             return 'ICM+Entropy' if entry.icm else 'Entropy'
         else:
-            return 'ICM' if entry.icm else 'None'
+            return 'ICM' if entry.icm else 'A3C-'
 
     label = '{0}{1}'.format(
         ('LSTM+' if group_entries[0].lstm else 'No LSTM+') if lstm_in_label else '',
@@ -206,11 +217,11 @@ def plot_statistic(data_groups, to_plot, y_label, y_lim, legend_loc,
     fig = plt.figure(figsize=(10, 6))
     ax = fig.add_subplot(111)
     ax.set_prop_cycle(
-        color=['xkcd:bright lavender', 'xkcd:cobalt blue', 'xkcd:lightish red'],
-        dashes=[[5, 1], [1, 1], [1, 0]],  # [1, 5], [5, 5], [3, 5, 1, 5]],
-        linewidth=[1.5, 1.5, 2.5]
+        color=['xkcd:light grass green', 'xkcd:bright lavender', 'xkcd:cobalt blue', 'xkcd:lightish red'],
+        dashes=[[5, 5], [5, 1], [1, 1], [1, 0]],  # [1, 5], [3, 5, 1, 5]],
+        linewidth=[1.5, 1.5, 1.5, 2.5]
     )
-    fill_alpha = [0.25, 0.25, 0.5]
+    fill_alpha = [0.25, 0.25, 0.25, 0.5]
     ax.set_ylabel(y_label, fontsize=18)
     ax.set_xlabel('Training steps', fontsize=18)
     ax.ticklabel_format(style='sci', axis='x', scilimits=(0, 0))
