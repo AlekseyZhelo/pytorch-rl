@@ -183,7 +183,7 @@ class MinisimEnv(Env):
                 [self.actions[i] for i in action_index.reshape(-1)]
             )
             if self.mode == 2:
-                # time.sleep(0.05)
+                # time.sleep(0.01)
                 self.total_reward += self.exp_reward
                 if self.verbose_test:
                     print('total reward: ', self.total_reward)
@@ -277,5 +277,5 @@ if __name__ == '__main__':
         env_0.reset()
         for j in xrange(np.random.randint(10, 100)):
             env_0.step(np.random.randint(0, 3, size=(1, 1)))
-    # env_1 = MinisimEnv(params, 1)
-    # time.sleep(10000)
+            # env_1 = MinisimEnv(params, 1)
+            # time.sleep(10000)

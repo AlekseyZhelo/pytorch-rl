@@ -871,6 +871,21 @@ class A3CTester(A3CSingleProcess):
             self.map_image = self.env.read_static_map_image()
             plt.rc('font', family='Times New Roman')
             matplotlib.rcParams.update({'font.size': 16})
+            self.triple_icm_test = True
+            if self.triple_icm_test:
+                self.icm_inv_model2 = self.master.icm_inv_model_prototype(self.master.model_params)
+                self.icm_fwd_model2 = self.master.icm_fwd_model_prototype(self.master.model_params)
+                self.icm_inv_model3 = self.master.icm_inv_model_prototype(self.master.model_params)
+                self.icm_fwd_model3 = self.master.icm_fwd_model_prototype(self.master.model_params)
+                inv_base = self.master.icm_inv_model_file[:self.master.icm_inv_model_file.index('step')]
+                fwd_base = self.master.icm_fwd_model_file[:self.master.icm_fwd_model_file.index('step')]
+                self.icm_inv_model2.load_state_dict(torch.load(inv_base + 'step_' + '115896' + '.pth'))
+                self.icm_fwd_model2.load_state_dict(torch.load(fwd_base + 'step_' + '115896' + '.pth'))
+                # self.icm_inv_model3.load_state_dict(torch.load(inv_base + 'step_' + '60109' + '.pth'))
+                # self.icm_fwd_model3.load_state_dict(torch.load(fwd_base + 'step_' + '60109' + '.pth'))
+                self.icm_inv_model3.load_state_dict(torch.load(inv_base + 'step_' + '2683' + '.pth'))
+                self.icm_fwd_model3.load_state_dict(torch.load(fwd_base + 'step_' + '2683' + '.pth'))
+
         if self.master.plot_env_picture:
             self.map_image = self.env.read_static_map_image()
             plt.rc('font', family='Times New Roman')
@@ -967,9 +982,12 @@ class A3CTester(A3CSingleProcess):
             if not self.training:
                 if self.master.visualize: self.env.visual()
                 if self.master.render: self.env.render()
-                if self.master.plot_icm_test and test_episode_steps < 150:
-                    self.plot_icm_test(p_vb, test_nepisodes)
-                if self.master.plot_env_picture and test_episode_steps >= 96:
+                if self.master.plot_icm_test and test_nepisodes == 7:
+                    if self.triple_icm_test:
+                        self.plot_icm_test_triple(p_vb, test_nepisodes)
+                    else:
+                        self.plot_icm_test(p_vb, test_nepisodes)
+                if self.master.plot_env_picture and test_nepisodes == 12:
                     self.plot_env_picture(test_nepisodes)
 
             if self.experience.terminal1 or \
@@ -1032,6 +1050,96 @@ class A3CTester(A3CSingleProcess):
         self.master.logger.warning("Testing: nepisodes_solved: {}".format(self.nepisodes_solved_log[-1][1]))
         self.master.logger.warning("Testing: repisodes_solved: {}".format(self.repisodes_solved_log[-1][1]))
 
+    def plot_icm_test_triple(self, p_vb, test_nepisodes):
+        features_next, features_next_pred = self.calculate_icm()
+        features_next2, features_next_pred2 = self.calculate_icm(inv_model=self.icm_inv_model2,
+                                                                 fwd_model=self.icm_fwd_model2)
+        features_next3, features_next_pred3 = self.calculate_icm(inv_model=self.icm_inv_model3,
+                                                                 fwd_model=self.icm_fwd_model3)
+
+        fig = plt.figure(figsize=(9, 10))
+        ax1 = plt.subplot2grid((10, 6), (0, 0), colspan=4, rowspan=4)
+        ax2 = plt.subplot2grid((10, 6), (0, 4), colspan=2, rowspan=4)
+        ax3 = plt.subplot2grid((10, 6), (4, 0), colspan=6, rowspan=2)
+        ax4 = plt.subplot2grid((10, 6), (6, 0), colspan=6, rowspan=2)
+        ax5 = plt.subplot2grid((10, 6), (8, 0), colspan=6, rowspan=2)
+
+        ax1.set_anchor('W')
+        self.plot_current_step(ax1, draw_path=True, draw_rays=True, show_legend=False)
+        # ax1.set_title('Top view')
+
+        actions = ('Fwd', 'Left', 'Right')  # TODO: check left and right
+        y_pos = np.arange(len(actions))
+        prob = p_vb.data.numpy().reshape(-1)
+
+        ax2.barh(y_pos, prob, align='center', height=0.4)
+        ax2.set_yticks(y_pos)
+        ax2.set_yticklabels(actions)
+        ax2.set_xlim([-0.05, 1.05])
+        ax2.yaxis.tick_right()
+        ax2.xaxis.tick_top()
+        # ax2.tick_params(axis='x', pad=-25)
+        ax2.tick_params(axis='x', labelbottom='off', labeltop='off')
+        ax2.tick_params(direction='in')
+        # ax2.set_title('Action', y=1.10)
+
+        x_pos = np.arange(16)
+        val_f_hat = features_next_pred.data.numpy().reshape(-1)
+        val_f = features_next.data.numpy().reshape(-1)
+
+        val_f_hat = np.tanh(val_f_hat)
+        val_f = np.tanh(val_f)
+
+        ax3.bar(x_pos, val_f_hat, width=0.2, label=r'$\^\phi_{3mil}$')
+        ax3.bar(x_pos + 0.2, val_f, width=0.2, label=r'$\phi_{3mil}$')
+        ax3.set_ylim([-1, 1])
+        ax3.set_xticks(np.arange(16))
+        ax3.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+        ax3.tick_params(direction='in')
+        ax3.tick_params(labelbottom='off', labeltop='off', labelleft='off')
+
+        val_f_hat = features_next_pred2.data.numpy().reshape(-1)
+        val_f = features_next2.data.numpy().reshape(-1)
+
+        val_f_hat = np.tanh(val_f_hat)
+        val_f = np.tanh(val_f)
+
+        ax4.bar(x_pos, val_f_hat, width=0.2, label=r'$\^\phi_{100k}$')
+        ax4.bar(x_pos + 0.2, val_f, width=0.2, label=r'$\phi_{100k}$')
+        ax4.set_ylim([-1, 1])
+        ax4.set_xticks(np.arange(16))
+        ax4.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+        ax4.tick_params(direction='in')
+        ax4.tick_params(labelbottom='off', labeltop='off', labelleft='off')
+
+        val_f_hat = features_next_pred3.data.numpy().reshape(-1)
+        val_f = features_next3.data.numpy().reshape(-1)
+
+        val_f_hat = np.tanh(val_f_hat)
+        val_f = np.tanh(val_f)
+
+        ax5.bar(x_pos, val_f_hat, width=0.2, label=r'$\^\phi_{3k}$')
+        ax5.bar(x_pos + 0.2, val_f, width=0.2, label=r'$\phi_{3k}$')
+        ax5.set_ylim([-1, 1])
+        ax5.set_xticks(np.arange(16))
+        ax5.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+        ax5.tick_params(direction='in')
+        ax5.tick_params(labelbottom='off', labeltop='off', labelleft='off')
+
+        plot_dir = os.path.join('imgs', 'icm_test_triple_plots', os.path.basename(self.master.icm_fwd_model_file)[:-4])
+        if not os.path.exists(plot_dir):
+            os.makedirs(plot_dir)
+        plt.savefig(
+            os.path.join(plot_dir, 'episode{0:03}_step{1:03}'.format(
+                test_nepisodes + 1,
+                len(self.action_history)
+            )),
+            dpi=200,
+            bbox_inches='tight',
+            pad_inches=0.05
+        )
+        plt.close(fig)
+
     def plot_icm_test(self, p_vb, test_nepisodes):
         features_next, features_next_pred = self.calculate_icm()
 
@@ -1083,15 +1191,19 @@ class A3CTester(A3CSingleProcess):
         wspace = 0.1  # 0.2  # the amount of width reserved for blank space between subplots
         hspace = 0.1  # 0.2  # the amount of height reserved for white space between subplots
         # plt.subplots_adjust(left=left, bottom=bottom, right=right, top=top, wspace=wspace, hspace=hspace)
-        plot_dir = os.path.join('imgs', 'icm_test_plots', os.path.basename(self.master.model_file)[:-4])
+        plot_dir = os.path.join('imgs', 'icm_test_plots', os.path.basename(self.master.icm_fwd_model_file)[:-4])
         if not os.path.exists(plot_dir):
             os.makedirs(plot_dir)
+        # extent = ax3.get_window_extent().transformed(fig.dpi_scale_trans.inverted())
         plt.savefig(
             os.path.join(plot_dir, 'episode{0:03}_step{1:03}'.format(
                 test_nepisodes + 1,
                 len(self.action_history)
             )),
-            dpi=200, bbox_inches='tight', pad_inches=0.05
+            dpi=200,
+            # bbox_inches=extent.expanded(1.43, 1),
+            bbox_inches='tight',
+            pad_inches=0.05
         )
         plt.close(fig)
 
@@ -1100,7 +1212,7 @@ class A3CTester(A3CSingleProcess):
         ax = fig.add_subplot(111)
 
         plt.axis('off')
-        self.plot_current_step(ax, draw_path=True, draw_rays=True, show_legend=True)
+        self.plot_current_step(ax, draw_path=True, draw_rays=True, show_legend=False)
 
         plt.tight_layout()
         plot_dir = os.path.join('imgs', 'env_pictures', os.path.basename(self.master.model_file)[:-4])
@@ -1109,7 +1221,7 @@ class A3CTester(A3CSingleProcess):
         plt.axis('off')
         plt.gcf().set_size_inches(self.map_image.shape[1] / 100.0, self.map_image.shape[0] / 100.0)
         plt.savefig(
-            os.path.join(plot_dir, 'episode{0:03}_step{1:03}.eps'.format(
+            os.path.join(plot_dir, 'episode{0:03}_step{1:03}.png'.format(
                 test_nepisodes + 1,
                 len(self.action_history)
             )),
@@ -1198,7 +1310,12 @@ class A3CTester(A3CSingleProcess):
                                    Rectangle: HandlerRectangle()})
 
     # TODO: use elsewhere, better name
-    def calculate_icm(self):
+    def calculate_icm(self, inv_model=None, fwd_model=None):
+        if inv_model is None:
+            inv_model = self.icm_inv_model
+        if fwd_model is None:
+            fwd_model = self.icm_fwd_model
+
         if self.icm_inv_model.same_features():
             state_start = self.episode_features_history[-1]
             # TODO: correct?
@@ -1220,8 +1337,8 @@ class A3CTester(A3CSingleProcess):
         actions = Variable(torch.from_numpy(actions).long(), requires_grad=False)
 
         features, features_next, action_logits, action_probs = \
-            self.icm_inv_model.forward((state_start, state_next))
+            inv_model.forward((state_start, state_next))
 
-        features_next_pred = self.icm_fwd_model.forward((features, actions))
+        features_next_pred = fwd_model.forward((features, actions))
 
         return features_next, features_next_pred

@@ -53,6 +53,10 @@ class Params(object):  # NOTE: shared across all modules
 
         # signatures of the best models
         # self.machine = "aiscpu4"
+        # self.timestamp = "18032000"
+        # self.step = "852623"
+        #
+        # self.machine = "aiscpu4"
         # self.timestamp = "18031601"
         # self.step = "2844054"
         # self.machine = "aiscpu2"
@@ -61,6 +65,7 @@ class Params(object):  # NOTE: shared across all modules
         self.machine = "aiscpu4"
         self.timestamp = "18031600"
         self.step = "2976216"
+        self.icm_step = "2976216"  # "60109"  # "115896"
 
         # self.machine = "aiscpu4"
         # self.timestamp = "18031300"
@@ -72,8 +77,8 @@ class Params(object):  # NOTE: shared across all modules
         # self.timestamp = "18031000"
         # self.step = "1299783"
 
-        self.test_ref_postfix = '_' + self.step + "_title"
-        # self.test_ref_postfix = '_' + self.step + "_test"
+        # self.test_ref_postfix = '_' + self.step + "_title"
+        self.test_ref_postfix = '_' + self.step + "_test"
         # self.test_ref_postfix = '_' + self.step + "_test_gen"
         # self.test_ref_postfix = '_' + self.step + "_test_gen2"
         # self.test_ref_postfix = '_' + self.step + "_test_gen3"
@@ -154,11 +159,11 @@ class Params(object):  # NOTE: shared across all modules
         # model files
         if self.icm:
             self.icm_inv_model_name = "{0}/models/{1}_icm_inv{2}.pth".format(self.root_dir, self.refs,
-                                                                             ("_step_" + self.step)
-                                                                             if self.step is not None else "")
+                                                                             ("_step_" + self.icm_step)
+                                                                             if self.icm_step is not None else "")
             self.icm_fwd_model_name = "{0}/models/{1}_icm_fwd{2}.pth".format(self.root_dir, self.refs,
-                                                                             ("_step_" + self.step)
-                                                                             if self.step is not None else "")
+                                                                             ("_step_" + self.icm_step)
+                                                                             if self.icm_step is not None else "")
             self.icm_inv_model_file = None
             self.icm_fwd_model_file = None
             if self.mode == 2:  # NOTE: so only need to change self.mode to 2 to test the current training
@@ -363,7 +368,7 @@ class AgentParams(Params):  # hyperparameters for drl agents
                 self.eval_steps = 7500  # 15000
                 self.prog_freq = self.eval_freq
                 # self.test_nepisodes = 50 if not self.plot_icm_test else 1
-                self.test_nepisodes = 300 if (not self.plot_icm_test and not self.plot_env_picture) else 3
+                self.test_nepisodes = 300 if (not self.plot_icm_test and not self.plot_env_picture) else 13
 
                 self.rollout_steps = 50  # max look-ahead steps in a single rollout
                 self.tau = 1.
