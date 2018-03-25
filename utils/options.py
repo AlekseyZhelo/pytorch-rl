@@ -52,20 +52,22 @@ class Params(object):  # NOTE: shared across all modules
         # self.step = ""
 
         # signatures of the best models
-        # self.machine = "aiscpu4"
-        # self.timestamp = "18032000"
-        # self.step = "852623"
+        self.machine = "aiscpu4"
+        self.timestamp = "18032100"
+        self.step = "3000021"
+        self.icm_step = "3000021"
         #
         # self.machine = "aiscpu4"
         # self.timestamp = "18031601"
         # self.step = "2844054"
+        # self.icm_step = "2844054"
         # self.machine = "aiscpu2"
         # self.timestamp = "18031700"
         # self.step = "2556792"
-        self.machine = "aiscpu4"
-        self.timestamp = "18031600"
-        self.step = "2976216"
-        self.icm_step = "2976216"  # "60109"  # "115896"
+        # self.machine = "aiscpu4"
+        # self.timestamp = "18031600"
+        # self.step = "2976216"
+        # self.icm_step = "2976216"  # "60109"  # "115896"
 
         # self.machine = "aiscpu4"
         # self.timestamp = "18031300"
@@ -92,7 +94,7 @@ class Params(object):  # NOTE: shared across all modules
         self.visualize = True  # whether do online plotting and stuff or not
         self.save_best = False  # save model w/ highest reward if True, otherwise always save the latest model
         self.icm_save_best = False
-        self.plot_icm_test = True
+        self.plot_icm_test = False
         self.plot_env_picture = False
         self.verbose_test = False
 

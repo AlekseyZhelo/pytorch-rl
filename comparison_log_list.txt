@@ -1,5 +1,7 @@
 
-3f4781f aiscpu4_18032000, office, no curr, ICM no + reward, LSTM, -5.0 for colliding, beta 0.00, 2nd time proper
+05a4781 aiscpu4_18032100, office, no curr, ICM no + reward, LSTM, -5.0 for colliding, beta 0.00, 4th time proper
+d66658d aiscpu2_18032100, office, no curr, ICM no + reward, LSTM, -5.0 for colliding, beta 0.00, 3rd time proper
+# 3f4781f aiscpu4_18032000, office, no curr, ICM no + reward, LSTM, -5.0 for colliding, beta 0.00, 2nd time proper
 17a4ca2 aiscpu2_18032000, office, no curr, ICM no + reward, LSTM, -5.0 for colliding, beta 0.00
 
 af4b5f3 aiscpu4_18031601, office, no curr, ICM no + reward, LSTM, -5.0 for colliding, beta 0.01, 3rd time proper

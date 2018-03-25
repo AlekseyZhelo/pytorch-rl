@@ -987,7 +987,7 @@ class A3CTester(A3CSingleProcess):
                         self.plot_icm_test_triple(p_vb, test_nepisodes)
                     else:
                         self.plot_icm_test(p_vb, test_nepisodes)
-                if self.master.plot_env_picture and test_nepisodes == 12:
+                if self.master.plot_env_picture and test_nepisodes == 7:  # 7
                     self.plot_env_picture(test_nepisodes)
 
             if self.experience.terminal1 or \

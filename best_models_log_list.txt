@@ -1,6 +1,9 @@
 
-3f4781f aiscpu4_18032000, office, no curr, ICM no + reward, LSTM, -5.0 for colliding, beta 0.00, 2nd time proper
-852623
+# 3f4781f aiscpu4_18032000, office, no curr, ICM no + reward, LSTM, -5.0 for colliding, beta 0.00, 2nd time proper
+# 852623
+
+d66658d aiscpu2_18032100, office, no curr, ICM no + reward, LSTM, -5.0 for colliding, beta 0.00, 3rd time proper
+1019005
 
 af4b5f3 aiscpu4_18031601, office, no curr, ICM no + reward, LSTM, -5.0 for colliding, beta 0.01, 3rd time proper
 step 2844054

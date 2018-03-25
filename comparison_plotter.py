@@ -52,6 +52,9 @@ def parse_log_list(log_list_path):
         for line in log_list_file.readlines():
             trimmed = line.rstrip()
 
+            if len(trimmed) > 0 and trimmed[0] == '#':
+                continue
+
             if trimmed == '':
                 if len(group) > 0:
                     log_groups.append(group)
@@ -175,7 +178,7 @@ def plot_group(ax, group_res: List[LogData], group_entries: List[LogEntry],
             group_res[1].n_episodes,
             group_res[2].n_episodes
         )
-    else:
+    elif len(group_res) == 2:
         mean, std = combine_2_means_stds(
             getattr(group_res[0], to_plot + '_avg'),
             getattr(group_res[1], to_plot + '_avg'),
@@ -183,6 +186,24 @@ def plot_group(ax, group_res: List[LogData], group_entries: List[LogEntry],
             getattr(group_res[1], to_plot + '_std'),
             group_res[0].n_episodes,
             group_res[1].n_episodes,
+        )
+    elif len(group_res) % 2 == 0:
+        combined = [[*combine_2_means_stds(
+            getattr(res1, to_plot + '_avg'),
+            getattr(res2, to_plot + '_avg'),
+            getattr(res1, to_plot + '_std'),
+            getattr(res2, to_plot + '_std'),
+            res1.n_episodes,
+            res2.n_episodes,
+        ), res1.n_episodes + res2.n_episodes] for res1, res2 in
+                    zip(group_res[0::2], group_res[1::2])]  # only one level of combining
+        mean, std = combine_2_means_stds(
+            combined[0][0],
+            combined[1][0],
+            combined[0][1],
+            combined[1][1],
+            combined[0][2],
+            combined[1][2],
         )
 
     lower_bound, upper_bound = st.t.interval(0.95, n - 1, loc=mean, scale=std / np.sqrt(n))
